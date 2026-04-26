@@ -87,6 +87,46 @@ def read_project_logs(project_name: str) -> str:
 
     return "\n".join(logs)
 
+@mcp.tool()
+def analyze_precice_logs(project_name: str) -> str:
+    """Analyze preCICE log files and detect common success/failure patterns."""
+    project_path = PROJECTS_DIR / project_name
+
+    if not project_path.exists():
+        return f"Project not found: {project_name}"
+
+    log_files = list(project_path.rglob("*.log"))
+
+    if not log_files:
+        return "No log files found."
+
+    report = []
+
+    for log_file in log_files:
+        content = log_file.read_text(errors="ignore")
+
+        report.append(f"\n--- Log file: {log_file.relative_to(project_path)} ---")
+
+        if "ERROR" in content or "Error" in content:
+            report.append("❌ Error detected in log.")
+        elif "WARNING" in content or "Warning" in content:
+            report.append("⚠️ Warning detected in log.")
+        else:
+            report.append("✅ No obvious errors or warnings found.")
+
+        if "iteration" in content.lower():
+            report.append("Coupling iterations detected.")
+
+        if "converged" in content.lower():
+            report.append("✅ Convergence information found.")
+
+        if "failed" in content.lower():
+            report.append("❌ Failure keyword found.")
+
+        report.append("\nLast 30 lines:")
+        report.append("\n".join(content.splitlines()[-30:]))
+
+    return "\n".join(report)
 
 if __name__ == "__main__":
     mcp.run()

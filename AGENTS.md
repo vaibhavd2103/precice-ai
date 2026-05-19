@@ -29,9 +29,9 @@ For logs:
 2. `read_latest_log`
 3. `analyze_precice_logs`
 
-## Current Scope
+<!-- ## Current Scope
 
-<!-- The assistant supports:
+The assistant supports:
 
 - project discovery
 - config inspection

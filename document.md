@@ -611,14 +611,14 @@ No single approach is optimal across all dimensions. The best architecture for a
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                  Orchestration Layer                     │
-│              Claude Code / Codex Agent                   │
-│   (MCP client — discovers tools, drives reasoning loop)  │
+│                  Orchestration Layer                    │
+│              Claude Code / Codex Agent                  │
+│   (MCP client — discovers tools, drives reasoning loop) │
 └────────────────────────┬────────────────────────────────┘
                          │ MCP Protocol
 ┌────────────────────────▼────────────────────────────────┐
-│                   Execution Layer                        │
-│                   MCP Server (server.py)                 │
+│                   Execution Layer                       │
+│                   MCP Server (server.py)                │
 │  ┌──────────────────────────────────────────────────┐   │
 │  │  list_precice_projects()                         │   │
 │  │  inspect_precice_config(project_name)            │   │
@@ -629,17 +629,17 @@ No single approach is optimal across all dimensions. The best architecture for a
 │  └──────────────────────────────────────────────────┘   │
 └────────────────────────┬────────────────────────────────┘
                          │ reads / writes
-         ┌───────────────┼────────────────────┐
-         │               │                    │
+         ┌───────────────┼───────────────────┐
+         │               │                   │
 ┌────────▼──────┐ ┌──────▼──────┐  ┌─────────▼──────────┐
-│  Knowledge    │ │   Agent     │  │  Human Knowledge    │
-│  Retrieval    │ │   Memory    │  │  Management         │
-│               │ │             │  │                     │
-│  ChromaDB     │ │    mem0     │  │  Obsidian Vault     │
-│  (RAG over    │ │  (session   │  │  (experiment logs,  │
-│  preCICE      │ │   memory,   │  │  ADRs, findings,    │
-│   docs +      │ │  past       │  │  thesis notes)      │
-│  past logs)   │ │  findings)  │  │                     │
+│  Knowledge    │ │   Agent     │  │  Human Knowledge   │
+│  Retrieval    │ │   Memory    │  │  Management        │
+│               │ │             │  │                    │
+│  ChromaDB     │ │    mem0     │  │  Obsidian Vault    │
+│  (RAG over    │ │  (session   │  │  (experiment logs, │
+│  preCICE      │ │   memory,   │  │  ADRs, findings,   │
+│   docs +      │ │  past       │  │  thesis notes)     │
+│  past logs)   │ │  findings)  │  │                    │
 └───────────────┘ └─────────────┘  └────────────────────┘
 ```
 

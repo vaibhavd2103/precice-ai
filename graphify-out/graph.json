@@ -1,0 +1,1766 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {
+    "hyperedges": [
+      {
+        "id": "new_project_tool_sequence",
+        "label": "New Project Tool Order",
+        "nodes": [
+          "tool_list_precice_projects",
+          "tool_inspect_project_structure",
+          "tool_find_precice_config",
+          "tool_inspect_precice_config",
+          "tool_summarize_precice_config",
+          "tool_check_precice_config"
+        ],
+        "relation": "participate_in",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "AGENTS.md"
+      },
+      {
+        "id": "log_analysis_tool_sequence",
+        "label": "Log Analysis Tool Order",
+        "nodes": [
+          "tool_list_project_logs",
+          "tool_read_latest_log",
+          "tool_analyze_precice_logs"
+        ],
+        "relation": "participate_in",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "AGENTS.md"
+      },
+      {
+        "id": "graphify_navigation_commands",
+        "label": "Graphify Navigation Command Set",
+        "nodes": [
+          "cmd_graphify_query",
+          "cmd_graphify_path",
+          "cmd_graphify_explain",
+          "file_graphify_out_graph_json"
+        ],
+        "relation": "form",
+        "confidence": "INFERRED",
+        "confidence_score": 0.82,
+        "source_file": "AGENTS.md"
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "label": ".graphify_detect.json",
+      "file_type": "code",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "id": "graphify_detect_json",
+      "community": 1,
+      "norm_label": ".graphify_detect.json"
+    },
+    {
+      "label": "files",
+      "file_type": "code",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "id": "precice_ai_graphify_detect_files",
+      "community": 1,
+      "norm_label": "files"
+    },
+    {
+      "label": "code",
+      "file_type": "code",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "id": "precice_ai_graphify_detect_files_code",
+      "community": 1,
+      "norm_label": "code"
+    },
+    {
+      "label": "document",
+      "file_type": "code",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "id": "precice_ai_graphify_detect_files_document",
+      "community": 1,
+      "norm_label": "document"
+    },
+    {
+      "label": "paper",
+      "file_type": "code",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "id": "precice_ai_graphify_detect_files_paper",
+      "community": 1,
+      "norm_label": "paper"
+    },
+    {
+      "label": "image",
+      "file_type": "code",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "id": "precice_ai_graphify_detect_files_image",
+      "community": 1,
+      "norm_label": "image"
+    },
+    {
+      "label": "video",
+      "file_type": "code",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "id": "precice_ai_graphify_detect_files_video",
+      "community": 1,
+      "norm_label": "video"
+    },
+    {
+      "label": "total_files",
+      "file_type": "code",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "id": "precice_ai_graphify_detect_total_files",
+      "community": 1,
+      "norm_label": "total_files"
+    },
+    {
+      "label": "total_words",
+      "file_type": "code",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "id": "precice_ai_graphify_detect_total_words",
+      "community": 1,
+      "norm_label": "total_words"
+    },
+    {
+      "label": "needs_graph",
+      "file_type": "code",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "id": "precice_ai_graphify_detect_needs_graph",
+      "community": 1,
+      "norm_label": "needs_graph"
+    },
+    {
+      "label": "warning",
+      "file_type": "code",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "id": "precice_ai_graphify_detect_warning",
+      "community": 1,
+      "norm_label": "warning"
+    },
+    {
+      "label": "skipped_sensitive",
+      "file_type": "code",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "id": "precice_ai_graphify_detect_skipped_sensitive",
+      "community": 1,
+      "norm_label": "skipped_sensitive"
+    },
+    {
+      "label": "graphifyignore_patterns",
+      "file_type": "code",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "id": "precice_ai_graphify_detect_graphifyignore_patterns",
+      "community": 1,
+      "norm_label": "graphifyignore_patterns"
+    },
+    {
+      "label": "scan_root",
+      "file_type": "code",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "id": "precice_ai_graphify_detect_scan_root",
+      "community": 1,
+      "norm_label": "scan_root"
+    },
+    {
+      "label": "server.py",
+      "file_type": "code",
+      "source_file": "server.py",
+      "source_location": "L1",
+      "id": "server_py",
+      "community": 0,
+      "norm_label": "server.py"
+    },
+    {
+      "label": "paths.py",
+      "file_type": "code",
+      "source_file": "core/paths.py",
+      "source_location": "L1",
+      "id": "core_paths_py",
+      "community": 0,
+      "norm_label": "paths.py"
+    },
+    {
+      "label": "get_project_path()",
+      "file_type": "code",
+      "source_file": "core/paths.py",
+      "source_location": "L8",
+      "rationale": "Return the absolute path of a project inside test-projects.      This also preve",
+      "id": "core_paths_get_project_path",
+      "community": 0,
+      "norm_label": "get_project_path()"
+    },
+    {
+      "label": "get_precice_config_path()",
+      "file_type": "code",
+      "source_file": "core/paths.py",
+      "source_location": "L23",
+      "rationale": "Return the expected precice-config.xml path for a project.",
+      "id": "core_paths_get_precice_config_path",
+      "community": 0,
+      "norm_label": "get_precice_config_path()"
+    },
+    {
+      "label": "safety.py",
+      "file_type": "code",
+      "source_file": "core/safety.py",
+      "source_location": "L1",
+      "id": "core_safety_py",
+      "community": 6,
+      "norm_label": "safety.py"
+    },
+    {
+      "label": "is_command_safe()",
+      "file_type": "code",
+      "source_file": "core/safety.py",
+      "source_location": "L38",
+      "rationale": "Check whether a command is safe to execute.      Returns:         (True, \"Allowe",
+      "id": "core_safety_is_command_safe",
+      "community": 6,
+      "norm_label": "is_command_safe()"
+    },
+    {
+      "label": "get_allowed_commands()",
+      "file_type": "code",
+      "source_file": "core/safety.py",
+      "source_location": "L73",
+      "id": "core_safety_get_allowed_commands",
+      "community": 6,
+      "norm_label": "get_allowed_commands()"
+    },
+    {
+      "label": "command_runner.py",
+      "file_type": "code",
+      "source_file": "core/command_runner.py",
+      "source_location": "L1",
+      "id": "core_command_runner_py",
+      "community": 6,
+      "norm_label": "command_runner.py"
+    },
+    {
+      "label": "run_safe_command()",
+      "file_type": "code",
+      "source_file": "core/command_runner.py",
+      "source_location": "L9",
+      "rationale": "Run a command safely inside a given working directory.      The command is check",
+      "id": "core_command_runner_run_safe_command",
+      "community": 6,
+      "norm_label": "run_safe_command()"
+    },
+    {
+      "label": "__init__.py",
+      "file_type": "code",
+      "source_file": "core/__init__.py",
+      "source_location": "L1",
+      "id": "core_init_py",
+      "community": 11,
+      "norm_label": "__init__.py"
+    },
+    {
+      "label": "config_tools.py",
+      "file_type": "code",
+      "source_file": "tools/config_tools.py",
+      "source_location": "L1",
+      "id": "tools_config_tools_py",
+      "community": 0,
+      "norm_label": "config_tools.py"
+    },
+    {
+      "label": "register_config_tools()",
+      "file_type": "code",
+      "source_file": "tools/config_tools.py",
+      "source_location": "L12",
+      "id": "tools_config_tools_register_config_tools",
+      "community": 0,
+      "norm_label": "register_config_tools()"
+    },
+    {
+      "label": "_clean_xml_tag()",
+      "file_type": "code",
+      "source_file": "tools/config_tools.py",
+      "source_location": "L177",
+      "id": "tools_config_tools_clean_xml_tag",
+      "community": 0,
+      "norm_label": "_clean_xml_tag()"
+    },
+    {
+      "label": "_format_list()",
+      "file_type": "code",
+      "source_file": "tools/config_tools.py",
+      "source_location": "L186",
+      "id": "tools_config_tools_format_list",
+      "community": 0,
+      "norm_label": "_format_list()"
+    },
+    {
+      "label": "log_tools.py",
+      "file_type": "code",
+      "source_file": "tools/log_tools.py",
+      "source_location": "L1",
+      "id": "tools_log_tools_py",
+      "community": 0,
+      "norm_label": "log_tools.py"
+    },
+    {
+      "label": "register_log_tools()",
+      "file_type": "code",
+      "source_file": "tools/log_tools.py",
+      "source_location": "L14",
+      "id": "tools_log_tools_register_log_tools",
+      "community": 0,
+      "norm_label": "register_log_tools()"
+    },
+    {
+      "label": "_find_log_files()",
+      "file_type": "code",
+      "source_file": "tools/log_tools.py",
+      "source_location": "L137",
+      "id": "tools_log_tools_find_log_files",
+      "community": 0,
+      "norm_label": "_find_log_files()"
+    },
+    {
+      "label": "project_tools.py",
+      "file_type": "code",
+      "source_file": "tools/project_tools.py",
+      "source_location": "L1",
+      "id": "tools_project_tools_py",
+      "community": 0,
+      "norm_label": "project_tools.py"
+    },
+    {
+      "label": "register_project_tools()",
+      "file_type": "code",
+      "source_file": "tools/project_tools.py",
+      "source_location": "L9",
+      "id": "tools_project_tools_register_project_tools",
+      "community": 0,
+      "norm_label": "register_project_tools()"
+    },
+    {
+      "label": "__init__.py",
+      "file_type": "code",
+      "source_file": "tools/__init__.py",
+      "source_location": "L1",
+      "id": "tools_init_py",
+      "community": 0,
+      "norm_label": "__init__.py"
+    },
+    {
+      "label": "register_all_tools()",
+      "file_type": "code",
+      "source_file": "tools/__init__.py",
+      "source_location": "L8",
+      "id": "tools_init_register_all_tools",
+      "community": 0,
+      "norm_label": "register_all_tools()"
+    },
+    {
+      "label": "settings.json",
+      "file_type": "code",
+      "source_file": ".claude/settings.json",
+      "source_location": "L1",
+      "id": "claude_settings_json",
+      "community": 7,
+      "norm_label": "settings.json"
+    },
+    {
+      "label": "hooks",
+      "file_type": "code",
+      "source_file": ".claude/settings.json",
+      "source_location": "L2",
+      "id": "claude_settings_hooks",
+      "community": 7,
+      "norm_label": "hooks"
+    },
+    {
+      "label": "PreToolUse",
+      "file_type": "code",
+      "source_file": ".claude/settings.json",
+      "source_location": "L3",
+      "id": "claude_settings_hooks_pretooluse",
+      "community": 7,
+      "norm_label": "pretooluse"
+    },
+    {
+      "label": "settings.json",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L1",
+      "id": "vscode_settings_json",
+      "community": 5,
+      "norm_label": "settings.json"
+    },
+    {
+      "label": "cSpell.ignoreWords",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L2",
+      "id": "vscode_settings_cspell_ignorewords",
+      "community": 5,
+      "norm_label": "cspell.ignorewords"
+    },
+    {
+      "label": "editor.fontFamily",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L5",
+      "id": "vscode_settings_editor_fontfamily",
+      "community": 5,
+      "norm_label": "editor.fontfamily"
+    },
+    {
+      "label": "editor.fontSize",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L6",
+      "id": "vscode_settings_editor_fontsize",
+      "community": 5,
+      "norm_label": "editor.fontsize"
+    },
+    {
+      "label": "editor.formatOnSave",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L7",
+      "id": "vscode_settings_editor_formatonsave",
+      "community": 5,
+      "norm_label": "editor.formatonsave"
+    },
+    {
+      "label": "workbench.colorTheme",
+      "file_type": "code",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "id": "vscode_settings_workbench_colortheme",
+      "community": 5,
+      "norm_label": "workbench.colortheme"
+    },
+    {
+      "label": "preCICE AI MCP Server",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "project_precice_ai",
+      "community": 3,
+      "norm_label": "precice ai mcp server"
+    },
+    {
+      "label": "MCP Server",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "project_mcp_server",
+      "community": 3,
+      "norm_label": "mcp server"
+    },
+    {
+      "label": "test-projects Directory",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "dir_test_projects",
+      "community": 3,
+      "norm_label": "test-projects directory"
+    },
+    {
+      "label": "precice-config.xml",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "file_precice_config_xml",
+      "community": 2,
+      "norm_label": "precice-config.xml"
+    },
+    {
+      "label": "list_precice_projects",
+      "file_type": "code",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "tool_list_precice_projects",
+      "community": 2,
+      "norm_label": "list_precice_projects"
+    },
+    {
+      "label": "inspect_project_structure",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "tool_inspect_project_structure",
+      "community": 2,
+      "norm_label": "inspect_project_structure"
+    },
+    {
+      "label": "find_precice_config",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "tool_find_precice_config",
+      "community": 2,
+      "norm_label": "find_precice_config"
+    },
+    {
+      "label": "inspect_precice_config",
+      "file_type": "code",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "tool_inspect_precice_config",
+      "community": 2,
+      "norm_label": "inspect_precice_config"
+    },
+    {
+      "label": "summarize_precice_config",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "tool_summarize_precice_config",
+      "community": 2,
+      "norm_label": "summarize_precice_config"
+    },
+    {
+      "label": "check_precice_config",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "tool_check_precice_config",
+      "community": 2,
+      "norm_label": "check_precice_config"
+    },
+    {
+      "label": "list_project_logs",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "tool_list_project_logs",
+      "community": 8,
+      "norm_label": "list_project_logs"
+    },
+    {
+      "label": "read_latest_log",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "tool_read_latest_log",
+      "community": 8,
+      "norm_label": "read_latest_log"
+    },
+    {
+      "label": "analyze_precice_logs",
+      "file_type": "code",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "tool_analyze_precice_logs",
+      "community": 8,
+      "norm_label": "analyze_precice_logs"
+    },
+    {
+      "label": "run_command_in_project",
+      "file_type": "code",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "tool_run_command_in_project",
+      "community": 10,
+      "norm_label": "run_command_in_project"
+    },
+    {
+      "label": "Prefer MCP Tools Over Raw Shell Commands",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "concept_mcp_tools_preferred",
+      "community": 10,
+      "norm_label": "prefer mcp tools over raw shell commands"
+    },
+    {
+      "label": "Backup Required Before Config Changes",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "concept_config_backup_required",
+      "community": 2,
+      "norm_label": "backup required before config changes"
+    },
+    {
+      "label": "graphify Knowledge Graph Workflow",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "concept_graphify_knowledge_graph",
+      "community": 4,
+      "norm_label": "graphify knowledge graph workflow"
+    },
+    {
+      "label": "graphify-out/graph.json",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "file_graphify_out_graph_json",
+      "community": 4,
+      "norm_label": "graphify-out/graph.json"
+    },
+    {
+      "label": "graphify query",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "cmd_graphify_query",
+      "community": 4,
+      "norm_label": "graphify query"
+    },
+    {
+      "label": "graphify path",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "cmd_graphify_path",
+      "community": 4,
+      "norm_label": "graphify path"
+    },
+    {
+      "label": "graphify explain",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "cmd_graphify_explain",
+      "community": 4,
+      "norm_label": "graphify explain"
+    },
+    {
+      "label": "graphify update .",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "cmd_graphify_update",
+      "community": 4,
+      "norm_label": "graphify update ."
+    },
+    {
+      "label": "mcp Python Package",
+      "file_type": "code",
+      "source_file": "requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "dep_mcp",
+      "community": 9,
+      "norm_label": "mcp python package"
+    },
+    {
+      "label": "fastmcp Python Package",
+      "file_type": "code",
+      "source_file": "requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "dep_fastmcp",
+      "community": 9,
+      "norm_label": "fastmcp python package"
+    },
+    {
+      "label": "Pylint GitHub Actions Workflow",
+      "file_type": "code",
+      "source_file": ".github/workflows/pylint.yml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "workflow_pylint_ci",
+      "community": 9,
+      "norm_label": "pylint github actions workflow"
+    },
+    {
+      "label": "Thesis Comparative Analysis",
+      "file_type": "document",
+      "source_file": "document.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": "Vaibhav Dange",
+      "contributor": null,
+      "id": "concept_thesis_comparative_analysis",
+      "community": 3,
+      "norm_label": "thesis comparative analysis"
+    },
+    {
+      "label": "Approach 1: MCP Server",
+      "file_type": "document",
+      "source_file": "document.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": "May 2026",
+      "author": "Vaibhav Dange",
+      "contributor": null,
+      "id": "approach_mcp_server",
+      "community": 3,
+      "norm_label": "approach 1: mcp server"
+    },
+    {
+      "label": "Approach 2: LangChain/LangGraph",
+      "file_type": "document",
+      "source_file": "document.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": "May 2026",
+      "author": "Vaibhav Dange",
+      "contributor": null,
+      "id": "approach_langgraph",
+      "community": 3,
+      "norm_label": "approach 2: langchain/langgraph"
+    },
+    {
+      "label": "Approach 3: Raw Function Calling",
+      "file_type": "document",
+      "source_file": "document.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": "May 2026",
+      "author": "Vaibhav Dange",
+      "contributor": null,
+      "id": "approach_raw_function_calling",
+      "community": 3,
+      "norm_label": "approach 3: raw function calling"
+    },
+    {
+      "label": "graphify Skill",
+      "file_type": "document",
+      "source_file": ".agents/skills/graphify/SKILL.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "skill_graphify",
+      "community": 4,
+      "norm_label": "graphify skill"
+    }
+  ],
+  "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "graphify_detect_json",
+      "target": "precice_ai_graphify_detect_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "graphify_detect_json",
+      "target": "precice_ai_graphify_detect_total_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "graphify_detect_json",
+      "target": "precice_ai_graphify_detect_total_words",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "graphify_detect_json",
+      "target": "precice_ai_graphify_detect_needs_graph",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "graphify_detect_json",
+      "target": "precice_ai_graphify_detect_warning",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "graphify_detect_json",
+      "target": "precice_ai_graphify_detect_skipped_sensitive",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "graphify_detect_json",
+      "target": "precice_ai_graphify_detect_graphifyignore_patterns",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "graphify_detect_json",
+      "target": "precice_ai_graphify_detect_scan_root",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "precice_ai_graphify_detect_files",
+      "target": "precice_ai_graphify_detect_files_code",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "precice_ai_graphify_detect_files",
+      "target": "precice_ai_graphify_detect_files_document",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "precice_ai_graphify_detect_files",
+      "target": "precice_ai_graphify_detect_files_paper",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "precice_ai_graphify_detect_files",
+      "target": "precice_ai_graphify_detect_files_image",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".graphify_detect.json",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "precice_ai_graphify_detect_files",
+      "target": "precice_ai_graphify_detect_files_video",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "server.py",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "server_py",
+      "target": "tools_init_register_all_tools",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "core/paths.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "core_paths_py",
+      "target": "core_paths_get_project_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "core/paths.py",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "core_paths_py",
+      "target": "core_paths_get_precice_config_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "core/paths.py",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "core_paths_get_precice_config_path",
+      "target": "core_paths_get_project_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/config_tools.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "tools_config_tools_py",
+      "target": "core_paths_get_project_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/log_tools.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "tools_log_tools_py",
+      "target": "core_paths_get_project_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/project_tools.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "tools_project_tools_py",
+      "target": "core_paths_get_project_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/config_tools.py",
+      "source_location": "L101",
+      "weight": 1.0,
+      "source": "tools_config_tools_register_config_tools",
+      "target": "core_paths_get_project_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/log_tools.py",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "tools_log_tools_register_log_tools",
+      "target": "core_paths_get_project_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/project_tools.py",
+      "source_location": "L39",
+      "weight": 1.0,
+      "source": "tools_project_tools_register_project_tools",
+      "target": "core_paths_get_project_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/config_tools.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "tools_config_tools_py",
+      "target": "core_paths_get_precice_config_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/config_tools.py",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "tools_config_tools_register_config_tools",
+      "target": "core_paths_get_precice_config_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "core/safety.py",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "core_safety_py",
+      "target": "core_safety_is_command_safe",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "core/safety.py",
+      "source_location": "L73",
+      "weight": 1.0,
+      "source": "core_safety_py",
+      "target": "core_safety_get_allowed_commands",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "core/command_runner.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "core_command_runner_py",
+      "target": "core_safety_is_command_safe",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "core/command_runner.py",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "core_command_runner_run_safe_command",
+      "target": "core_safety_is_command_safe",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "core/command_runner.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "core_command_runner_py",
+      "target": "core_command_runner_run_safe_command",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/config_tools.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "tools_config_tools_py",
+      "target": "core_command_runner_run_safe_command",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/project_tools.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "tools_project_tools_py",
+      "target": "core_command_runner_run_safe_command",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/config_tools.py",
+      "source_location": "L109",
+      "weight": 1.0,
+      "source": "tools_config_tools_register_config_tools",
+      "target": "core_command_runner_run_safe_command",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/project_tools.py",
+      "source_location": "L94",
+      "weight": 1.0,
+      "source": "tools_project_tools_register_project_tools",
+      "target": "core_command_runner_run_safe_command",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/config_tools.py",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "tools_config_tools_py",
+      "target": "tools_config_tools_register_config_tools",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/config_tools.py",
+      "source_location": "L177",
+      "weight": 1.0,
+      "source": "tools_config_tools_py",
+      "target": "tools_config_tools_clean_xml_tag",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/config_tools.py",
+      "source_location": "L186",
+      "weight": 1.0,
+      "source": "tools_config_tools_py",
+      "target": "tools_config_tools_format_list",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "re_exports",
+      "context": "export",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/__init__.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "tools_init_py",
+      "target": "tools_config_tools_py",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/__init__.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "tools_init_py",
+      "target": "tools_config_tools_register_config_tools",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/__init__.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "tools_init_register_all_tools",
+      "target": "tools_config_tools_register_config_tools",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/log_tools.py",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "tools_log_tools_py",
+      "target": "tools_log_tools_register_log_tools",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/log_tools.py",
+      "source_location": "L137",
+      "weight": 1.0,
+      "source": "tools_log_tools_py",
+      "target": "tools_log_tools_find_log_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "re_exports",
+      "context": "export",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/__init__.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "tools_init_py",
+      "target": "tools_log_tools_py",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/__init__.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "tools_init_py",
+      "target": "tools_log_tools_register_log_tools",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/__init__.py",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "tools_init_register_all_tools",
+      "target": "tools_log_tools_register_log_tools",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/project_tools.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "tools_project_tools_py",
+      "target": "tools_project_tools_register_project_tools",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "re_exports",
+      "context": "export",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/__init__.py",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "tools_init_py",
+      "target": "tools_project_tools_py",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/__init__.py",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "tools_init_py",
+      "target": "tools_project_tools_register_project_tools",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/__init__.py",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "tools_init_register_all_tools",
+      "target": "tools_project_tools_register_project_tools",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/__init__.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "tools_init_py",
+      "target": "tools_init_register_all_tools",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "claude_settings_json",
+      "target": "claude_settings_hooks",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "claude_settings_hooks",
+      "target": "claude_settings_hooks_pretooluse",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "vscode_settings_json",
+      "target": "vscode_settings_cspell_ignorewords",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "vscode_settings_json",
+      "target": "vscode_settings_editor_fontfamily",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "vscode_settings_json",
+      "target": "vscode_settings_editor_fontsize",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "vscode_settings_json",
+      "target": "vscode_settings_editor_formatonsave",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".vscode/settings.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "vscode_settings_json",
+      "target": "vscode_settings_workbench_colortheme",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "project_precice_ai",
+      "target": "project_mcp_server"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "project_precice_ai",
+      "target": "dir_test_projects"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.86,
+      "source_file": "document.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "approach_mcp_server",
+      "target": "project_mcp_server"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "tool_inspect_precice_config",
+      "target": "file_precice_config_xml"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "tool_find_precice_config",
+      "target": "file_precice_config_xml"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "tool_check_precice_config",
+      "target": "file_precice_config_xml"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "concept_config_backup_required",
+      "target": "file_precice_config_xml"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "tool_list_precice_projects",
+      "target": "tool_inspect_project_structure"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "tool_inspect_project_structure",
+      "target": "tool_find_precice_config"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "tool_find_precice_config",
+      "target": "tool_inspect_precice_config"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "tool_inspect_precice_config",
+      "target": "tool_summarize_precice_config"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "tool_summarize_precice_config",
+      "target": "tool_check_precice_config"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "tool_list_project_logs",
+      "target": "tool_read_latest_log"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "tool_read_latest_log",
+      "target": "tool_analyze_precice_logs"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "concept_mcp_tools_preferred",
+      "target": "tool_run_command_in_project"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "concept_graphify_knowledge_graph",
+      "target": "file_graphify_out_graph_json"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "concept_graphify_knowledge_graph",
+      "target": "cmd_graphify_query"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "concept_graphify_knowledge_graph",
+      "target": "cmd_graphify_path"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "concept_graphify_knowledge_graph",
+      "target": "cmd_graphify_explain"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "concept_graphify_knowledge_graph",
+      "target": "cmd_graphify_update"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": ".agents/skills/graphify/SKILL.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "skill_graphify",
+      "target": "cmd_graphify_query"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": ".agents/skills/graphify/SKILL.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "skill_graphify",
+      "target": "cmd_graphify_path"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": ".agents/skills/graphify/SKILL.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "skill_graphify",
+      "target": "cmd_graphify_explain"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": ".github/workflows/pylint.yml",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "workflow_pylint_ci",
+      "target": "dep_mcp"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": ".github/workflows/pylint.yml",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "workflow_pylint_ci",
+      "target": "dep_fastmcp"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "document.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "concept_thesis_comparative_analysis",
+      "target": "approach_mcp_server"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "document.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "concept_thesis_comparative_analysis",
+      "target": "approach_langgraph"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "document.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "concept_thesis_comparative_analysis",
+      "target": "approach_raw_function_calling"
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "new_project_tool_sequence",
+      "label": "New Project Tool Order",
+      "nodes": [
+        "tool_list_precice_projects",
+        "tool_inspect_project_structure",
+        "tool_find_precice_config",
+        "tool_inspect_precice_config",
+        "tool_summarize_precice_config",
+        "tool_check_precice_config"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md"
+    },
+    {
+      "id": "log_analysis_tool_sequence",
+      "label": "Log Analysis Tool Order",
+      "nodes": [
+        "tool_list_project_logs",
+        "tool_read_latest_log",
+        "tool_analyze_precice_logs"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md"
+    },
+    {
+      "id": "graphify_navigation_commands",
+      "label": "Graphify Navigation Command Set",
+      "nodes": [
+        "cmd_graphify_query",
+        "cmd_graphify_path",
+        "cmd_graphify_explain",
+        "file_graphify_out_graph_json"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.82,
+      "source_file": "AGENTS.md"
+    }
+  ],
+  "built_at_commit": "5b5ba558af70d8a8d516fea35f50f377d3b0bd02"
+}

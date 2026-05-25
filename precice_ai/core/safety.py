@@ -36,8 +36,7 @@ BLOCKED_PATTERNS = [
 
 
 def is_command_safe(command: str) -> tuple[bool, str]:
-    """
-    Check whether a command is safe to execute.
+    """Check whether a command is safe to execute.
 
     Returns:
         (True, "Allowed") if safe
@@ -71,7 +70,4 @@ def is_command_safe(command: str) -> tuple[bool, str]:
 
 
 def get_allowed_commands() -> list[str]:
-    """
-    Return the list of allowed command prefixes.
-    """
     return ALLOWED_COMMAND_PREFIXES

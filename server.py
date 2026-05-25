@@ -1,13 +1,10 @@
-from mcp.server.fastmcp import FastMCP
+"""Convenience entry point for running the server from the repo root.
 
-from tools import register_all_tools
-
-
-mcp = FastMCP("preCICE AI")
-
-
-register_all_tools(mcp)
-
+For production / pip-installed usage, prefer:
+    python -m precice_ai.server
+    precice-ai-server   (after pip install)
+"""
+from precice_ai.server import main
 
 if __name__ == "__main__":
-    mcp.run()
+    main()

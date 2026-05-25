@@ -24,6 +24,18 @@ When working with multi-physics coupling workflows, most time is spent jumping b
 
 The server currently provides the following MCP tools:
 
+### `kb_ingest_precice_data(docs_pages_limit=20, forum_topics_limit=20, timeout_seconds=20) -> str`
+Fetches content from preCICE documentation and preCICE Discourse forum, then stores it in `kb_store/knowledge_base.json` for retrieval.
+
+### `kb_query_precice(question: str, top_k=5) -> str`
+Queries the locally ingested knowledge base and returns the top matching snippets with source URLs.
+
+### `kb_query_precice_live(question: str, top_k=5, max_age_hours=24) -> str`
+Auto-refreshes the knowledge base from docs/forum when stale, then runs the query.
+
+### `kb_precice_status() -> str`
+Returns KB status, freshness timestamp, and document count.
+
 ### `list_precice_projects() -> list[str]`
 Lists all subdirectories under `test-projects/`.
 
@@ -126,4 +138,3 @@ Add your Claude-specific configuration snippet here when you finalize that integ
 ## License
 
 Add your preferred license (for example, MIT) in a `LICENSE` file.
-

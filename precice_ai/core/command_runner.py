@@ -3,7 +3,7 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-from core.safety import is_command_safe
+from precice_ai.core.safety import is_command_safe
 
 
 def run_safe_command(
@@ -11,11 +11,7 @@ def run_safe_command(
     cwd: Path,
     timeout: int = 60,
 ) -> str:
-    """
-    Run a command safely inside a given working directory.
-
-    The command is checked before execution.
-    """
+    """Run a command safely inside a given working directory."""
     is_safe, reason = is_command_safe(command)
 
     if not is_safe:

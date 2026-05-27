@@ -2,35 +2,26 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
-from core.paths import PROJECTS_DIR, get_project_path
-from core.command_runner import run_safe_command
+from precice_ai.core.paths import get_projects_dir, get_project_path
+from precice_ai.core.command_runner import run_safe_command
 
 
 def register_project_tools(mcp: FastMCP) -> None:
-    """
-    Register project-related MCP tools.
-    """
+    """Register project-related MCP tools."""
 
     @mcp.tool()
     def list_precice_projects() -> list[str]:
-        """
-        List available local preCICE tutorial projects.
-        """
-        if not PROJECTS_DIR.exists():
+        """List available local preCICE tutorial projects."""
+        projects_dir = get_projects_dir()
+        if not projects_dir.exists():
             return []
-
         return sorted(
-            [
-                project.name
-                for project in PROJECTS_DIR.iterdir()
-                if project.is_dir()
-            ]
+            [project.name for project in projects_dir.iterdir() if project.is_dir()]
         )
 
     @mcp.tool()
     def inspect_project_structure(project_name: str, max_depth: int = 3) -> str:
-        """
-        Inspect the folder structure of a preCICE project.
+        """Inspect the folder structure of a preCICE project.
 
         Args:
             project_name: Name of the project inside test-projects.
@@ -42,15 +33,12 @@ def register_project_tools(mcp: FastMCP) -> None:
             return f"Project not found: {project_name}"
 
         lines: list[str] = [f"Project structure for: {project_name}\n"]
-
         base_depth = len(project_path.parts)
 
         for path in sorted(project_path.rglob("*")):
             relative_depth = len(path.parts) - base_depth
-
             if relative_depth > max_depth:
                 continue
-
             indent = "  " * (relative_depth - 1)
             suffix = "/" if path.is_dir() else ""
             lines.append(f"{indent}- {path.name}{suffix}")
@@ -59,9 +47,7 @@ def register_project_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     def find_precice_config(project_name: str) -> str:
-        """
-        Find all precice-config.xml files inside a project.
-        """
+        """Find all precice-config.xml files inside a project."""
         project_path = get_project_path(project_name)
 
         if not project_path.exists():
@@ -73,7 +59,6 @@ def register_project_tools(mcp: FastMCP) -> None:
             return f"No precice-config.xml found in project: {project_name}"
 
         result = ["Found preCICE config file(s):"]
-
         for config_file in config_files:
             result.append(f"- {config_file.relative_to(project_path)}")
 
@@ -81,10 +66,9 @@ def register_project_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     def run_command_in_project(project_name: str, command: str) -> str:
-        """
-        Run a safe command inside a preCICE project.
+        """Run a safe command inside a preCICE project.
 
-        Only whitelisted read/list/test commands are allowed.
+        Only allowlisted read/list/test commands are permitted.
         """
         project_path = get_project_path(project_name)
 

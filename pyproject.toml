@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "precice-ai"
+version = "0.1.0"
+description = "MCP server for preCICE simulation project management"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastmcp>=3.0",
+    "httpx>=0.24",
+    "lxml>=4.9",
+    "typer>=0.9",
+]
+
+[project.scripts]
+precice-ai = "precice_ai.cli.main:app"
+precice-ai-server = "precice_ai.server:main"
+
+[tool.setuptools.packages.find]
+include = ["precice_ai*"]

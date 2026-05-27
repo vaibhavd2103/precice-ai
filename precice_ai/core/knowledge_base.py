@@ -1,23 +1,32 @@
 from __future__ import annotations
 
+import json
+import math
+import os
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-import json
-import math
-import re
 
 import httpx
 from lxml import html
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-KB_DIR = BASE_DIR / "kb_store"
-KB_FILE = KB_DIR / "knowledge_base.json"
+def _get_kb_dir() -> Path:
+    """Return the KB store directory.
+
+    Uses PRECICE_KB_STORE_DIR env var when set (required for global pip
+    installs), otherwise defaults to ~/.precice-ai/kb_store so that the
+    installed package never writes into the source tree.
+    """
+    env = os.environ.get("PRECICE_KB_STORE_DIR")
+    if env:
+        return Path(env).resolve()
+    return Path.home() / ".precice-ai" / "kb_store"
+
 
 DOCS_START_URL = "https://precice.org/"
 FORUM_RECENT_URL = "https://precice.discourse.group/latest.json"
-
 USER_AGENT = "precice-ai-mcp/1.0 (+https://github.com/precice)"
 
 
@@ -40,8 +49,8 @@ class KBDocument:
 
 
 class KnowledgeBaseService:
-    def __init__(self, kb_file: Path = KB_FILE) -> None:
-        self.kb_file = kb_file
+    def __init__(self, kb_file: Path | None = None) -> None:
+        self.kb_file = kb_file or _get_kb_dir() / "knowledge_base.json"
         self.kb_file.parent.mkdir(parents=True, exist_ok=True)
 
     def ingest_precice_sources(
@@ -280,30 +289,24 @@ class KnowledgeBaseService:
     def _read_kb(self) -> dict[str, object] | None:
         if not self.kb_file.exists():
             return None
-
         try:
             data = json.loads(self.kb_file.read_text(encoding="utf-8"))
         except Exception:
             return None
-
         if not isinstance(data, dict):
             return None
-
         return data
 
     def _is_stale(self, payload: dict[str, object] | None, max_age_hours: int) -> bool:
         if not payload:
             return True
-
         updated_at = payload.get("updated_at")
         if not isinstance(updated_at, str):
             return True
-
         try:
             dt = datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
         except ValueError:
             return True
-
         age_hours = (datetime.now(timezone.utc) - dt).total_seconds() / 3600.0
         return age_hours > max_age_hours
 
@@ -311,13 +314,10 @@ class KnowledgeBaseService:
 def _normalize_url(base: str, href: str) -> str | None:
     if href.startswith("javascript:"):
         return None
-
     if href.startswith("http://") or href.startswith("https://"):
         return href
-
     if href.startswith("/"):
         return base.rstrip("/") + href
-
     return base.rstrip("/") + "/" + href
 
 
@@ -342,7 +342,6 @@ def _extract_html_document(raw_html: str, url: str, source: str) -> KBDocument:
 
 
 def _strip_html(value: str) -> str:
-    # Remove HTML tags from Discourse "cooked" content.
     return re.sub(r"<[^>]+>", " ", value).replace("\n", " ").strip()
 
 
@@ -353,22 +352,18 @@ def _tokenize(text: str) -> list[str]:
 def _bm25_like_score(query_terms: list[str], doc_terms: list[str]) -> float:
     if not query_terms or not doc_terms:
         return 0.0
-
     doc_len = len(doc_terms)
     if doc_len == 0:
         return 0.0
-
     tf: dict[str, int] = {}
     for term in doc_terms:
         tf[term] = tf.get(term, 0) + 1
-
     score = 0.0
     for term in query_terms:
         freq = tf.get(term, 0)
         if freq == 0:
             continue
         score += (freq / (freq + 1.2 * (0.25 + 0.75 * (doc_len / 1000.0)))) * (1.0 + math.log1p(freq))
-
     return score
 
 

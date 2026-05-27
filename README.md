@@ -134,6 +134,41 @@ Prints the JSON block to paste into any MCP-compatible config file:
 
 The `setup` command automatically injects `PRECICE_PROJECTS_DIR` into the platform config.
 
+### Knowledge base storage
+
+The knowledge base is stored as a single JSON file **outside the repo** so it is never committed to git:
+
+```
+~/.precice-ai/kb_store/knowledge_base.json
+```
+
+Check its status at any time:
+
+```bash
+# Via terminal
+ls -lh ~/.precice-ai/kb_store/
+
+# Via MCP tool
+kb_precice_status()
+```
+
+To store the KB in a custom location (e.g. inside the project), set `PRECICE_KB_STORE_DIR` in the platform config. For Claude Code, add it to `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "precice-ai": {
+      "command": "python",
+      "args": ["-m", "precice_ai.server"],
+      "env": {
+        "PRECICE_PROJECTS_DIR": "/path/to/your/projects",
+        "PRECICE_KB_STORE_DIR": "/path/to/your/kb_store"
+      }
+    }
+  }
+}
+```
+
 ---
 
 ## MCP tools reference
@@ -147,7 +182,7 @@ The `setup` command automatically injects `PRECICE_PROJECTS_DIR` into the platfo
 | `kb_query_precice_live(question, top_k, max_age_hours)` | Same as above but auto-refreshes the KB if the cache is older than `max_age_hours`. |
 | `kb_precice_status()` | Returns KB freshness timestamp and document count. |
 
-**Typical first use:** call `kb_ingest_precice_data` once to populate the KB, then use `kb_query_precice` for subsequent questions.
+**Typical first use:** `kb_query_precice_live` handles everything automatically — it ingests on first use and re-ingests when the cache is older than 1 hour. The KB is stored at `~/.precice-ai/kb_store/knowledge_base.json` (outside the repo, never committed to git).
 
 ### Project discovery
 

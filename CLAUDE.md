@@ -1,3 +1,9 @@
+## preCICE knowledge base
+
+**Always** call `kb_query_precice_live` before answering any question about preCICE — what it is, how it works, configuration, errors, adapters, coupling schemes, or any comparison. Do not answer from training data alone. The tool auto-ingests on first use and caches results for 1 hour; subsequent calls in the same session are instant.
+
+---
+
 ## graphify (optional)
 
 A knowledge graph of this codebase is available at `graphify-out/` if you have [graphify](https://github.com/Graphify-app/Graphify) installed.

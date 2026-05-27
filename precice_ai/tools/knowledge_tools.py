@@ -32,7 +32,7 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     def kb_query_precice(question: str, top_k: int = 5) -> str:
-        """Query local ingested KB for preCICE-related answers/snippets."""
+        """Query the local KB directly without any cache check. Only use this when you have already confirmed the KB is populated and fresh. Prefer kb_query_precice_live for normal use."""
         try:
             result = kb_service.query(question=question, top_k=top_k)
             return json.dumps(result, indent=2)
@@ -40,8 +40,8 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
             return json.dumps({"status": "error", "message": str(exc)}, indent=2)
 
     @mcp.tool()
-    def kb_query_precice_live(question: str, top_k: int = 5, max_age_hours: int = 24) -> str:
-        """Query KB and auto-refresh from docs/forum if cache is stale."""
+    def kb_query_precice_live(question: str, top_k: int = 5, max_age_hours: int = 1) -> str:
+        """Answer any question about preCICE (docs, forum, FAQs). Use this for ALL preCICE questions. Automatically fetches and caches documentation on first use, then serves from cache. Re-fetches if cache is older than max_age_hours (default 1 hour)."""
         try:
             result = kb_service.query_with_optional_live_refresh(
                 question=question,

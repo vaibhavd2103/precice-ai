@@ -181,11 +181,20 @@ class KnowledgeBaseService:
         payload = self._read_kb()
 
         if self._is_stale(payload, refresh_if_older_than_hours):
-            ingest_result = self.ingest_precice_sources()
-            if ingest_result.get("status") != "ok":
+            ingest_result = self.ingest_precice_sources(
+                docs_pages_limit=10,
+                forum_topics_limit=10,
+            )
+            ingest_status = ingest_result.get("status")
+            # "ok" = fresh data written; "warning" = kept old data — both allow querying.
+            # On hard failure with no existing KB, surface the error.
+            if ingest_status == "error" and not self._read_kb():
                 return {
                     "status": "error",
-                    "message": "Failed to refresh knowledge base before query.",
+                    "message": (
+                        "Could not fetch preCICE docs/forum and no cached KB exists. "
+                        f"Details: {ingest_result.get('message', '')}"
+                    ),
                 }
 
         return self.query(question=question, top_k=top_k)

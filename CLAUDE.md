@@ -1,9 +1,16 @@
-## graphify
+## preCICE knowledge base
 
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+**Always** call `kb_query_precice_live` before answering any question about preCICE — what it is, how it works, configuration, errors, adapters, coupling schemes, or any comparison. Do not answer from training data alone. The tool auto-ingests on first use and caches results for 1 hour; subsequent calls in the same session are instant.
 
-Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+---
+
+## graphify (optional)
+
+A knowledge graph of this codebase is available at `graphify-out/` if you have [graphify](https://github.com/Graphify-app/Graphify) installed.
+
+Rules (only apply when `graphify-out/graph.json` exists):
+- For codebase questions, first run `graphify query "<question>"`. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts.
+- Read `graphify-out/GRAPH_REPORT.md` only for broad architecture review.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+
+If `graphify-out/graph.json` does not exist, skip all graphify commands and navigate the codebase directly.

@@ -222,3 +222,10 @@ __marimo__/
 test-projects/
 
 .codex
+
+# graphify — machine-specific files containing absolute paths
+graphify-out/.graphify_root
+graphify-out/.graphify_python
+graphify-out/manifest.json
+graphify-out/cache/
+kb_store/

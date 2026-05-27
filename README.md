@@ -1,140 +1,299 @@
 # preCICE AI MCP Server
 
-A lightweight Model Context Protocol (MCP) server for exploring and operating local preCICE tutorial projects from AI coding agents.
+A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for exploring and operating local preCICE simulation projects from any AI coding agent.
 
-This project exposes a focused set of tools to:
-- discover local preCICE projects,
-- inspect coupling configuration,
-- run controlled project commands, and
-- read/analyze simulation log files.
+Exposes 17 tools covering project discovery, config inspection, command execution, log analysis, and a local knowledge base built from the preCICE docs and Discourse forum.
 
 ## Why this exists
 
-When working with multi-physics coupling workflows, most time is spent jumping between project folders, XML configs, and logs. This MCP server provides a stable tool layer so assistants like Codex can interact with preCICE projects safely and consistently.
+Working with multi-physics coupling means jumping between project folders, XML configs, and log files constantly. This server gives AI assistants — Claude Code, Cursor, Codex, Windsurf, and others — a safe, stable tool layer so they can read, inspect, and operate preCICE projects without needing raw shell access.
 
-## Features
+---
 
-- Local project discovery under `test-projects/`
-- Direct read access to `precice-config.xml`
-- Controlled command execution with allowlisted command prefixes
-- Recursive log aggregation (`*.log`)
-- Basic log diagnostics (error/warning/failure/convergence/iteration signals)
-
-## MCP Tools
-
-The server currently provides the following MCP tools:
-
-### `kb_ingest_precice_data(docs_pages_limit=20, forum_topics_limit=20, timeout_seconds=20) -> str`
-Fetches content from preCICE documentation and preCICE Discourse forum, then stores it in `kb_store/knowledge_base.json` for retrieval.
-
-### `kb_query_precice(question: str, top_k=5) -> str`
-Queries the locally ingested knowledge base and returns the top matching snippets with source URLs.
-
-### `kb_query_precice_live(question: str, top_k=5, max_age_hours=24) -> str`
-Auto-refreshes the knowledge base from docs/forum when stale, then runs the query.
-
-### `kb_precice_status() -> str`
-Returns KB status, freshness timestamp, and document count.
-
-### `list_precice_projects() -> list[str]`
-Lists all subdirectories under `test-projects/`.
-
-### `inspect_precice_config(project_name: str) -> str`
-Reads `test-projects/<project_name>/precice-config.xml`.
-
-### `run_command_in_project(project_name: str, command: str) -> str`
-Runs a command inside a project directory if it matches one of these allowed prefixes:
-- `ls`
-- `pwd`
-- `cat`
-- `precice-tools`
-- `python3`
-- `./run.sh`
-
-Returns stdout, stderr, and return code.
-
-### `read_project_logs(project_name: str) -> str`
-Finds all `*.log` files under the project and returns their content (truncated per file).
-
-### `analyze_precice_logs(project_name: str) -> str`
-Per log file, reports simple diagnostics and appends the last 30 lines.
-
-## Project Structure
-
-```text
-.
-├── server.py
-├── document.md
-└── test-projects/
-    └── <your-precice-cases>/
-        ├── precice-config.xml
-        └── ... (*.log, run scripts, solver files)
-```
-
-## Setup
-
-### 1. Create and activate a Python environment
+## Installation
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+git clone https://github.com/vaibhavd2103/precice-ai
+cd precice-ai
+python -m venv .venv && source .venv/bin/activate
+pip install -e .
 ```
 
-### 2. Install dependencies
+After installation, the `precice-ai` CLI is available in the venv.
+
+---
+
+## Platform setup
+
+Register the MCP server with your AI coding platform:
 
 ```bash
-pip install mcp
+precice-ai setup claude-code
+precice-ai setup claude-desktop
+precice-ai setup cursor
+precice-ai setup codex
+precice-ai setup windsurf
+precice-ai setup generic   # prints the JSON snippet for manual use
 ```
 
-If your project pins dependencies elsewhere, install from your lock/requirements file instead.
-
-### 3. Start the MCP server
+Pass `--projects-dir` to point at a custom location (defaults to `./test-projects`):
 
 ```bash
-python3 server.py
+precice-ai setup claude-code --projects-dir /path/to/my/precice-cases
 ```
 
-## Using with Codex
+### Check which platforms are detected
 
-Add this server to your MCP client configuration for Codex using your local absolute path:
+```bash
+precice-ai list-platforms
+```
+
+### Claude Code
+
+Writes the server entry to `.mcp.json` in the current directory (project scope, the default):
+
+```bash
+precice-ai setup claude-code
+```
+
+Or to `~/.claude/settings.json` (user scope, available in every project):
+
+```bash
+precice-ai setup claude-code --scope user
+```
+
+After setup, open the directory in Claude Code — the server is picked up automatically.
+
+### Claude Desktop
+
+```bash
+precice-ai setup claude-desktop
+```
+
+Config file locations:
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+- Linux: `~/.config/Claude/claude_desktop_config.json`
+
+Restart Claude Desktop after running setup.
+
+### Cursor
+
+```bash
+precice-ai setup cursor
+```
+
+Writes to `~/.cursor/mcp.json`. Reload the window after setup.
+
+### Windsurf
+
+```bash
+precice-ai setup windsurf
+```
+
+Writes to `~/.codeium/windsurf/mcp_config.json`. Restart Windsurf after setup.
+
+### OpenAI Codex
+
+```bash
+precice-ai setup codex
+```
+
+Writes to `~/.codex/mcp.json`.
+
+### Manual / generic
+
+```bash
+precice-ai setup generic
+```
+
+Prints the JSON block to paste into any MCP-compatible config file:
 
 ```json
 {
   "mcpServers": {
     "precice-ai": {
-      "command": "python3",
-      "args": ["/absolute/path/to/precice-ai/server.py"]
+      "command": "python",
+      "args": ["-m", "precice_ai.server"],
+      "env": {
+        "PRECICE_PROJECTS_DIR": "/absolute/path/to/your/projects"
+      }
     }
   }
 }
 ```
 
-After connecting, Codex can call the tools listed above to inspect and operate your local preCICE tutorial projects.
+---
 
-## Using with Claude Code (Later)
+## Environment variables
 
-Claude Code support can be added with the same server entry pattern once MCP server configuration is enabled in your Claude setup.
+| Variable | Default | Description |
+|---|---|---|
+| `PRECICE_PROJECTS_DIR` | `./test-projects` | Directory scanned by `list_precice_projects` and all project tools. |
+| `PRECICE_KB_STORE_DIR` | `~/.precice-ai/kb_store` | Where the knowledge base JSON is stored. |
 
-Recommended approach:
-- Reuse the same Python environment and `server.py` command.
-- Register this MCP server under a name like `precice-ai`.
-- Validate by calling `list_precice_projects` first.
+The `setup` command automatically injects `PRECICE_PROJECTS_DIR` into the platform config.
 
-Add your Claude-specific configuration snippet here when you finalize that integration.
+---
 
-## Safety Notes
+## MCP tools reference
 
-- `run_command_in_project` is allowlist-based but still executes via shell; keep your project workspace trusted.
-- The command allowlist is prefix-based; tighten it further for production usage.
-- Log parsing is heuristic and should not replace solver-level validation.
+### Knowledge base
 
-## Roadmap
+| Tool | Description |
+|---|---|
+| `kb_ingest_precice_data(docs_pages_limit, forum_topics_limit, timeout_seconds)` | Fetches preCICE docs and Discourse forum, stores results locally. |
+| `kb_query_precice(question, top_k)` | BM25 search over the ingested knowledge base. Returns scored snippets with source URLs. |
+| `kb_query_precice_live(question, top_k, max_age_hours)` | Same as above but auto-refreshes the KB if the cache is older than `max_age_hours`. |
+| `kb_precice_status()` | Returns KB freshness timestamp and document count. |
 
-- Stronger command validation (exact command parsing instead of simple prefix checks)
-- Structured JSON diagnostics for logs
-- Optional project metadata tool (participants, meshes, coupling scheme extraction)
-- Claude Code configuration examples with tested snippets
+**Typical first use:** call `kb_ingest_precice_data` once to populate the KB, then use `kb_query_precice` for subsequent questions.
+
+### Project discovery
+
+| Tool | Description |
+|---|---|
+| `list_precice_projects()` | Lists all directories under `PRECICE_PROJECTS_DIR`. |
+| `inspect_project_structure(project_name, max_depth)` | Prints the folder tree for a project up to `max_depth` levels. |
+| `find_precice_config(project_name)` | Finds all `precice-config.xml` files within a project. |
+
+### Configuration
+
+| Tool | Description |
+|---|---|
+| `inspect_precice_config(project_name)` | Returns the raw contents of `precice-config.xml`. |
+| `summarize_precice_config(project_name)` | Extracts participants, meshes, data items, and coupling scheme tags from the XML. |
+| `check_precice_config(project_name)` | Runs `precice-cli config check` (falls back to `precice-tools check`) and returns the output. |
+| `backup_precice_config(project_name)` | Creates a timestamped backup of `precice-config.xml` in the same directory. |
+| `visualize_precice_config(project_name)` | Runs `precice-cli config visualize` to generate a diagram (requires preCICE CLI). |
+
+### Command execution
+
+| Tool | Description |
+|---|---|
+| `run_command_in_project(project_name, command)` | Runs a command inside the project directory. Only allowlisted prefixes are permitted. |
+
+Allowed command prefixes: `ls`, `pwd`, `cat`, `find`, `grep`, `tail`, `head`, `precice-tools`, `precice-cli`, `python3`, `./run.sh`
+
+### Logs
+
+| Tool | Description |
+|---|---|
+| `list_project_logs(project_name)` | Lists all `*.log` and `*.txt` files in the project. |
+| `read_project_logs(project_name, max_chars_per_file)` | Returns contents of all log files (truncated per file). |
+| `read_latest_log(project_name, lines)` | Returns the last N lines of the most recently modified log file. |
+| `analyze_precice_logs(project_name)` | Scans each log for error/warning/convergence/failure keywords and appends the last 30 lines. |
+
+---
+
+## Usage walkthrough
+
+### 1. Ingest the preCICE knowledge base
+
+```
+kb_ingest_precice_data()
+```
+
+Fetches up to 20 docs pages and 20 forum topics and stores them locally. Run once; subsequent queries use the cache.
+
+### 2. Discover your projects
+
+```
+list_precice_projects()
+```
+
+Returns the names of all case directories under `PRECICE_PROJECTS_DIR`.
+
+### 3. Inspect a project
+
+```
+inspect_project_structure("partitioned-heat-conduction")
+summarize_precice_config("partitioned-heat-conduction")
+```
+
+### 4. Validate the config
+
+```
+check_precice_config("partitioned-heat-conduction")
+```
+
+### 5. Run safe commands
+
+```
+run_command_in_project("partitioned-heat-conduction", "ls -la")
+run_command_in_project("partitioned-heat-conduction", "cat run.sh")
+```
+
+### 6. Read and analyze logs
+
+```
+read_latest_log("partitioned-heat-conduction")
+analyze_precice_logs("partitioned-heat-conduction")
+```
+
+### 7. Ask the knowledge base
+
+```
+kb_query_precice("how does implicit coupling work in preCICE?")
+kb_query_precice_live("what is the waveform relaxation method?")
+```
+
+---
+
+## Project structure
+
+```
+precice_ai/
+├── server.py               # FastMCP server entry point
+├── core/
+│   ├── paths.py            # Project path resolution (env-var aware)
+│   ├── safety.py           # Command allowlist and block patterns
+│   ├── command_runner.py   # Safe subprocess execution
+│   └── knowledge_base.py   # KB ingestion and BM25 query engine
+├── tools/
+│   ├── project_tools.py    # list, inspect, find, run_command
+│   ├── config_tools.py     # inspect, summarize, check, backup, visualize
+│   ├── log_tools.py        # list, read, read_latest, analyze
+│   └── knowledge_tools.py  # kb_ingest, kb_query, kb_query_live, kb_status
+└── cli/
+    ├── main.py             # precice-ai CLI (setup / list-platforms / server)
+    └── platforms/          # Per-platform config writers
+        ├── claude_code.py
+        ├── claude_desktop.py
+        ├── codex.py
+        ├── cursor.py
+        ├── windsurf.py
+        └── generic.py
+server.py                   # Convenience shim for python server.py (local dev)
+pyproject.toml              # Package definition and CLI entry points
+```
+
+---
+
+## Starting the server manually
+
+```bash
+# Via the CLI
+precice-ai server
+
+# Via Python module
+python -m precice_ai.server
+
+# From the repo root (local dev)
+python server.py
+```
+
+---
+
+## Safety notes
+
+- `run_command_in_project` executes via shell with a prefix allowlist. Commands not matching an allowed prefix are rejected before execution.
+- The command allowlist blocks patterns like `rm`, `sudo`, `curl`, `wget`, and fork bombs. Tighten it further in [precice_ai/core/safety.py](precice_ai/core/safety.py).
+- Log parsing is heuristic (keyword search). It does not replace solver-level validation.
+- The knowledge base is stored locally at `~/.precice-ai/kb_store/`. No data leaves your machine except when ingesting from `precice.org` and `precice.discourse.group`.
+
+---
 
 ## License
 
-Add your preferred license (for example, MIT) in a `LICENSE` file.
+MIT — see `LICENSE`.

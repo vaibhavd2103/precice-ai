@@ -270,6 +270,51 @@ pyproject.toml              # Package definition and CLI entry points
 
 ---
 
+## Codebase knowledge graph (optional)
+
+This repo ships a pre-built knowledge graph in `graphify-out/` (`graph.json`, `GRAPH_REPORT.md`). If you have [graphify](https://github.com/Graphify-app/Graphify) installed you can query it directly from your terminal or let your AI assistant use it for faster codebase navigation.
+
+### Install graphify
+
+```bash
+pip install graphify-cli   # or follow the graphify README for your platform
+```
+
+### Query the graph
+
+```bash
+# Ask a question about the codebase
+graphify query "how does the knowledge base ingestion work?"
+
+# Find the relationship between two modules
+graphify path "KnowledgeBaseService" "kb_query_precice"
+
+# Deep-dive on a concept
+graphify explain "BM25 scoring"
+```
+
+### Keep the graph current after code changes
+
+```bash
+graphify update .
+```
+
+This re-indexes only changed files (AST-only pass, no API cost).
+
+### Configure your AI assistant to use the graph
+
+For Claude Code, add this to `.claude/CLAUDE.md` in the project root (already present in this repo):
+
+```
+When graphify-out/graph.json exists, run `graphify query "<question>"` before
+browsing source files. Use `graphify path "<A>" "<B>"` for relationships and
+`graphify explain "<concept>"` for focused concepts.
+```
+
+Graphify is entirely optional — the MCP server and CLI work without it.
+
+---
+
 ## Starting the server manually
 
 ```bash

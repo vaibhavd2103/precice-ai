@@ -6,7 +6,6 @@ import xml.etree.ElementTree as ET
 from mcp.server.fastmcp import FastMCP
 
 from precice_ai.core.paths import get_project_path, get_precice_config_path
-from precice_ai.core.command_runner import run_safe_command
 
 
 def register_config_tools(mcp: FastMCP) -> None:
@@ -77,37 +76,6 @@ Coupling scheme tags:
 """
 
     @mcp.tool()
-    def check_precice_config(project_name: str) -> str:
-        """Run preCICE config check on precice-config.xml."""
-        project_path = get_project_path(project_name)
-        config_file = get_precice_config_path(project_name)
-
-        if not config_file.exists():
-            return f"No precice-config.xml found at: {config_file}"
-
-        command = "precice-cli config check precice-config.xml"
-        result = run_safe_command(command=command, cwd=project_path, timeout=60)
-
-        if "executable is not allowed" in result or "not found" in result.lower():
-            fallback_command = "precice-tools check precice-config.xml"
-            fallback_result = run_safe_command(
-                command=fallback_command, cwd=project_path, timeout=60
-            )
-            return f"""Tried primary command:
-{command}
-
-Primary result:
-{result}
-
-Tried fallback command:
-{fallback_command}
-
-Fallback result:
-{fallback_result}
-"""
-        return result
-
-    @mcp.tool()
     def backup_precice_config(project_name: str) -> str:
         """Create a timestamped backup of precice-config.xml."""
         config_file = get_precice_config_path(project_name)
@@ -118,21 +86,6 @@ Fallback result:
         backup_file = config_file.with_name(f"precice-config.backup-{timestamp}.xml")
         shutil.copy2(config_file, backup_file)
         return f"Backup created: {backup_file}"
-
-    @mcp.tool()
-    def visualize_precice_config(project_name: str) -> str:
-        """Generate a visualization of precice-config.xml if preCICE CLI supports it."""
-        project_path = get_project_path(project_name)
-        config_file = get_precice_config_path(project_name)
-
-        if not config_file.exists():
-            return f"No precice-config.xml found at: {config_file}"
-
-        return run_safe_command(
-            command="precice-cli config visualize precice-config.xml",
-            cwd=project_path,
-            timeout=60,
-        )
 
 
 def _clean_xml_tag(tag: str) -> str:

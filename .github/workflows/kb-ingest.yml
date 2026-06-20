@@ -1,0 +1,76 @@
+name: Build & Publish Knowledge Base Embeddings
+
+on:
+  schedule:
+    - cron: '0 2 * * 0'   # every Sunday at 02:00 UTC
+  workflow_dispatch:        # manual trigger from GitHub UI
+
+permissions:
+  contents: write           # needed to create/delete releases
+
+jobs:
+  build-kb:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout precice-ai (this repo)
+        uses: actions/checkout@v4
+
+      # Sparse-checkout only the content/ folder from the docs repo
+      - name: Checkout precice docs (content/ only)
+        uses: actions/checkout@v4
+        with:
+          repository: precice/precice.github.io
+          path: precice-docs
+          sparse-checkout: |
+            _docs
+            _pages
+            _posts
+          sparse-checkout-cone-mode: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install embedding dependencies
+        run: pip install --quiet openai numpy
+
+      - name: Build embeddings archive
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          python scripts/build_embeddings.py \
+            --docs-dir precice-docs \
+            --api-key "$OPENROUTER_API_KEY" \
+            --base-url "https://openrouter.ai/api/v1" \
+            --model "openai/text-embedding-3-small" \
+            --output kb-embeddings.npz
+
+      - name: Verify archive
+        run: |
+          python - <<'EOF'
+          import numpy as np, json, sys
+          data = np.load("kb-embeddings.npz", allow_pickle=True)
+          chunks = json.loads(data["chunks"].item())
+          emb = data["embeddings"]
+          print(f"chunks={len(chunks)}  embeddings={emb.shape}  dtype={emb.dtype}")
+          if emb.shape[0] != len(chunks):
+              sys.exit("chunk/embedding count mismatch")
+          EOF
+
+      # Delete the previous release (tag + release) so the asset name stays stable.
+      - name: Delete previous release (if exists)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release delete kb-latest --yes --cleanup-tag 2>/dev/null || true
+
+      - name: Create new release with embeddings asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          gh release create kb-latest kb-embeddings.npz \
+            --title "Knowledge Base Embeddings" \
+            --notes "Auto-generated on ${TIMESTAMP} from precice/precice.github.io" \
+            --latest

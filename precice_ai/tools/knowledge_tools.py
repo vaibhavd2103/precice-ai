@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import json
+import os
 
 from mcp.server.fastmcp import FastMCP
 
-from precice_ai.core.knowledge_base import KnowledgeBaseService
+from precice_ai.core.knowledge_base import KnowledgeBaseService, VectorKnowledgeBase
 
 
 kb_service = KnowledgeBaseService()
+vector_kb = VectorKnowledgeBase()
 
 
 def register_knowledge_tools(mcp: FastMCP) -> None:
@@ -15,48 +17,70 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     def kb_ingest_precice_data(
-        docs_pages_limit: int = 20,
-        forum_topics_limit: int = 20,
-        timeout_seconds: int = 20,
+        github_token: str | None = None,
     ) -> str:
-        """Ingest preCICE docs + forum data into local KB storage."""
+        """Download the latest pre-built vector KB embeddings from GitHub Releases.
+
+        The embeddings are built from the preCICE documentation by a scheduled
+        GitHub Action and published as a Release asset. Call this once (or
+        whenever you want a fresher index) — subsequent queries will use the
+        cached local file.
+
+        Optionally pass github_token if the repository is private; otherwise
+        the public release asset is downloaded without authentication.
+        """
+        token = github_token or os.environ.get("GITHUB_TOKEN")
         try:
-            result = kb_service.ingest_precice_sources(
-                docs_pages_limit=docs_pages_limit,
-                forum_topics_limit=forum_topics_limit,
-                timeout_seconds=timeout_seconds,
-            )
+            result = vector_kb.download_from_release(github_token=token)
             return json.dumps(result, indent=2)
         except Exception as exc:
             return json.dumps({"status": "error", "message": str(exc)}, indent=2)
 
     @mcp.tool()
     def kb_query_precice(question: str, top_k: int = 5) -> str:
-        """Query the local KB directly without any cache check. Only use this when you have already confirmed the KB is populated and fresh. Prefer kb_query_precice_live for normal use."""
+        """Semantic search over the local preCICE vector KB.
+
+        Embeds the question via the configured embedding API (set
+        OPENROUTER_API_KEY and optionally EMBEDDING_BASE_URL / EMBEDDING_MODEL)
+        and returns the top_k most similar document chunks.
+
+        Run kb_ingest_precice_data first if the local index is not yet
+        downloaded.
+        """
         try:
-            result = kb_service.query(question=question, top_k=top_k)
+            result = vector_kb.query(question=question, top_k=top_k)
             return json.dumps(result, indent=2)
         except Exception as exc:
             return json.dumps({"status": "error", "message": str(exc)}, indent=2)
 
     @mcp.tool()
-    def kb_query_precice_live(question: str, top_k: int = 5, max_age_hours: int = 1) -> str:
-        """Answer any question about preCICE (docs, forum, FAQs). Use this for ALL preCICE questions. Automatically fetches and caches documentation on first use, then serves from cache. Re-fetches if cache is older than max_age_hours (default 1 hour)."""
+    def kb_query_precice_live(question: str, top_k: int = 5) -> str:
+        """Answer any question about preCICE using semantic search.
+
+        Use this for ALL preCICE questions (configuration, adapters, coupling
+        schemes, errors, etc.). Automatically downloads the vector KB on first
+        use if it is not present locally, then runs cosine-similarity search.
+
+        Requires OPENROUTER_API_KEY (or BLABLADOR_API_KEY) to be set so the
+        question can be embedded at query time.
+        """
         try:
-            result = kb_service.query_with_optional_live_refresh(
-                question=question,
-                top_k=top_k,
-                refresh_if_older_than_hours=max_age_hours,
-            )
+            if not vector_kb.is_available():
+                token = os.environ.get("GITHUB_TOKEN")
+                dl = vector_kb.download_from_release(github_token=token)
+                if dl.get("status") == "error":
+                    return json.dumps(dl, indent=2)
+
+            result = vector_kb.query(question=question, top_k=top_k)
             return json.dumps(result, indent=2)
         except Exception as exc:
             return json.dumps({"status": "error", "message": str(exc)}, indent=2)
 
     @mcp.tool()
     def kb_precice_status() -> str:
-        """Show KB freshness and document count."""
+        """Show the status of the local vector KB (file size, download time, chunk count)."""
         try:
-            result = kb_service.kb_status()
+            result = vector_kb.status()
             return json.dumps(result, indent=2)
         except Exception as exc:
             return json.dumps({"status": "error", "message": str(exc)}, indent=2)

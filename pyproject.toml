@@ -13,6 +13,8 @@ dependencies = [
     "httpx>=0.24",
     "lxml>=4.9",
     "typer>=0.9",
+    "openai>=1.0",
+    "numpy>=1.24",
 ]
 
 [project.scripts]

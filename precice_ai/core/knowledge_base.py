@@ -7,7 +7,6 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-
 import httpx
 from lxml import html
 
@@ -400,3 +399,158 @@ def _dedupe_keep_order(items: list[str]) -> list[str]:
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+# ---------------------------------------------------------------------------
+# Vector knowledge base (semantic search via pre-built embeddings)
+# ---------------------------------------------------------------------------
+
+_RELEASE_TAG = "kb-latest"
+_ASSET_NAME = "kb-embeddings.npz"
+_DEFAULT_GITHUB_REPO = "vaibhavd2103/precice-ai"
+_DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
+_DEFAULT_MODEL = "openai/text-embedding-3-small"
+
+
+class VectorKnowledgeBase:
+    """Downloads a pre-built .npz embeddings archive from a GitHub Release and
+    answers semantic queries by cosine-similarity search (pure NumPy, no server)."""
+
+    def __init__(self, store_dir: Path | None = None) -> None:
+        self._dir = store_dir or _get_kb_dir()
+        self._dir.mkdir(parents=True, exist_ok=True)
+        self._npz_file = self._dir / _ASSET_NAME
+        # In-memory cache — populated lazily on first query
+        self._embeddings: object = None   # np.ndarray (N, D) once loaded
+        self._chunks: list[dict[str, str | int]] | None = None
+
+    # ------------------------------------------------------------------
+    # Ingest: download the release asset
+    # ------------------------------------------------------------------
+
+    def download_from_release(self, github_token: str | None = None) -> dict[str, object]:
+        repo = os.environ.get("PRECICE_AI_GITHUB_REPO", _DEFAULT_GITHUB_REPO)
+        asset_url = (
+            f"https://github.com/{repo}/releases/download/{_RELEASE_TAG}/{_ASSET_NAME}"
+        )
+        headers: dict[str, str] = {}
+        if github_token:
+            headers["Authorization"] = f"token {github_token}"
+
+        try:
+            with httpx.Client(follow_redirects=True, timeout=180, headers=headers) as client:
+                response = client.get(asset_url)
+                response.raise_for_status()
+                self._npz_file.write_bytes(response.content)
+        except httpx.HTTPStatusError as exc:
+            return {
+                "status": "error",
+                "message": f"Failed to download release asset ({exc.response.status_code}): {asset_url}",
+            }
+        except Exception as exc:
+            return {"status": "error", "message": str(exc)}
+
+        # Invalidate in-memory cache so next query reloads from fresh file
+        self._embeddings = None
+        self._chunks = None
+
+        size_mb = self._npz_file.stat().st_size / 1_048_576
+        return {
+            "status": "ok",
+            "npz_file": str(self._npz_file),
+            "size_mb": round(size_mb, 2),
+        }
+
+    def is_available(self) -> bool:
+        return self._npz_file.exists()
+
+    def status(self) -> dict[str, object]:
+        if not self._npz_file.exists():
+            return {"status": "empty", "message": "No embeddings downloaded yet."}
+        mtime = datetime.fromtimestamp(self._npz_file.stat().st_mtime, tz=timezone.utc)
+        size_mb = self._npz_file.stat().st_size / 1_048_576
+        loaded = self._chunks is not None
+        return {
+            "status": "ok",
+            "npz_file": str(self._npz_file),
+            "size_mb": round(size_mb, 2),
+            "downloaded_at": mtime.isoformat().replace("+00:00", "Z"),
+            "chunks_in_memory": len(self._chunks) if loaded else None,
+        }
+
+    # ------------------------------------------------------------------
+    # Query: embed question → cosine similarity
+    # ------------------------------------------------------------------
+
+    def query(self, question: str, top_k: int = 5) -> dict[str, object]:
+        try:
+            import numpy as np
+        except ImportError:
+            return {"status": "error", "message": "numpy is required: pip install numpy"}
+
+        try:
+            from openai import OpenAI
+        except ImportError:
+            return {"status": "error", "message": "openai is required: pip install openai"}
+
+        if not self._npz_file.exists():
+            return {
+                "status": "error",
+                "message": "Vector KB not available. Run kb_ingest_precice_data first.",
+            }
+
+        # Lazy-load embeddings
+        if self._embeddings is None or self._chunks is None:
+            try:
+                data = np.load(self._npz_file, allow_pickle=True)
+                self._embeddings = data["embeddings"].astype(np.float32)
+                self._chunks = json.loads(data["chunks"].item())
+            except Exception as exc:
+                return {"status": "error", "message": f"Failed to load embeddings: {exc}"}
+
+        # Embed the query
+        api_key = (
+            os.environ.get("OPENROUTER_API_KEY")
+            or os.environ.get("BLABLADOR_API_KEY")
+        )
+        if not api_key:
+            return {
+                "status": "error",
+                "message": "Set OPENROUTER_API_KEY (or BLABLADOR_API_KEY) env var for query embedding.",
+            }
+
+        base_url = os.environ.get("EMBEDDING_BASE_URL", _DEFAULT_BASE_URL)
+        model = os.environ.get("EMBEDDING_MODEL", _DEFAULT_MODEL)
+
+        try:
+            client = OpenAI(api_key=api_key, base_url=base_url)
+            resp = client.embeddings.create(input=question, model=model)
+            q_vec = np.array(resp.data[0].embedding, dtype=np.float32)
+        except Exception as exc:
+            return {"status": "error", "message": f"Embedding API error: {exc}"}
+
+        # Cosine similarity
+        emb = self._embeddings  # np.ndarray (N, D)
+        norms = np.linalg.norm(emb, axis=1)
+        q_norm = float(np.linalg.norm(q_vec))
+        if q_norm == 0:
+            return {"status": "error", "message": "Query embedding is a zero vector."}
+
+        scores = (emb @ q_vec) / (norms * q_norm + 1e-9)
+        top_idx = list(map(int, np.argsort(scores)[::-1][:top_k]))
+
+        chunks = self._chunks
+        results = []
+        for i in top_idx:
+            chunk = chunks[i]
+            results.append(
+                {
+                    "score": round(float(scores[i]), 4),
+                    "title": chunk.get("title", ""),
+                    "url": chunk.get("url", ""),
+                    "source": chunk.get("source", "precice-docs"),
+                    "snippet": str(chunk.get("text", ""))[:400],
+                }
+            )
+
+        return {"status": "ok", "results": results}

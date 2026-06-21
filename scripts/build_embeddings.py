@@ -117,15 +117,54 @@ def _embed_batch(
 # Main
 # ---------------------------------------------------------------------------
 
+def _load_config(config_path: Path) -> dict:
+    if not config_path.exists():
+        return {}
+    try:
+        return json.loads(config_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        print(f"Warning: could not read {config_path}: {exc}", file=sys.stderr)
+        return {}
+
+
+def _collect_md_files(docs_dir: Path, config: dict) -> list[Path]:
+    include = config.get("include_subfolders", [])
+    exclude = config.get("exclude_patterns", [])
+
+    if include:
+        files: list[Path] = []
+        for folder in include:
+            folder_path = docs_dir / folder
+            if not folder_path.exists():
+                print(f"  warning: folder not found: {folder_path}", file=sys.stderr)
+                continue
+            files.extend(sorted(folder_path.rglob("*.md")))
+    else:
+        files = sorted(docs_dir.rglob("*.md"))
+
+    if exclude:
+        def _is_excluded(p: Path) -> bool:
+            rel = str(p.relative_to(docs_dir))
+            return any(pat in rel for pat in exclude)
+        files = [f for f in files if not _is_excluded(f)]
+
+    return files
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--docs-dir", required=True, help="Path to content/ folder")
+    parser.add_argument("--docs-dir", required=True, help="Path to checked-out content/ folder")
     parser.add_argument("--api-key", required=True, help="OpenRouter / Blablador API key")
     parser.add_argument("--base-url", default=BASE_URL_DEFAULT, help="OpenAI-compatible base URL")
     parser.add_argument("--model", default=MODEL_DEFAULT, help="Embedding model name")
     parser.add_argument("--output", default="kb-embeddings.npz", help="Output .npz path")
     parser.add_argument("--batch-size", type=int, default=BATCH_SIZE_DEFAULT)
+    parser.add_argument("--config", default="kb_sources.json", help="Path to kb_sources.json")
     args = parser.parse_args()
+
+    config = _load_config(Path(args.config))
+    if config:
+        print(f"Loaded config from {args.config}", file=sys.stderr)
 
     docs_dir = Path(args.docs_dir).resolve()
     if not docs_dir.exists():
@@ -133,7 +172,7 @@ def main() -> None:
 
     client = OpenAI(api_key=args.api_key, base_url=args.base_url)
 
-    md_files = sorted(docs_dir.rglob("*.md"))
+    md_files = _collect_md_files(docs_dir, config)
     print(f"Found {len(md_files)} markdown files in {docs_dir}", file=sys.stderr)
 
     all_chunks: list[dict[str, str | int]] = []

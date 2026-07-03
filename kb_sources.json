@@ -1,0 +1,34 @@
+{
+  "repo": "precice/precice.github.io",
+  "sparse_checkout_paths": [
+    "content/docs",
+    "content/tutorials",
+    "content/community",
+    "content/about"
+  ],
+  "docs_dir": "precice-docs/content",
+  "include_subfolders": [
+    "docs",
+    "tutorials",
+    "community",
+    "about"
+  ],
+  "exclude_patterns": [
+    "docs/_index.md",
+    "docs/docs-meta",
+    "tutorials/_index.md"
+  ],
+  "base_url": "https://precice.org",
+  "notes": {
+    "docs/adapters": "preCICE adapters for OpenFOAM, FEniCS, deal.II, etc.",
+    "docs/configuration": "XML configuration reference and examples",
+    "docs/couple-your-code": "API guide for coupling solvers",
+    "docs/fundamentals": "core concepts: coupling schemes, data mapping, etc.",
+    "docs/installation": "build and install instructions",
+    "docs/running": "how to run coupled simulations",
+    "docs/tooling": "preCICE tools: config visualizer, watchdog, etc.",
+    "tutorials": "step-by-step tutorial walkthroughs",
+    "community": "community resources, publications, events",
+    "about": "project overview and roadmap"
+  }
+}

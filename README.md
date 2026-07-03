@@ -2,7 +2,7 @@
 
 A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for exploring and operating local preCICE simulation projects from any AI coding agent.
 
-Exposes 17 tools covering project discovery, config inspection, command execution, log analysis, and a local knowledge base built from the preCICE docs and Discourse forum.
+Exposes 17 tools covering project discovery, config inspection, command execution, log analysis, and a semantic knowledge base built from the preCICE documentation using vector embeddings.
 
 ## Why this exists
 
@@ -130,16 +130,36 @@ Prints the JSON block to paste into any MCP-compatible config file:
 | Variable | Default | Description |
 |---|---|---|
 | `PRECICE_PROJECTS_DIR` | `./test-projects` | Directory scanned by `list_precice_projects` and all project tools. |
-| `PRECICE_KB_STORE_DIR` | `~/.precice-ai/kb_store` | Where the knowledge base JSON is stored. |
+| `PRECICE_KB_STORE_DIR` | `~/.precice-ai/kb_store` | Where the vector KB archive is stored locally. |
+| `OPENROUTER_API_KEY` | — | **Required for KB queries.** API key used to embed questions at query time. |
+| `EMBEDDING_BASE_URL` | `https://openrouter.ai/api/v1` | OpenAI-compatible base URL for the embedding API. Override to switch providers (e.g. Blablador). |
+| `EMBEDDING_MODEL` | `openai/text-embedding-3-small` | Embedding model name passed to the API. |
+| `PRECICE_AI_GITHUB_REPO` | `vaibhavd2103/precice-ai` | GitHub repo from which `kb_ingest_precice_data` downloads the release asset. |
+| `GITHUB_TOKEN` | — | Optional. Set if the release asset is in a private repo. |
 
-The `setup` command automatically injects `PRECICE_PROJECTS_DIR` into the platform config.
+The `setup` command automatically injects `PRECICE_PROJECTS_DIR` into the platform config. Add the embedding variables manually for KB query support:
+
+```json
+{
+  "mcpServers": {
+    "precice-ai": {
+      "command": "python",
+      "args": ["-m", "precice_ai.server"],
+      "env": {
+        "PRECICE_PROJECTS_DIR": "/path/to/your/projects",
+        "OPENROUTER_API_KEY": "sk-or-..."
+      }
+    }
+  }
+}
+```
 
 ### Knowledge base storage
 
-The knowledge base is stored as a single JSON file **outside the repo** so it is never committed to git:
+The vector KB is stored as a compressed NumPy archive **outside the repo** so it is never committed to git:
 
 ```
-~/.precice-ai/kb_store/knowledge_base.json
+~/.precice-ai/kb_store/kb-embeddings.npz
 ```
 
 Check its status at any time:
@@ -152,23 +172,6 @@ ls -lh ~/.precice-ai/kb_store/
 kb_precice_status()
 ```
 
-To store the KB in a custom location (e.g. inside the project), set `PRECICE_KB_STORE_DIR` in the platform config. For Claude Code, add it to `.mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "precice-ai": {
-      "command": "python",
-      "args": ["-m", "precice_ai.server"],
-      "env": {
-        "PRECICE_PROJECTS_DIR": "/path/to/your/projects",
-        "PRECICE_KB_STORE_DIR": "/path/to/your/kb_store"
-      }
-    }
-  }
-}
-```
-
 ---
 
 ## MCP tools reference
@@ -177,12 +180,12 @@ To store the KB in a custom location (e.g. inside the project), set `PRECICE_KB_
 
 | Tool | Description |
 |---|---|
-| `kb_ingest_precice_data(docs_pages_limit, forum_topics_limit, timeout_seconds)` | Fetches preCICE docs and Discourse forum, stores results locally. |
-| `kb_query_precice(question, top_k)` | BM25 search over the ingested knowledge base. Returns scored snippets with source URLs. |
-| `kb_query_precice_live(question, top_k, max_age_hours)` | Same as above but auto-refreshes the KB if the cache is older than `max_age_hours`. |
-| `kb_precice_status()` | Returns KB freshness timestamp and document count. |
+| `kb_ingest_precice_data(github_token?)` | Downloads the latest pre-built embeddings archive from the GitHub Release (`kb-latest`). Run once to populate the local index. |
+| `kb_query_precice(question, top_k)` | Semantic search over the local vector KB. Embeds the question and returns the top-k most similar doc chunks with source URLs and scores. |
+| `kb_query_precice_live(question, top_k)` | Same as above but auto-downloads the archive if it is not yet present locally. Use this for all preCICE questions. |
+| `kb_precice_status()` | Returns the local archive size, download timestamp, and chunk count. |
 
-**Typical first use:** `kb_query_precice_live` handles everything automatically — it ingests on first use and re-ingests when the cache is older than 1 hour. The KB is stored at `~/.precice-ai/kb_store/knowledge_base.json` (outside the repo, never committed to git).
+**Typical first use:** `kb_query_precice_live` handles everything — it downloads the archive on first use and runs semantic search. Requires `OPENROUTER_API_KEY` (or `BLABLADOR_API_KEY`) to embed the question at query time.
 
 ### Project discovery
 
@@ -223,13 +226,13 @@ Allowed command prefixes: `ls`, `pwd`, `cat`, `find`, `grep`, `tail`, `head`, `p
 
 ## Usage walkthrough
 
-### 1. Ingest the preCICE knowledge base
+### 1. Download the knowledge base
 
 ```
 kb_ingest_precice_data()
 ```
 
-Fetches up to 20 docs pages and 20 forum topics and stores them locally. Run once; subsequent queries use the cache.
+Downloads the pre-built vector embeddings archive from the GitHub Release. Run once; queries use the local cache until you explicitly refresh.
 
 ### 2. Discover your projects
 
@@ -269,9 +272,88 @@ analyze_precice_logs("partitioned-heat-conduction")
 ### 7. Ask the knowledge base
 
 ```
-kb_query_precice("how does implicit coupling work in preCICE?")
-kb_query_precice_live("what is the waveform relaxation method?")
+kb_query_precice_live("how does implicit coupling work in preCICE?")
+kb_query_precice_live("what adapters does preCICE support?")
 ```
+
+Both calls embed the question via the configured embedding API and return the most semantically similar chunks from the preCICE documentation.
+
+---
+
+## Vector knowledge base
+
+### How it works
+
+```
+GitHub Action (weekly / manual)
+  └── checkout precice/precice.github.io
+        └── walk content/ (docs, tutorials, community, about)
+              └── chunk each .md file (~450 words, 50-word overlap)
+                    └── embed chunks via OpenRouter API
+                          └── save kb-embeddings.npz → publish as GitHub Release (kb-latest)
+
+MCP tool: kb_query_precice_live(question)
+  └── download kb-embeddings.npz from kb-latest release  (first use only)
+        └── embed question via OpenRouter API
+              └── cosine similarity search (NumPy, no server)
+                    └── return top-k chunks with title, url, score, snippet
+```
+
+The embeddings archive (`kb-embeddings.npz`) is stored locally at `~/.precice-ai/kb_store/` and loaded into memory on first query. No vector database server is required.
+
+### Controlling what gets indexed
+
+Edit [`kb_sources.json`](kb_sources.json) at the repo root to control which folders are indexed and which files are skipped:
+
+```json
+{
+  "include_subfolders": ["docs", "tutorials", "community", "about"],
+  "exclude_patterns": ["docs/_index.md", "docs/docs-meta", "tutorials/_index.md"]
+}
+```
+
+The GitHub Action reads this file on every run — no changes to the workflow or build script are needed.
+
+### Refreshing the knowledge base
+
+**Automatic:** The Action runs every Sunday at 02:00 UTC. Any merged doc changes are picked up automatically.
+
+**Manual trigger (GitHub UI):**
+Actions → "Build & Publish Knowledge Base Embeddings" → "Run workflow"
+
+**Manual trigger (CLI):**
+```bash
+gh workflow run kb-ingest.yml --repo vaibhavd2103/precice-ai
+```
+
+After the Action completes, the next call to any `kb_query_*` tool will download the new archive automatically (on first query after deletion of the old local file), or force a re-download explicitly:
+
+```bash
+# Delete local cache to force re-download on next query
+rm ~/.precice-ai/kb_store/kb-embeddings.npz
+```
+
+Or call `kb_ingest_precice_data()` from the MCP tool to re-download immediately.
+
+### Switching embedding providers
+
+To switch from OpenRouter to Blablador (or any OpenAI-compatible provider), set these env vars in your MCP config — no code changes required:
+
+| Variable | OpenRouter | Blablador |
+|---|---|---|
+| `OPENROUTER_API_KEY` / `BLABLADOR_API_KEY` | `sk-or-...` | your Blablador key |
+| `EMBEDDING_BASE_URL` | `https://openrouter.ai/api/v1` | `https://helmholtz-blablador.fz-juelich.de:8000/v1` |
+| `EMBEDDING_MODEL` | `openai/text-embedding-3-small` | `alias-embeddings` |
+
+Also update `OPENROUTER_API_KEY` → `BLABLADOR_API_KEY` in the `OPENROUTER_API_KEY` GitHub Secret when rebuilding the index with Blablador.
+
+### Required GitHub secret
+
+Add this secret in **Settings → Secrets and variables → Actions → New repository secret** before running the Action:
+
+| Secret | Value |
+|---|---|
+| `OPENROUTER_API_KEY` | Your OpenRouter API key from openrouter.ai/keys |
 
 ---
 
@@ -284,7 +366,7 @@ precice_ai/
 │   ├── paths.py            # Project path resolution (env-var aware)
 │   ├── safety.py           # Command allowlist and block patterns
 │   ├── command_runner.py   # Safe subprocess execution
-│   └── knowledge_base.py   # KB ingestion and BM25 query engine
+│   └── knowledge_base.py   # VectorKnowledgeBase (download, cosine search)
 ├── tools/
 │   ├── project_tools.py    # list, inspect, find, run_command
 │   ├── config_tools.py     # inspect, summarize, check, backup, visualize
@@ -299,6 +381,11 @@ precice_ai/
         ├── cursor.py
         ├── windsurf.py
         └── generic.py
+scripts/
+└── build_embeddings.py     # Chunks docs, calls embedding API, saves .npz
+.github/workflows/
+└── kb-ingest.yml           # Scheduled Action: build embeddings → GitHub Release
+kb_sources.json             # Controls which doc folders/files get indexed
 server.py                   # Convenience shim for python server.py (local dev)
 pyproject.toml              # Package definition and CLI entry points
 ```
@@ -370,7 +457,7 @@ python server.py
 - `run_command_in_project` executes via shell with a prefix allowlist. Commands not matching an allowed prefix are rejected before execution.
 - The command allowlist blocks patterns like `rm`, `sudo`, `curl`, `wget`, and fork bombs. Tighten it further in [precice_ai/core/safety.py](precice_ai/core/safety.py).
 - Log parsing is heuristic (keyword search). It does not replace solver-level validation.
-- The knowledge base is stored locally at `~/.precice-ai/kb_store/`. No data leaves your machine except when ingesting from `precice.org` and `precice.discourse.group`.
+- The vector KB archive is stored locally at `~/.precice-ai/kb_store/kb-embeddings.npz`. At query time, the question text is sent to the configured embedding API (OpenRouter or Blablador) to produce a vector — no document content leaves your machine.
 
 ---
 

@@ -1,14 +1,14 @@
 {
-    "cSpell.ignoreWords": [
-        "CICE",
-        "precice",
-        "vaibhav",
-        "preCICE",
-        "graphify",
-        "pylint"
-    ],
-    "editor.fontFamily": "JetBrains Mono",
-    "editor.fontSize": 16,
-    "editor.formatOnSave": true,
-    "workbench.colorTheme": "GitHub Light"
+  "cSpell.ignoreWords": [
+    "CICE",
+    "precice",
+    "vaibhav",
+    "preCICE",
+    "graphify",
+    "pylint"
+  ],
+  "editor.fontFamily": "JetBrains Mono",
+  "editor.fontSize": 16,
+  "editor.formatOnSave": true,
+  "workbench.colorTheme": "One Dark Pro Night Flat"
 }

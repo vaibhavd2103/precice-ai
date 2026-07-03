@@ -16,16 +16,17 @@ jobs:
       - name: Checkout precice-ai (this repo)
         uses: actions/checkout@v4
 
-      # Sparse-checkout only the content/ folder from the docs repo
+      # Sparse-checkout only the indexed content folders (see kb_sources.json)
       - name: Checkout precice docs (content/ only)
         uses: actions/checkout@v4
         with:
           repository: precice/precice.github.io
           path: precice-docs
           sparse-checkout: |
-            _docs
-            _pages
-            _posts
+            content/docs
+            content/tutorials
+            content/community
+            content/about
           sparse-checkout-cone-mode: false
 
       - name: Set up Python 3.12
@@ -41,7 +42,8 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
           python scripts/build_embeddings.py \
-            --docs-dir precice-docs \
+            --docs-dir precice-docs/content \
+            --config kb_sources.json \
             --api-key "$OPENROUTER_API_KEY" \
             --base-url "https://openrouter.ai/api/v1" \
             --model "openai/text-embedding-3-small" \

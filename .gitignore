@@ -229,3 +229,9 @@ graphify-out/.graphify_python
 graphify-out/manifest.json
 graphify-out/cache/
 kb_store/
+
+
+.vscode/settings.json
+.venv/
+
+out.json

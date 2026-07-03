@@ -228,6 +228,9 @@ graphify-out/.graphify_root
 graphify-out/.graphify_python
 graphify-out/manifest.json
 graphify-out/cache/
+# graphify — human/session-only artifacts (not useful as LLM context)
+graphify-out/graph.html
+graphify-out/cost.json
 kb_store/
 
 

@@ -1,34 +1,71 @@
 {
-  "repo": "precice/precice.github.io",
-  "sparse_checkout_paths": [
-    "content/docs",
-    "content/tutorials",
-    "content/community",
-    "content/about"
-  ],
-  "docs_dir": "precice-docs/content",
-  "include_subfolders": [
-    "docs",
-    "tutorials",
-    "community",
-    "about"
-  ],
-  "exclude_patterns": [
-    "docs/_index.md",
-    "docs/docs-meta",
-    "tutorials/_index.md"
-  ],
   "base_url": "https://precice.org",
-  "notes": {
-    "docs/adapters": "preCICE adapters for OpenFOAM, FEniCS, deal.II, etc.",
-    "docs/configuration": "XML configuration reference and examples",
-    "docs/couple-your-code": "API guide for coupling solvers",
-    "docs/fundamentals": "core concepts: coupling schemes, data mapping, etc.",
-    "docs/installation": "build and install instructions",
-    "docs/running": "how to run coupled simulations",
-    "docs/tooling": "preCICE tools: config visualizer, watchdog, etc.",
-    "tutorials": "step-by-step tutorial walkthroughs",
-    "community": "community resources, publications, events",
-    "about": "project overview and roadmap"
+  "categories": {
+    "about": {
+      "description": "project overview, roadmap, adopters",
+      "sources": [
+        {
+          "repo": "precice/precice.github.io",
+          "checkout_path": "content/about",
+          "docs_subdir": "content/about"
+        }
+      ],
+      "exclude_patterns": []
+    },
+    "community": {
+      "description": "community resources, publications, events",
+      "sources": [
+        {
+          "repo": "precice/precice.github.io",
+          "checkout_path": "content/community",
+          "docs_subdir": "content/community"
+        }
+      ],
+      "exclude_patterns": []
+    },
+    "documentation": {
+      "description": "XML configuration reference, fundamentals, adapters, installation, tooling",
+      "sources": [
+        {
+          "repo": "precice/precice.github.io",
+          "checkout_path": "content/docs",
+          "docs_subdir": "content/docs"
+        },
+        {
+          "repo": "precice/precice",
+          "checkout_path": "docs",
+          "docs_subdir": "docs",
+          "branch": "develop"
+        }
+      ],
+      "exclude_patterns": [
+        "docs/_index.md",
+        "docs/docs-meta"
+      ]
+    },
+    "tutorials": {
+      "description": "step-by-step tutorial walkthroughs and tutorial case READMEs",
+      "sources": [
+        {
+          "repo": "precice/precice.github.io",
+          "checkout_path": "content/tutorials",
+          "docs_subdir": "content/tutorials"
+        },
+        {
+          "repo": "precice/tutorials",
+          "checkout_path": "",
+          "docs_subdir": "",
+          "branch": "develop"
+        }
+      ],
+      "exclude_patterns": [
+        "tutorials/_index.md"
+      ]
+    },
+    "forum": {
+      "description": "recent precice.discourse.group topics",
+      "type": "discourse",
+      "forum_url": "https://precice.discourse.group"
+    }
   }
 }

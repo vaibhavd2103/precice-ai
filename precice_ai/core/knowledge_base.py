@@ -406,83 +406,114 @@ def _now_iso() -> str:
 # ---------------------------------------------------------------------------
 
 _RELEASE_TAG = "kb-latest"
-_ASSET_NAME = "kb-embeddings.npz"
 _DEFAULT_GITHUB_REPO = "vaibhavd2103/precice-ai"
 _DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
 _DEFAULT_MODEL = "openai/text-embedding-3-small"
 
+# Must match the category keys in kb_sources.json and the asset names the
+# kb-ingest.yml workflow uploads (kb-embeddings-<category>.npz), one per
+# category, so a changed category can be re-fetched without touching the rest.
+CATEGORIES = ["about", "community", "documentation", "tutorials", "forum"]
+
+
+def _asset_name(category: str) -> str:
+    return f"kb-embeddings-{category}.npz"
+
 
 class VectorKnowledgeBase:
-    """Downloads a pre-built .npz embeddings archive from a GitHub Release and
-    answers semantic queries by cosine-similarity search (pure NumPy, no server)."""
+    """Downloads pre-built per-category .npz embedding archives from a GitHub
+    Release and answers semantic queries by cosine-similarity search (pure
+    NumPy, no server). Each category can be refreshed independently."""
 
     def __init__(self, store_dir: Path | None = None) -> None:
         self._dir = store_dir or _get_kb_dir()
         self._dir.mkdir(parents=True, exist_ok=True)
-        self._npz_file = self._dir / _ASSET_NAME
-        # In-memory cache — populated lazily on first query
-        self._embeddings: object = None   # np.ndarray (N, D) once loaded
-        self._chunks: list[dict[str, str | int]] | None = None
+        self._npz_files = {cat: self._dir / _asset_name(cat) for cat in CATEGORIES}
+        # In-memory cache — populated lazily per category on first query
+        self._embeddings: dict[str, object] = {}   # category -> np.ndarray (N, D)
+        self._chunks: dict[str, list[dict[str, str | int]]] = {}
 
     # ------------------------------------------------------------------
-    # Ingest: download the release asset
+    # Ingest: download release assets, one per category
     # ------------------------------------------------------------------
 
-    def download_from_release(self, github_token: str | None = None) -> dict[str, object]:
+    def download_from_release(
+        self, github_token: str | None = None, category: str | None = None
+    ) -> dict[str, object]:
+        categories = [category] if category else CATEGORIES
         repo = os.environ.get("PRECICE_AI_GITHUB_REPO", _DEFAULT_GITHUB_REPO)
-        asset_url = (
-            f"https://github.com/{repo}/releases/download/{_RELEASE_TAG}/{_ASSET_NAME}"
-        )
         headers: dict[str, str] = {}
         if github_token:
             headers["Authorization"] = f"token {github_token}"
 
-        try:
-            with httpx.Client(follow_redirects=True, timeout=180, headers=headers) as client:
-                response = client.get(asset_url)
-                response.raise_for_status()
-                self._npz_file.write_bytes(response.content)
-        except httpx.HTTPStatusError as exc:
-            return {
-                "status": "error",
-                "message": f"Failed to download release asset ({exc.response.status_code}): {asset_url}",
-            }
-        except Exception as exc:
-            return {"status": "error", "message": str(exc)}
+        per_category: dict[str, object] = {}
+        any_ok = False
+        with httpx.Client(follow_redirects=True, timeout=180, headers=headers) as client:
+            for cat in categories:
+                asset_url = (
+                    f"https://github.com/{repo}/releases/download/{_RELEASE_TAG}/{_asset_name(cat)}"
+                )
+                try:
+                    response = client.get(asset_url)
+                    response.raise_for_status()
+                    self._npz_files[cat].write_bytes(response.content)
+                except httpx.HTTPStatusError as exc:
+                    per_category[cat] = {
+                        "status": "error",
+                        "message": f"Failed to download release asset ({exc.response.status_code}): {asset_url}",
+                    }
+                    continue
+                except Exception as exc:
+                    per_category[cat] = {"status": "error", "message": str(exc)}
+                    continue
 
-        # Invalidate in-memory cache so next query reloads from fresh file
-        self._embeddings = None
-        self._chunks = None
+                # Invalidate in-memory cache so next query reloads from fresh file
+                self._embeddings.pop(cat, None)
+                self._chunks.pop(cat, None)
+                any_ok = True
+                size_mb = self._npz_files[cat].stat().st_size / 1_048_576
+                per_category[cat] = {
+                    "status": "ok",
+                    "npz_file": str(self._npz_files[cat]),
+                    "size_mb": round(size_mb, 2),
+                }
 
-        size_mb = self._npz_file.stat().st_size / 1_048_576
         return {
-            "status": "ok",
-            "npz_file": str(self._npz_file),
-            "size_mb": round(size_mb, 2),
+            "status": "ok" if any_ok else "error",
+            "categories": per_category,
         }
 
-    def is_available(self) -> bool:
-        return self._npz_file.exists()
+    def is_available(self, category: str | None = None) -> bool:
+        if category:
+            return self._npz_files[category].exists()
+        return any(f.exists() for f in self._npz_files.values())
 
     def status(self) -> dict[str, object]:
-        if not self._npz_file.exists():
-            return {"status": "empty", "message": "No embeddings downloaded yet."}
-        mtime = datetime.fromtimestamp(self._npz_file.stat().st_mtime, tz=timezone.utc)
-        size_mb = self._npz_file.stat().st_size / 1_048_576
-        loaded = self._chunks is not None
-        return {
-            "status": "ok",
-            "npz_file": str(self._npz_file),
-            "size_mb": round(size_mb, 2),
-            "downloaded_at": mtime.isoformat().replace("+00:00", "Z"),
-            "chunks_in_memory": len(self._chunks) if loaded else None,
-        }
+        categories: dict[str, object] = {}
+        for cat, npz_file in self._npz_files.items():
+            if not npz_file.exists():
+                categories[cat] = {"status": "empty", "message": "No embeddings downloaded yet."}
+                continue
+            mtime = datetime.fromtimestamp(npz_file.stat().st_mtime, tz=timezone.utc)
+            size_mb = npz_file.stat().st_size / 1_048_576
+            loaded = cat in self._chunks
+            categories[cat] = {
+                "status": "ok",
+                "npz_file": str(npz_file),
+                "size_mb": round(size_mb, 2),
+                "downloaded_at": mtime.isoformat().replace("+00:00", "Z"),
+                "chunks_in_memory": len(self._chunks[cat]) if loaded else None,
+            }
+
+        if not any(npz_file.exists() for npz_file in self._npz_files.values()):
+            return {"status": "empty", "message": "No embeddings downloaded yet.", "categories": categories}
+        return {"status": "ok", "categories": categories}
 
     # ------------------------------------------------------------------
-    # Query: embed question → cosine similarity
+    # Query: embed question → cosine similarity, merged across categories
     # ------------------------------------------------------------------
 
-    def query(self, question: str, top_k: int = 5) -> dict[str, object]:
+    def query(self, question: str, top_k: int = 5, category: str | None = None) -> dict[str, object]:
         try:
             import numpy as np
         except ImportError:
@@ -493,20 +524,23 @@ class VectorKnowledgeBase:
         except ImportError:
             return {"status": "error", "message": "openai is required: pip install openai"}
 
-        if not self._npz_file.exists():
+        categories = [category] if category else CATEGORIES
+        available = [cat for cat in categories if self._npz_files[cat].exists()]
+        if not available:
             return {
                 "status": "error",
                 "message": "Vector KB not available. Run kb_ingest_precice_data first.",
             }
 
-        # Lazy-load embeddings
-        if self._embeddings is None or self._chunks is None:
-            try:
-                data = np.load(self._npz_file, allow_pickle=True)
-                self._embeddings = data["embeddings"].astype(np.float32)
-                self._chunks = json.loads(data["chunks"].item())
-            except Exception as exc:
-                return {"status": "error", "message": f"Failed to load embeddings: {exc}"}
+        # Lazy-load embeddings for any category not yet cached in memory
+        for cat in available:
+            if cat not in self._embeddings or cat not in self._chunks:
+                try:
+                    data = np.load(self._npz_files[cat], allow_pickle=True)
+                    self._embeddings[cat] = data["embeddings"].astype(np.float32)
+                    self._chunks[cat] = json.loads(data["chunks"].item())
+                except Exception as exc:
+                    return {"status": "error", "message": f"Failed to load embeddings for {cat}: {exc}"}
 
         # Embed the query
         api_key = (
@@ -529,17 +563,20 @@ class VectorKnowledgeBase:
         except Exception as exc:
             return {"status": "error", "message": f"Embedding API error: {exc}"}
 
-        # Cosine similarity
-        emb = self._embeddings  # np.ndarray (N, D)
-        norms = np.linalg.norm(emb, axis=1)
         q_norm = float(np.linalg.norm(q_vec))
         if q_norm == 0:
             return {"status": "error", "message": "Query embedding is a zero vector."}
 
+        # Merge embeddings/chunks across all requested categories, then rank globally
+        emb = np.concatenate([self._embeddings[cat] for cat in available], axis=0)
+        chunks: list[dict[str, str | int]] = []
+        for cat in available:
+            chunks.extend(self._chunks[cat])
+
+        norms = np.linalg.norm(emb, axis=1)
         scores = (emb @ q_vec) / (norms * q_norm + 1e-9)
         top_idx = list(map(int, np.argsort(scores)[::-1][:top_k]))
 
-        chunks = self._chunks
         results = []
         for i in top_idx:
             chunk = chunks[i]
@@ -549,6 +586,7 @@ class VectorKnowledgeBase:
                     "title": chunk.get("title", ""),
                     "url": chunk.get("url", ""),
                     "source": chunk.get("source", "precice-docs"),
+                    "category": chunk.get("category", ""),
                     "snippet": str(chunk.get("text", ""))[:400],
                 }
             )

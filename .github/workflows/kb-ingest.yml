@@ -6,7 +6,10 @@ on:
   workflow_dispatch:        # manual trigger from GitHub UI
 
 permissions:
-  contents: write           # needed to create/delete releases
+  contents: write           # needed to create/upload releases and commit kb_state.json
+
+env:
+  GIT_CATEGORIES: "about community documentation tutorials"
 
 jobs:
   build-kb:
@@ -15,13 +18,17 @@ jobs:
     steps:
       - name: Checkout precice-ai (this repo)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # Sparse-checkout only the indexed content folders (see kb_sources.json)
-      - name: Checkout precice docs (content/ only)
+      # Full history is needed so `git log -- <path>` can find the latest
+      # commit that touched each category's folder.
+      - name: Checkout precice.github.io (content/ only)
         uses: actions/checkout@v4
         with:
           repository: precice/precice.github.io
           path: precice-docs
+          fetch-depth: 0
           sparse-checkout: |
             content/docs
             content/tutorials
@@ -29,50 +36,168 @@ jobs:
             content/about
           sparse-checkout-cone-mode: false
 
+      - name: Checkout precice/precice (docs/ only)
+        uses: actions/checkout@v4
+        with:
+          repository: precice/precice
+          ref: develop
+          path: precice-core
+          fetch-depth: 0
+          sparse-checkout: |
+            docs
+          sparse-checkout-cone-mode: false
+
+      - name: Checkout precice/tutorials
+        uses: actions/checkout@v4
+        with:
+          repository: precice/tutorials
+          ref: develop
+          path: precice-tutorials-repo
+          fetch-depth: 0
+
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Install embedding dependencies
-        run: pip install --quiet openai numpy
+      - name: Install dependencies
+        run: pip install --quiet openai numpy httpx
 
-      - name: Build embeddings archive
+      - name: Determine which categories changed
+        id: diff
+        env:
+          CHECKOUT_DIRS: >-
+            precice/precice.github.io=precice-docs
+            precice/precice=precice-core
+            precice/tutorials=precice-tutorials-repo
+        run: |
+          set -euo pipefail
+          changed=""
+          : > kb_signatures.txt
+          for category in $GIT_CATEGORIES; do
+            args=""
+            for pair in $CHECKOUT_DIRS; do args="$args --checkout-dir $pair"; done
+            sig=$(python scripts/kb_state.py category-signature --config kb_sources.json --category "$category" $args)
+            echo "  $category signature: $sig"
+            if python scripts/kb_state.py check --state-file kb_state.json --category "$category" --signature "$sig"; then
+              echo "  -> stale, will rebuild"
+              changed="$changed $category"
+              echo "$category=$sig" >> kb_signatures.txt
+            else
+              echo "  -> unchanged, skipping"
+            fi
+          done
+
+          forum_sig=$(python scripts/kb_state.py forum-sig --url https://precice.discourse.group)
+          echo "  forum signature: $forum_sig"
+          if python scripts/kb_state.py check --state-file kb_state.json --category forum --signature "$forum_sig"; then
+            echo "  -> stale, will rebuild"
+            changed="$changed forum"
+            echo "forum=$forum_sig" >> kb_signatures.txt
+          else
+            echo "  -> unchanged, skipping"
+          fi
+
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+
+      - name: Build changed Markdown categories
+        if: steps.diff.outputs.changed != ''
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          CHANGED: ${{ steps.diff.outputs.changed }}
+          CHECKOUT_DIRS: >-
+            precice/precice.github.io=precice-docs
+            precice/precice=precice-core
+            precice/tutorials=precice-tutorials-repo
+        run: |
+          set -euo pipefail
+          for category in $CHANGED; do
+            if [ "$category" = "forum" ]; then
+              continue
+            fi
+            args=""
+            for pair in $CHECKOUT_DIRS; do args="$args --checkout-dir $pair"; done
+            sources_json=$(python scripts/render_sources_json.py --config kb_sources.json --category "$category" $args)
+            echo "Building category: $category"
+            python scripts/build_embeddings.py \
+              --category "$category" \
+              --sources-json "$sources_json" \
+              --api-key "$OPENROUTER_API_KEY" \
+              --base-url "https://openrouter.ai/api/v1" \
+              --model "openai/text-embedding-3-small" \
+              --output "kb-embeddings-$category.npz"
+          done
+
+      - name: Build forum category
+        if: contains(steps.diff.outputs.changed, 'forum')
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
-          python scripts/build_embeddings.py \
-            --docs-dir precice-docs/content \
-            --config kb_sources.json \
+          python scripts/build_forum_embeddings.py \
+            --forum-url "https://precice.discourse.group" \
             --api-key "$OPENROUTER_API_KEY" \
             --base-url "https://openrouter.ai/api/v1" \
             --model "openai/text-embedding-3-small" \
-            --output kb-embeddings.npz
+            --output "kb-embeddings-forum.npz"
 
-      - name: Verify archive
+      - name: Verify built archives
+        if: steps.diff.outputs.changed != ''
+        env:
+          CHANGED: ${{ steps.diff.outputs.changed }}
         run: |
-          python - <<'EOF'
+          set -euo pipefail
+          for category in $CHANGED; do
+            python - "$category" <<'EOF'
           import numpy as np, json, sys
-          data = np.load("kb-embeddings.npz", allow_pickle=True)
+          category = sys.argv[1]
+          data = np.load(f"kb-embeddings-{category}.npz", allow_pickle=True)
           chunks = json.loads(data["chunks"].item())
           emb = data["embeddings"]
-          print(f"chunks={len(chunks)}  embeddings={emb.shape}  dtype={emb.dtype}")
+          print(f"{category}: chunks={len(chunks)} embeddings={emb.shape} dtype={emb.dtype}")
           if emb.shape[0] != len(chunks):
-              sys.exit("chunk/embedding count mismatch")
+              sys.exit(f"{category}: chunk/embedding count mismatch")
           EOF
+          done
 
-      # Delete the previous release (tag + release) so the asset name stays stable.
-      - name: Delete previous release (if exists)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release delete kb-latest --yes --cleanup-tag 2>/dev/null || true
-
-      - name: Create new release with embeddings asset
+      # The release is never deleted wholesale — unchanged categories keep
+      # their existing asset untouched, only rebuilt ones are re-uploaded.
+      - name: Ensure kb-latest release exists
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          gh release create kb-latest kb-embeddings.npz \
-            --title "Knowledge Base Embeddings" \
-            --notes "Auto-generated on ${TIMESTAMP} from precice/precice.github.io" \
+          gh release view kb-latest >/dev/null 2>&1 || \
+          gh release create kb-latest --title "Knowledge Base Embeddings" \
+            --notes "Per-category preCICE KB embeddings. Rebuilt incrementally by kb-ingest.yml." \
             --latest
+
+      - name: Upload changed category assets
+        if: steps.diff.outputs.changed != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHANGED: ${{ steps.diff.outputs.changed }}
+        run: |
+          set -euo pipefail
+          for category in $CHANGED; do
+            gh release upload kb-latest "kb-embeddings-$category.npz" --clobber
+          done
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          gh release edit kb-latest --notes "Updated categories [$CHANGED] on ${TIMESTAMP} from precice/precice.github.io, precice/precice, precice/tutorials, precice.discourse.group"
+
+      - name: Update kb_state.json and commit
+        if: steps.diff.outputs.changed != ''
+        env:
+          CHANGED: ${{ steps.diff.outputs.changed }}
+        run: |
+          set -euo pipefail
+          for category in $CHANGED; do
+            sig=$(grep "^$category=" kb_signatures.txt | head -1 | cut -d= -f2-)
+            python scripts/kb_state.py update --state-file kb_state.json --category "$category" --signature "$sig"
+          done
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add kb_state.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update kb_state.json for changed categories [$CHANGED]"
+            git push
+          fi

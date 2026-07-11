@@ -4,6 +4,9 @@ import json
 import math
 import os
 import re
+import subprocess
+import sys
+import tempfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -420,6 +423,31 @@ def _asset_name(category: str) -> str:
     return f"kb-embeddings-{category}.npz"
 
 
+def _find_repo_scripts_dir() -> Path | None:
+    """Locate the precice-ai source checkout's scripts/ dir, if any.
+
+    Only available when running from an editable/source install (the repo
+    tree sits next to the installed package); a plain package install has
+    no scripts/ to build with, so the local-build fallback degrades to an
+    explicit error in that case.
+    """
+    env = os.environ.get("PRECICE_AI_SCRIPTS_DIR")
+    if env:
+        candidate = Path(env)
+        return candidate if candidate.exists() else None
+    candidate = Path(__file__).resolve().parents[2] / "scripts"
+    return candidate if candidate.exists() else None
+
+
+def _find_kb_sources_config() -> Path | None:
+    env = os.environ.get("PRECICE_AI_KB_SOURCES")
+    if env:
+        candidate = Path(env)
+        return candidate if candidate.exists() else None
+    candidate = Path(__file__).resolve().parents[2] / "kb_sources.json"
+    return candidate if candidate.exists() else None
+
+
 class VectorKnowledgeBase:
     """Downloads pre-built per-category .npz embedding archives from a GitHub
     Release and answers semantic queries by cosine-similarity search (pure
@@ -458,6 +486,14 @@ class VectorKnowledgeBase:
                     response.raise_for_status()
                     self._npz_files[cat].write_bytes(response.content)
                 except httpx.HTTPStatusError as exc:
+                    if exc.response.status_code == 404:
+                        # No release/asset published yet (e.g. the scheduled
+                        # workflow hasn't run) — build this category locally
+                        # instead of failing outright.
+                        per_category[cat] = self._build_category_locally(cat)
+                        if per_category[cat].get("status") == "ok":
+                            any_ok = True
+                        continue
                     per_category[cat] = {
                         "status": "error",
                         "message": f"Failed to download release asset ({exc.response.status_code}): {asset_url}",
@@ -481,6 +517,125 @@ class VectorKnowledgeBase:
         return {
             "status": "ok" if any_ok else "error",
             "categories": per_category,
+        }
+
+    def _build_category_locally(self, category: str, timeout_seconds: int = 900) -> dict[str, object]:
+        """Fallback for when no GitHub Release asset exists yet for a category.
+
+        Clones just that category's source(s) into a temp dir and runs the
+        exact same build scripts the kb-ingest.yml workflow uses, saving the
+        result straight into the local kb_store. Requires a source checkout
+        (scripts/ + kb_sources.json) next to the installed package — a plain
+        package install has nothing to build with, so this degrades to a
+        clear error pointing at the scheduled Action instead.
+        """
+        scripts_dir = _find_repo_scripts_dir()
+        config_path = _find_kb_sources_config()
+        if not scripts_dir or not config_path:
+            return {
+                "status": "error",
+                "message": (
+                    f"No GitHub Release asset found for category '{category}' and no local "
+                    "source checkout (scripts/ + kb_sources.json) is available to build it "
+                    "on the fly. Either wait for the scheduled kb-ingest.yml Action to publish "
+                    "a release, trigger it manually (`gh workflow run kb-ingest.yml`), or run "
+                    "this MCP server from a full clone of the precice-ai repo."
+                ),
+            }
+
+        api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("BLABLADOR_API_KEY")
+        if not api_key:
+            return {
+                "status": "error",
+                "message": (
+                    f"No GitHub Release asset found for category '{category}'. A local build "
+                    "was attempted but OPENROUTER_API_KEY (or BLABLADOR_API_KEY) is not set."
+                ),
+            }
+
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+        cat_config = config.get("categories", {}).get(category)
+        if cat_config is None:
+            return {"status": "error", "message": f"Unknown category: {category}"}
+
+        output_path = self._npz_files[category]
+
+        try:
+            with tempfile.TemporaryDirectory(prefix="precice-kb-fallback-") as tmp:
+                tmp_path = Path(tmp)
+
+                if cat_config.get("type") == "discourse":
+                    cmd = [
+                        sys.executable, str(scripts_dir / "build_forum_embeddings.py"),
+                        "--forum-url", cat_config["forum_url"],
+                        "--api-key", api_key,
+                        "--output", str(output_path),
+                    ]
+                else:
+                    checkout_dirs: list[str] = []
+                    for source in cat_config.get("sources", []):
+                        repo = source["repo"]
+                        checkout_path = source.get("checkout_path", "")
+                        branch = source.get("branch")
+                        local_dir = tmp_path / repo.replace("/", "_")
+
+                        clone_cmd = ["git", "clone", "--filter=blob:none", "--no-checkout"]
+                        if checkout_path:
+                            clone_cmd.append("--sparse")
+                        if branch:
+                            clone_cmd += ["-b", branch]
+                        clone_cmd += [f"https://github.com/{repo}.git", str(local_dir)]
+                        subprocess.run(clone_cmd, check=True, capture_output=True, timeout=timeout_seconds)
+
+                        if checkout_path:
+                            subprocess.run(
+                                ["git", "-C", str(local_dir), "sparse-checkout", "set", checkout_path],
+                                check=True, capture_output=True, timeout=timeout_seconds,
+                            )
+                        subprocess.run(
+                            ["git", "-C", str(local_dir), "checkout"],
+                            check=True, capture_output=True, timeout=timeout_seconds,
+                        )
+                        checkout_dirs.append(f"{repo}={local_dir}")
+
+                    render_cmd = [
+                        sys.executable, str(scripts_dir / "render_sources_json.py"),
+                        "--config", str(config_path), "--category", category,
+                    ]
+                    for pair in checkout_dirs:
+                        render_cmd += ["--checkout-dir", pair]
+                    rendered = subprocess.run(
+                        render_cmd, check=True, capture_output=True, text=True, timeout=60,
+                    )
+                    sources_json = rendered.stdout.strip()
+
+                    cmd = [
+                        sys.executable, str(scripts_dir / "build_embeddings.py"),
+                        "--category", category,
+                        "--sources-json", sources_json,
+                        "--api-key", api_key,
+                        "--output", str(output_path),
+                    ]
+
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_seconds)
+                if result.returncode != 0:
+                    return {
+                        "status": "error",
+                        "message": f"Local build for '{category}' failed: {result.stderr[-2000:]}",
+                    }
+        except subprocess.CalledProcessError as exc:
+            return {"status": "error", "message": f"Local build for '{category}' failed: {exc.stderr}"}
+        except subprocess.TimeoutExpired:
+            return {"status": "error", "message": f"Local build for '{category}' timed out."}
+
+        self._embeddings.pop(category, None)
+        self._chunks.pop(category, None)
+        size_mb = output_path.stat().st_size / 1_048_576
+        return {
+            "status": "ok",
+            "npz_file": str(output_path),
+            "size_mb": round(size_mb, 2),
+            "built_locally": True,
         }
 
     def is_available(self, category: str | None = None) -> bool:

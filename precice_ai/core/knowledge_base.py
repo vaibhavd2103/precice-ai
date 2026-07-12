@@ -416,7 +416,7 @@ _DEFAULT_MODEL = "openai/text-embedding-3-small"
 # Must match the category keys in kb_sources.json and the asset names the
 # kb-ingest.yml workflow uploads (kb-embeddings-<category>.npz), one per
 # category, so a changed category can be re-fetched without touching the rest.
-CATEGORIES = ["about", "community", "documentation", "tutorials", "forum"]
+CATEGORIES = ["about", "community", "documentation", "tutorials", "forum", "issues", "pulls"]
 
 
 def _asset_name(category: str) -> str:
@@ -571,6 +571,18 @@ class VectorKnowledgeBase:
                         "--api-key", api_key,
                         "--output", str(output_path),
                     ]
+                elif cat_config.get("type") in ("github_issues", "github_prs"):
+                    kind = "issues" if cat_config["type"] == "github_issues" else "pulls"
+                    cmd = [
+                        sys.executable, str(scripts_dir / "build_github_activity_embeddings.py"),
+                        "--repo", cat_config["repo"],
+                        "--kind", kind,
+                        "--api-key", api_key,
+                        "--output", str(output_path),
+                    ]
+                    github_token = os.environ.get("GITHUB_TOKEN")
+                    if github_token:
+                        cmd += ["--github-token", github_token]
                 else:
                     checkout_dirs: list[str] = []
                     for source in cat_config.get("sources", []):

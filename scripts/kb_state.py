@@ -67,6 +67,26 @@ def forum_signature(forum_url: str, timeout_seconds: int = 20) -> str:
     return max(timestamps) if timestamps else ""
 
 
+def github_activity_signature(
+    repo: str, kind: str, github_token: str | None = None, timeout_seconds: int = 20
+) -> str:
+    """updated_at of the most recently updated issue/PR — advances whenever repo activity changes."""
+    endpoint = f"https://api.github.com/repos/{repo}/{kind}"
+    headers = {"User-Agent": USER_AGENT, "Accept": "application/vnd.github+json"}
+    if github_token:
+        headers["Authorization"] = f"Bearer {github_token}"
+
+    with httpx.Client(timeout=timeout_seconds, headers=headers) as client:
+        response = client.get(
+            endpoint,
+            params={"state": "all", "sort": "updated", "direction": "desc", "per_page": 1},
+        )
+        response.raise_for_status()
+        items = response.json()
+
+    return items[0].get("updated_at", "") if items else ""
+
+
 def load_state(state_file: Path) -> dict:
     if not state_file.exists():
         return {"categories": {}}
@@ -107,6 +127,10 @@ def category_signature(
     if cat_config.get("type") == "discourse":
         return forum_signature(cat_config["forum_url"])
 
+    if cat_config.get("type") in ("github_issues", "github_prs"):
+        kind = "issues" if cat_config["type"] == "github_issues" else "pulls"
+        return github_activity_signature(cat_config["repo"], kind)
+
     parts: list[str] = []
     for source in cat_config.get("sources", []):
         repo = source["repo"]
@@ -140,6 +164,11 @@ def main() -> None:
     p_forum = sub.add_parser("forum-sig", help="Print forum change signature")
     p_forum.add_argument("--url", required=True)
 
+    p_github = sub.add_parser("github-sig", help="Print GitHub issues/PRs change signature")
+    p_github.add_argument("--repo", required=True)
+    p_github.add_argument("--kind", required=True, choices=["issues", "pulls"])
+    p_github.add_argument("--github-token", default=None)
+
     p_sig = sub.add_parser("category-signature", help="Print a category's combined signature")
     p_sig.add_argument("--config", required=True)
     p_sig.add_argument("--category", required=True)
@@ -166,6 +195,8 @@ def main() -> None:
         print(git_sha_for_path(Path(args.repo_dir), args.path))
     elif args.command == "forum-sig":
         print(forum_signature(args.url))
+    elif args.command == "github-sig":
+        print(github_activity_signature(args.repo, args.kind, args.github_token))
     elif args.command == "category-signature":
         config = json.loads(Path(args.config).read_text(encoding="utf-8"))
         checkout_map = _parse_checkout_dirs(args.checkout_dir)

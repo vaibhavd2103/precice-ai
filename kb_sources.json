@@ -66,6 +66,16 @@
       "description": "recent precice.discourse.group topics",
       "type": "discourse",
       "forum_url": "https://precice.discourse.group"
+    },
+    "issues": {
+      "description": "precice/precice GitHub issues (bug reports, questions, errors)",
+      "type": "github_issues",
+      "repo": "precice/precice"
+    },
+    "pulls": {
+      "description": "precice/precice GitHub pull requests (fixes, features, discussion)",
+      "type": "github_prs",
+      "repo": "precice/precice"
     }
   }
 }

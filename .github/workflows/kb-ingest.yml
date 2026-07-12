@@ -66,6 +66,7 @@ jobs:
       - name: Determine which categories changed
         id: diff
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CHECKOUT_DIRS: >-
             precice/precice.github.io=precice-docs
             precice/precice=precice-core
@@ -98,6 +99,18 @@ jobs:
             echo "  -> unchanged, skipping"
           fi
 
+          for kind in issues pulls; do
+            sig=$(python scripts/kb_state.py github-sig --repo precice/precice --kind "$kind" --github-token "$GH_TOKEN")
+            echo "  $kind signature: $sig"
+            if python scripts/kb_state.py check --state-file kb_state.json --category "$kind" --signature "$sig"; then
+              echo "  -> stale, will rebuild"
+              changed="$changed $kind"
+              echo "$kind=$sig" >> kb_signatures.txt
+            else
+              echo "  -> unchanged, skipping"
+            fi
+          done
+
           echo "changed=$changed" >> "$GITHUB_OUTPUT"
 
       - name: Build changed Markdown categories
@@ -112,9 +125,9 @@ jobs:
         run: |
           set -euo pipefail
           for category in $CHANGED; do
-            if [ "$category" = "forum" ]; then
-              continue
-            fi
+            case "$category" in
+              forum|issues|pulls) continue ;;
+            esac
             args=""
             for pair in $CHECKOUT_DIRS; do args="$args --checkout-dir $pair"; done
             sources_json=$(python scripts/render_sources_json.py --config kb_sources.json --category "$category" $args)
@@ -139,6 +152,29 @@ jobs:
             --base-url "https://openrouter.ai/api/v1" \
             --model "openai/text-embedding-3-small" \
             --output "kb-embeddings-forum.npz"
+
+      - name: Build GitHub issues/pulls categories
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHANGED: ${{ steps.diff.outputs.changed }}
+        run: |
+          set -euo pipefail
+          for kind in issues pulls; do
+            case " $CHANGED " in
+              *" $kind "*)
+                echo "Building category: $kind"
+                python scripts/build_github_activity_embeddings.py \
+                  --repo precice/precice \
+                  --kind "$kind" \
+                  --api-key "$OPENROUTER_API_KEY" \
+                  --github-token "$GH_TOKEN" \
+                  --base-url "https://openrouter.ai/api/v1" \
+                  --model "openai/text-embedding-3-small" \
+                  --output "kb-embeddings-$kind.npz"
+                ;;
+            esac
+          done
 
       - name: Verify built archives
         if: steps.diff.outputs.changed != ''
@@ -181,7 +217,7 @@ jobs:
             gh release upload kb-latest "kb-embeddings-$category.npz" --clobber
           done
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          gh release edit kb-latest --notes "Updated categories [$CHANGED] on ${TIMESTAMP} from precice/precice.github.io, precice/precice, precice/tutorials, precice.discourse.group"
+          gh release edit kb-latest --notes "Updated categories [$CHANGED] on ${TIMESTAMP} from precice/precice.github.io, precice/precice, precice/tutorials, precice.discourse.group, precice/precice issues & pulls"
 
       - name: Update kb_state.json and commit
         if: steps.diff.outputs.changed != ''

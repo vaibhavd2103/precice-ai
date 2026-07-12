@@ -23,12 +23,13 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
         """Download the latest pre-built vector KB embeddings from GitHub Releases.
 
         The embeddings are built per category (about, community, documentation,
-        tutorials, forum) by a scheduled GitHub Action that only rebuilds a
-        category when its underlying pages/repo actually changed, and are
-        published as separate Release assets. Call this once (or whenever you
-        want a fresher index) — subsequent queries use the cached local files.
+        tutorials, forum, issues, pulls) by a scheduled GitHub Action that only
+        rebuilds a category when its underlying pages/repo/issues actually
+        changed, and are published as separate Release assets. Call this once
+        (or whenever you want a fresher index) — subsequent queries use the
+        cached local files.
 
-        Pass category to refresh just one category (e.g. "tutorials") instead
+        Pass category to refresh just one category (e.g. "issues") instead
         of downloading all of them. Optionally pass github_token if the
         repository is private; otherwise the public release assets are
         downloaded without authentication.
@@ -48,9 +49,9 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
         OPENROUTER_API_KEY and optionally EMBEDDING_BASE_URL / EMBEDDING_MODEL)
         and returns the top_k most similar document chunks.
 
-        Pass category ("about", "community", "documentation", "tutorials", or
-        "forum") to restrict the search to that category only; omit it to
-        search across every downloaded category.
+        Pass category ("about", "community", "documentation", "tutorials",
+        "forum", "issues", or "pulls") to restrict the search to that category
+        only; omit it to search across every downloaded category.
 
         Run kb_ingest_precice_data first if the local index is not yet
         downloaded.
@@ -66,11 +67,14 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
         """Answer any question about preCICE using semantic search.
 
         Use this for ALL preCICE questions (configuration, adapters, coupling
-        schemes, errors, etc.). Automatically downloads the vector KB on first
-        use if it is not present locally, then runs cosine-similarity search.
+        schemes, errors, etc.), including questions that may be answered by a
+        past bug report or pull request discussion. Automatically downloads
+        the vector KB on first use if it is not present locally, then runs
+        cosine-similarity search.
 
-        Pass category ("about", "community", "documentation", "tutorials", or
-        "forum") to restrict the search to that category only.
+        Pass category ("about", "community", "documentation", "tutorials",
+        "forum", "issues", or "pulls") to restrict the search to that category
+        only.
 
         Requires OPENROUTER_API_KEY (or BLABLADOR_API_KEY) to be set so the
         question can be embedded at query time.

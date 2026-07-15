@@ -1,0 +1,77 @@
+{
+  "type": "object",
+  "properties": {
+    "participants": {
+      "type": "array",
+      "description": "List of participants in the simulation",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Unique name of the participant"
+          },
+          "solver": {
+            "type": "string",
+            "description": "Solver used by the participant"
+          },
+          "dimensionality": {
+            "type": "integer",
+            "description": "Dimensionality of the participants meshes.",
+            "default": 3
+          }
+        },
+        "required": ["name", "solver"]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "exchanges": {
+      "type": "array",
+      "description": "Defines the data exchanges between participants in the simulation.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "Name of the source participant sending data"
+          },
+          "from-patch": {
+            "type": "string",
+            "description": "Specific interface patch or surface on the source participant from which data is sent"
+          },
+          "to": {
+            "type": "string",
+            "description": "Name of the target participant receiving data"
+          },
+          "to-patch": {
+            "type": "string",
+            "description": "Specific interface patch or surface on the target participant where data is received"
+          },
+          "data": {
+            "type": "string",
+            "description": "Type of data being exchanged (e.g., Force, Displacement, Velocity)"
+          },
+          "data-type": {
+            "type": "string",
+            "description": "Specifies whether the data is a scalar or vector quantity",
+            "enum": ["scalar", "vector"],
+            "default": "scalar"
+          },
+          "type": {
+            "type": "string",
+            "description": "Defines the coupling type: 'strong' for tight coupling, 'weak' for loose coupling",
+            "enum": ["strong", "weak"]
+          }
+        },
+        "required": ["from", "from-patch", "to", "to-patch", "data", "type"],
+        "optional": ["data-type"]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    }
+  },
+  "required": ["participants", "exchanges"],
+  "title": "preCICE Topology Configuration",
+  "description": "JSON schema defining the topology configuration for precice-case-generate. Specifies participants, exchanges, and their coupling relationships."
+}

@@ -1,15 +1,50 @@
+import json
 import shutil
 from pathlib import Path
 
+import jsonschema
+import yaml
 from mcp.server.fastmcp import FastMCP
 
 from precice_ai.core.command_runner import run_safe_command
+from precice_ai.core.paths import get_project_path
+
+TOPOLOGY_SCHEMA_PATH = Path(__file__).resolve().parent.parent / "utils" / "topology_schema.json"
+
+# The installed precice-case-generate still requires an explicit
+# coupling-scheme key to be present, even though topology_schema.json no
+# longer requires it (those values are meant to be inferred/defaulted).
+# Inject these defaults so generation doesn't crash on that version lag.
+DEFAULT_COUPLING_SCHEME = {
+    "max-time": 1.0,
+    "time-window-size": 0.01,
+    "max-iterations": 50,
+    "coupling": "parallel",
+}
 
 
 def _check_precice_cli() -> str | None:
     if shutil.which("precice-cli") is None:
         return "precice-cli is not installed or not in PATH. Install it via: pip install precice"
     return None
+
+
+def _load_topology_schema() -> dict:
+    return json.loads(TOPOLOGY_SCHEMA_PATH.read_text())
+
+
+def _validate_topology(topology: dict) -> list[str]:
+    """Validate a topology dict against topology_schema.json.
+
+    Returns a list of human-readable error messages (empty if valid).
+    """
+    schema = _load_topology_schema()
+    validator_cls = jsonschema.validators.validator_for(schema)
+    validator = validator_cls(schema)
+    errors = sorted(validator.iter_errors(topology), key=lambda e: list(e.path))
+    return [
+        f"{'/'.join(str(p) for p in e.path) or '<root>'}: {e.message}" for e in errors
+    ]
 
 
 def register_cli_tools(mcp: FastMCP) -> None:
@@ -90,19 +125,69 @@ def register_cli_tools(mcp: FastMCP) -> None:
         return run_safe_command(command=cmd, cwd=Path(cwd), timeout=60)
 
     @mcp.tool()
-    def precice_init(cwd: str, extra_args: str = "") -> str:
-        """Generate a new preCICE configuration scaffold using precice-cli init.
+    def precice_init(
+        project_name: str,
+        participants: list[dict],
+        exchanges: list[dict],
+        coupling_scheme: dict | None = None,
+        output_dir: str = "",
+    ) -> str:
+        """Create a new preCICE case from topology details and run precice-cli init.
+
+        Validates participants/exchanges/coupling_scheme against
+        precice_ai/utils/topology_schema.json. If required details are
+        missing or invalid, no files are written or executed -- instead a
+        list of validation errors is returned. Ask the user for the missing
+        details and call this tool again with the complete topology.
+
+        Once validation passes, writes topology.yaml to
+        test-projects/<project_name> (or output_dir if given), then runs
+        `precice-cli init` against it with --validate-topology.
 
         Args:
-            cwd: Absolute path to the directory where config should be generated.
-            extra_args: Optional additional arguments passed to precice-cli init.
+            project_name: Case name; determines the default test-projects/<project_name> location.
+            participants: List of dicts per topology_schema.json, e.g.
+                {"name": "Fluid", "solver": "OpenFOAM", "dimensionality": 3}.
+            exchanges: List of dicts per topology_schema.json, e.g.
+                {"from": "Fluid", "from-patch": "interface", "to": "Solid",
+                 "to-patch": "interface", "data": "Force", "data-type": "vector",
+                 "type": "strong"}.
+            coupling_scheme: Optional dict with max-time, time-window-size,
+                max-iterations, coupling ("parallel"/"serial"). Defaults are
+                applied for any keys omitted.
+            output_dir: Optional absolute path overriding the test-projects default.
         """
         if err := _check_precice_cli():
             return err
-        cmd = "precice-cli init"
-        if extra_args:
-            cmd += f" {extra_args}"
-        return run_safe_command(command=cmd, cwd=Path(cwd), timeout=120)
+
+        topology = {"participants": participants, "exchanges": exchanges}
+        errors = _validate_topology(topology)
+        if errors:
+            return (
+                "Topology is incomplete or invalid. Please provide the following "
+                "before the project can be created:\n"
+                + "\n".join(f"- {e}" for e in errors)
+            )
+
+        full_topology = {
+            "coupling-scheme": {**DEFAULT_COUPLING_SCHEME, **(coupling_scheme or {})},
+            "participants": participants,
+            "exchanges": exchanges,
+        }
+
+        try:
+            target_dir = (
+                Path(output_dir).resolve() if output_dir else get_project_path(project_name)
+            )
+        except ValueError as exc:
+            return str(exc)
+
+        target_dir.mkdir(parents=True, exist_ok=True)
+        topology_path = target_dir / "topology.yaml"
+        topology_path.write_text(yaml.dump(full_topology, sort_keys=False))
+
+        cmd = "precice-cli init -f topology.yaml -o generated --validate-topology -v"
+        return run_safe_command(command=cmd, cwd=target_dir, timeout=120)
 
     @mcp.tool()
     def precice_profiling_analyze(

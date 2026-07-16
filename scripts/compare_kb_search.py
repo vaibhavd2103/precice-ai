@@ -58,19 +58,20 @@ def _run_vector(
     result["elapsed_ms"] = elapsed_ms
 
     if result.get("status") == "ok":
-        result["embedding_dim"] = int(kb._embeddings.shape[1]) if kb._embeddings is not None else None
-        result["chunks_indexed"] = len(kb._chunks) if kb._chunks is not None else None
+        all_embeddings = list(kb._embeddings.values())
+        all_chunks = [c for chunks in kb._chunks.values() for c in chunks]
+        result["embedding_dim"] = int(all_embeddings[0].shape[1]) if all_embeddings else None
+        result["chunks_indexed"] = len(all_chunks)
         if include_vectors:
             # Attach the raw embedding vector for each returned chunk so it can
             # be inspected/plotted offline. Matched back by (title, url) since
             # VectorKnowledgeBase.query() doesn't return chunk indices.
-            emb = kb._embeddings
-            chunks = kb._chunks or []
             for item in result.get("results", []):
-                for idx, chunk in enumerate(chunks):
-                    if chunk.get("title") == item["title"] and chunk.get("url") == item["url"]:
-                        item["embedding"] = emb[idx].tolist()
-                        break
+                for cat, chunks in kb._chunks.items():
+                    for idx, chunk in enumerate(chunks):
+                        if chunk.get("title") == item["title"] and chunk.get("url") == item["url"]:
+                            item["embedding"] = kb._embeddings[cat][idx].tolist()
+                            break
 
     return result
 

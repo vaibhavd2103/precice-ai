@@ -156,10 +156,16 @@ The `setup` command automatically injects `PRECICE_PROJECTS_DIR` into the platfo
 
 ### Knowledge base storage
 
-The vector KB is stored as a compressed NumPy archive **outside the repo** so it is never committed to git:
+The vector KB is stored as one compressed NumPy archive per category **outside the repo** so it is never committed to git:
 
 ```
-~/.precice-ai/kb_store/kb-embeddings.npz
+~/.precice-ai/kb_store/kb-embeddings-about.npz
+~/.precice-ai/kb_store/kb-embeddings-community.npz
+~/.precice-ai/kb_store/kb-embeddings-documentation.npz
+~/.precice-ai/kb_store/kb-embeddings-tutorials.npz
+~/.precice-ai/kb_store/kb-embeddings-forum.npz
+~/.precice-ai/kb_store/kb-embeddings-issues.npz
+~/.precice-ai/kb_store/kb-embeddings-pulls.npz
 ```
 
 Check its status at any time:
@@ -282,41 +288,126 @@ Both calls embed the question via the configured embedding API and return the mo
 
 ## Vector knowledge base
 
-### How it works
+This is the retrieval system behind every `kb_query_*` / `kb_ingest_precice_data` / `kb_precice_status` tool. It is implemented by `VectorKnowledgeBase` in [`precice_ai/core/knowledge_base.py`](precice_ai/core/knowledge_base.py) and has two independent lifecycles: an **offline ingestion pipeline** (runs in GitHub Actions, produces embeddings) and an **online query path** (runs inside the MCP server process, in your editor/agent).
+
+There is also a second, older code path — `KnowledgeBaseService` (BM25-style lexical scoring over live-scraped docs/forum pages, no embeddings). It still lives in `knowledge_base.py` and is instantiated in `knowledge_tools.py`, but **no MCP tool calls it today**; it's kept around for [`scripts/compare_kb_search.py`](scripts/compare_kb_search.py), which benchmarks lexical vs. vector retrieval quality. Everything below describes the vector path, which is what actually answers questions.
+
+### When it runs
+
+| Event | What happens |
+|---|---|
+| Weekly, Sunday 02:00 UTC | `kb-ingest.yml` runs automatically, rebuilding only categories whose sources changed. |
+| `gh workflow run kb-ingest.yml` / Actions tab "Run workflow" | Same pipeline, triggered on demand. |
+| First call to `kb_query_precice_live` in a fresh environment | The server downloads whichever categories aren't yet cached in `~/.precice-ai/kb_store/`, then queries. Subsequent calls in the same environment reuse the cache — no network round-trip beyond embedding the question. |
+| `kb_ingest_precice_data(category?)` called explicitly | Forces a fresh download of one or all categories, overwriting the local cache. |
+| `kb_query_precice(...)` (non-live) | Never downloads — errors out if the local cache is empty. Use this when you want to control ingestion timing explicitly. |
+
+Ingestion (building the embeddings) and querying (using them) are fully decoupled: the MCP server never computes embeddings for documents, only for the question text at query time.
+
+### How ingestion works (offline, GitHub Actions)
 
 ```
 GitHub Action (weekly / manual)
-  └── checkout precice/precice.github.io
-        └── walk content/ (docs, tutorials, community, about)
-              └── chunk each .md file (~450 words, 50-word overlap)
-                    └── embed chunks via OpenRouter API
-                          └── save kb-embeddings.npz → publish as GitHub Release (kb-latest)
-
-MCP tool: kb_query_precice_live(question)
-  └── download kb-embeddings.npz from kb-latest release  (first use only)
-        └── embed question via OpenRouter API
-              └── cosine similarity search (NumPy, no server)
-                    └── return top-k chunks with title, url, score, snippet
+  └── checkout precice/precice.github.io, precice/precice, precice/tutorials
+        └── for each category (about, community, documentation, tutorials,
+            forum, issues, pulls):
+              ├── compute a signature and compare it to kb_state.json:
+              │     • git categories   → latest commit SHA per {repo, path}
+              │     • forum            → latest post timestamp across recent topics
+              │     • issues / pulls   → updated_at of the most recently
+              │                          updated GitHub issue / PR (sorted desc,
+              │                          one API call, first page only)
+              ├── skip the category entirely if the signature is unchanged
+              └── if stale, build the category:
+                    • about/community/documentation/tutorials: chunk every .md
+                      file under the configured checkout path (~450 words per
+                      chunk, 50-word overlap, frontmatter stripped, min 30
+                      words/chunk to drop near-empty fragments)
+                    • forum: fetch recent Discourse topics + all posts in each,
+                      merge post bodies into one document per topic, then chunk
+                    • issues/pulls: fetch up to 200 items via the GitHub REST
+                      API (state=all, sorted by updated), merge each item's
+                      body with up to 20 of its comments into one document,
+                      then chunk
+                    └── embed every chunk via the OpenAI-compatible embedding
+                          API (OpenRouter by default)
+                          └── save kb-embeddings-<category>.npz
+                                → upload/replace just that asset on the
+                                  GitHub Release (kb-latest); other categories'
+                                  assets are left untouched
+        └── commit updated kb_state.json back to the repo
 ```
 
-The embeddings archive (`kb-embeddings.npz`) is stored locally at `~/.precice-ai/kb_store/` and loaded into memory on first query. No vector database server is required.
+Each `.npz` archive holds two parallel arrays: `embeddings` (an `(N, D)` float32 matrix, one row per chunk) and `chunks` (a JSON-encoded list of `{title, url, source, category, chunk_index, text}` — row `i` of `chunks` describes row `i` of `embeddings`). Because categories are independent, editing only the tutorials pages re-embeds and re-uploads just `kb-embeddings-tutorials.npz`; opening a new GitHub issue only touches `kb-embeddings-issues.npz` on the next scheduled run.
 
-### Controlling what gets indexed
+If no release asset exists yet for a category (e.g. right after adding one), the MCP server falls back to building it locally on first use, using the same scripts the Action runs — this requires a source checkout next to the installed package and `OPENROUTER_API_KEY` set, and can take a while for large categories.
 
-Edit [`kb_sources.json`](kb_sources.json) at the repo root to control which folders are indexed and which files are skipped:
+### How querying and chunk matching work (online, inside the MCP server)
+
+```
+kb_query_precice_live(question, top_k=5, category=None)
+  ├── if the requested category (or all, if none given) isn't cached locally:
+  │     download kb-embeddings-<category>.npz from the kb-latest release
+  ├── lazy-load each requested category's .npz into memory
+  │     (kept cached for the life of the server process)
+  ├── embed the question via the configured embedding API
+  │     → a single (D,) float32 vector, same model/dimensions as the chunks
+  ├── concatenate the embedding matrices of every requested category into
+  │     one (N_total, D) matrix — matching happens globally, not per-category
+  ├── score every chunk by cosine similarity:
+  │     score[i] = (emb[i] · q_vec) / (‖emb[i]‖ · ‖q_vec‖)
+  ├── argsort descending, take the top_k indices
+  └── return {score, title, url, source, category, snippet} per hit
+        (snippet = the chunk's raw text, truncated to 400 chars)
+```
+
+This is brute-force cosine similarity over whatever is loaded in memory — no ANN index (FAISS/HNSW), no vector database, no reranking stage. At the current corpus size (a few thousand chunks per category) a full NumPy matrix-vector product is fast enough to run synchronously per query. Passing `category` restricts the matrix to one category before scoring; omitting it merges every downloaded category and ranks globally, so a very on-topic forum chunk can legitimately outrank a documentation chunk if it embeds closer to the question.
+
+### Categories and sources
+
+Edit [`kb_sources.json`](kb_sources.json) at the repo root to control which categories exist, which repos/folders (or APIs) feed each one, and which files are skipped:
 
 ```json
 {
-  "include_subfolders": ["docs", "tutorials", "community", "about"],
-  "exclude_patterns": ["docs/_index.md", "docs/docs-meta", "tutorials/_index.md"]
+  "categories": {
+    "about":         { "sources": [{ "repo": "precice/precice.github.io", "checkout_path": "content/about" }] },
+    "community":     { "sources": [{ "repo": "precice/precice.github.io", "checkout_path": "content/community" }] },
+    "documentation": { "sources": [
+      { "repo": "precice/precice.github.io", "checkout_path": "content/docs" },
+      { "repo": "precice/precice", "checkout_path": "docs", "branch": "develop" }
+    ]},
+    "tutorials": { "sources": [
+      { "repo": "precice/precice.github.io", "checkout_path": "content/tutorials" },
+      { "repo": "precice/tutorials", "checkout_path": "", "branch": "develop" }
+    ]},
+    "forum":  { "type": "discourse",     "forum_url": "https://precice.discourse.group" },
+    "issues": { "type": "github_issues", "repo": "precice/precice" },
+    "pulls":  { "type": "github_prs",    "repo": "precice/precice" }
+  }
 }
 ```
 
-The GitHub Action reads this file on every run — no changes to the workflow or build script are needed.
+The GitHub Action reads this file on every run — no changes to the workflow or build scripts are needed to add a source to an existing category. Adding a brand-new category also requires: its name added to `CATEGORIES` in [`precice_ai/core/knowledge_base.py`](precice_ai/core/knowledge_base.py), a matching branch in `_build_category_locally` (for the local-build fallback), and either an entry in `GIT_CATEGORIES` in [`kb-ingest.yml`](.github/workflows/kb-ingest.yml) (git-checkout categories) or a dedicated build/signature step (API-fetched categories, following the `forum`/`issues`/`pulls` pattern).
+
+`kb_state.json` (committed to the repo) tracks each category's last-processed signature so unchanged categories are skipped on the next run.
+
+### Limitations
+
+- **Query-time freshness ceiling.** Once a category is downloaded locally it is used indefinitely — the MCP server never checks whether a newer release exists. Freshness is bounded by whenever you last called `kb_ingest_precice_data` (or deleted the cache), not by how recently the Action ran.
+- **No reranking or cross-encoder pass.** Retrieval is pure cosine similarity over independently-embedded chunks; it has no notion of query-document interaction beyond the embedding space, so subtly-worded or multi-hop questions can retrieve topically-related-but-wrong chunks.
+- **Chunk-boundary fragmentation.** Long documents (a big config reference page, a long issue thread) are split into ~450-word windows with only 50 words of overlap. An answer that spans two chunks may not fully appear in either one, and `top_k` results can duplicate content across overlapping chunks from the same document.
+- **Global top-k merge across categories.** Without an explicit `category`, ranking is entirely score-driven — there's no per-category quota, so a category with many near-duplicate chunks (e.g. `forum`) can crowd out a category with fewer but more authoritative chunks (e.g. `documentation`).
+- **`issues`/`pulls` are lossy summaries of long threads.** Only the first 20 comments per issue/PR are embedded and each item is capped at 200 most-recently-updated items per category per rebuild; very active or very old discussions may be truncated or missing entirely.
+- **Model lock-in per corpus.** All chunks in a category must share one embedding model/dimensionality. Changing `EMBEDDING_MODEL` requires rebuilding every category from scratch — old and new embeddings can't be mixed in one `.npz`.
+- **No in-place incremental updates.** A "stale" category is rebuilt wholesale (every source file re-chunked and re-embedded), not diffed — there's no per-chunk change detection, so a one-line doc edit re-embeds the entire category.
+- **Requires live network + API key at query time.** `kb_query_precice`/`kb_query_precice_live` need `OPENROUTER_API_KEY` (or `BLABLADOR_API_KEY`) to embed the question; if unset, or if the embedding API is unreachable, the tool returns an error rather than falling back to lexical search.
+- **GitHub API rate limits bound `issues`/`pulls` ingestion.** Unauthenticated requests are capped at 60/hour; the Action passes `GITHUB_TOKEN` to raise this to 5,000/hour, but a manual local rebuild without a token can hit the limit on large repos.
+- **Snippets are truncated, not summarized.** The `snippet` field in results is the raw chunk text cut to 400 characters — it can end mid-sentence and isn't re-ranked for relevance within the chunk.
+- **No access control.** Everything ingested is assumed public (precice.org, the public GitHub repos, the public forum); there's no mechanism to scope or redact content per user/query.
 
 ### Refreshing the knowledge base
 
-**Automatic:** The Action runs every Sunday at 02:00 UTC. Any merged doc changes are picked up automatically.
+**Automatic:** The Action runs every Sunday at 02:00 UTC and only rebuilds categories whose sources changed since the last run.
 
 **Manual trigger (GitHub UI):**
 Actions → "Build & Publish Knowledge Base Embeddings" → "Run workflow"
@@ -326,14 +417,17 @@ Actions → "Build & Publish Knowledge Base Embeddings" → "Run workflow"
 gh workflow run kb-ingest.yml --repo vaibhavd2103/precice-ai
 ```
 
-After the Action completes, the next call to any `kb_query_*` tool will download the new archive automatically (on first query after deletion of the old local file), or force a re-download explicitly:
+After the Action completes, the next call to any `kb_query_*` tool downloads any category not yet cached locally. To force a re-download of everything (or just one category):
 
 ```bash
 # Delete local cache to force re-download on next query
-rm ~/.precice-ai/kb_store/kb-embeddings.npz
+rm ~/.precice-ai/kb_store/kb-embeddings-*.npz
+
+# Or just one category
+rm ~/.precice-ai/kb_store/kb-embeddings-tutorials.npz
 ```
 
-Or call `kb_ingest_precice_data()` from the MCP tool to re-download immediately.
+Or call `kb_ingest_precice_data()` (optionally with `category="tutorials"`) from the MCP tool to re-download immediately.
 
 ### Switching embedding providers
 
@@ -382,10 +476,15 @@ precice_ai/
         ├── windsurf.py
         └── generic.py
 scripts/
-└── build_embeddings.py     # Chunks docs, calls embedding API, saves .npz
+├── build_embeddings.py                  # Chunks a category's Markdown sources, embeds, saves .npz
+├── build_forum_embeddings.py            # Same, for the forum category (fetched via Discourse API)
+├── build_github_activity_embeddings.py  # Same, for the issues/pulls categories (fetched via GitHub REST API)
+├── render_sources_json.py               # Resolves a category's kb_sources.json entries to local checkout paths
+└── kb_state.py                          # Computes/compares per-category signatures (git SHA / forum timestamp / GitHub updated_at)
 .github/workflows/
-└── kb-ingest.yml           # Scheduled Action: build embeddings → GitHub Release
-kb_sources.json             # Controls which doc folders/files get indexed
+└── kb-ingest.yml           # Scheduled Action: rebuild only changed categories → GitHub Release
+kb_sources.json             # Defines categories and which repos/folders feed each one
+kb_state.json               # Per-category last-processed signature (committed, updated by the Action)
 server.py                   # Convenience shim for python server.py (local dev)
 pyproject.toml              # Package definition and CLI entry points
 ```
@@ -457,7 +556,7 @@ python server.py
 - `run_command_in_project` executes via shell with a prefix allowlist. Commands not matching an allowed prefix are rejected before execution.
 - The command allowlist blocks patterns like `rm`, `sudo`, `curl`, `wget`, and fork bombs. Tighten it further in [precice_ai/core/safety.py](precice_ai/core/safety.py).
 - Log parsing is heuristic (keyword search). It does not replace solver-level validation.
-- The vector KB archive is stored locally at `~/.precice-ai/kb_store/kb-embeddings.npz`. At query time, the question text is sent to the configured embedding API (OpenRouter or Blablador) to produce a vector — no document content leaves your machine.
+- The vector KB archives are stored locally at `~/.precice-ai/kb_store/kb-embeddings-<category>.npz`. At query time, the question text is sent to the configured embedding API (OpenRouter or Blablador) to produce a vector — no document content leaves your machine.
 
 ---
 

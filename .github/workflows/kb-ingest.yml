@@ -2,8 +2,8 @@ name: Build & Publish Knowledge Base Embeddings
 
 on:
   schedule:
-    - cron: '0 2 * * 0'   # every Sunday at 02:00 UTC
-  workflow_dispatch:        # manual trigger from GitHub UI
+    - cron: '0 2 * * *'   # every day at 02:00 UTC; gate job restricts to alternate days
+  workflow_dispatch:        # manual trigger from GitHub UI (always runs, bypasses the gate)
 
 permissions:
   contents: write           # needed to create/upload releases and commit kb_state.json
@@ -12,7 +12,32 @@ env:
   GIT_CATEGORIES: "about community documentation tutorials"
 
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      run_today: ${{ steps.check.outputs.run_today }}
+    steps:
+      - name: Check alternate-day schedule
+        id: check
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run_today=true" >> "$GITHUB_OUTPUT"
+            echo "Manual trigger — running regardless of day parity."
+            exit 0
+          fi
+          day_of_year=$(date -u +%j)
+          if (( 10#$day_of_year % 2 == 0 )); then
+            echo "run_today=true" >> "$GITHUB_OUTPUT"
+            echo "Day of year $day_of_year is even — running today."
+          else
+            echo "run_today=false" >> "$GITHUB_OUTPUT"
+            echo "Day of year $day_of_year is odd — skipping (runs every other day)."
+          fi
+
   build-kb:
+    needs: gate
+    if: needs.gate.outputs.run_today == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -21,8 +46,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Full history is needed so `git log -- <path>` can find the latest
-      # commit that touched each category's folder.
+      # Only HEAD content is needed now — signatures are content tree hashes,
+      # not commit history — but fetch-depth: 0 is kept for the other repos
+      # below since git log/tree lookups still expect refs to be resolvable.
       - name: Checkout precice.github.io (content/ only)
         uses: actions/checkout@v4
         with:
@@ -61,9 +87,11 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install --quiet openai numpy httpx
+        run: |
+          pip install --quiet openai numpy httpx
+          pip install --quiet -e .
 
-      - name: Determine which categories changed
+      - name: Compute category signatures (always rebuild every run)
         id: diff
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -73,42 +101,38 @@ jobs:
             precice/tutorials=precice-tutorials-repo
         run: |
           set -euo pipefail
+          # The gate job already limits this workflow to one run per 48h, so
+          # every category is rebuilt and republished unconditionally on
+          # every run — the KB should never go stale for longer than that,
+          # even if a category's content hash happens to match the last
+          # publish. Signatures are still computed and recorded in
+          # kb_state.json purely as an audit trail (last known hash per
+          # category), not as a build gate.
           changed=""
           : > kb_signatures.txt
           for category in $GIT_CATEGORIES; do
             args=""
             for pair in $CHECKOUT_DIRS; do args="$args --checkout-dir $pair"; done
+            # Content tree hash of a fresh clone — logged for audit purposes.
             sig=$(python scripts/kb_state.py category-signature --config kb_sources.json --category "$category" $args)
-            echo "  $category signature: $sig"
-            if python scripts/kb_state.py check --state-file kb_state.json --category "$category" --signature "$sig"; then
-              echo "  -> stale, will rebuild"
-              changed="$changed $category"
-              echo "$category=$sig" >> kb_signatures.txt
-            else
-              echo "  -> unchanged, skipping"
-            fi
+            echo "  $category tree hash: $sig -> rebuilding"
+            changed="$changed $category"
+            echo "$category=$sig" >> kb_signatures.txt
           done
 
+          # forum/issues/pulls have no git repo to hash — keep the lightweight
+          # live signature (latest post/updated_at) fetched from their APIs,
+          # logged the same way.
           forum_sig=$(python scripts/kb_state.py forum-sig --url https://precice.discourse.group)
-          echo "  forum signature: $forum_sig"
-          if python scripts/kb_state.py check --state-file kb_state.json --category forum --signature "$forum_sig"; then
-            echo "  -> stale, will rebuild"
-            changed="$changed forum"
-            echo "forum=$forum_sig" >> kb_signatures.txt
-          else
-            echo "  -> unchanged, skipping"
-          fi
+          echo "  forum signature: $forum_sig -> rebuilding"
+          changed="$changed forum"
+          echo "forum=$forum_sig" >> kb_signatures.txt
 
           for kind in issues pulls; do
             sig=$(python scripts/kb_state.py github-sig --repo precice/precice --kind "$kind" --github-token "$GH_TOKEN")
-            echo "  $kind signature: $sig"
-            if python scripts/kb_state.py check --state-file kb_state.json --category "$kind" --signature "$sig"; then
-              echo "  -> stale, will rebuild"
-              changed="$changed $kind"
-              echo "$kind=$sig" >> kb_signatures.txt
-            else
-              echo "  -> unchanged, skipping"
-            fi
+            echo "  $kind signature: $sig -> rebuilding"
+            changed="$changed $kind"
+            echo "$kind=$sig" >> kb_signatures.txt
           done
 
           echo "changed=$changed" >> "$GITHUB_OUTPUT"
@@ -176,7 +200,7 @@ jobs:
             esac
           done
 
-      - name: Verify built archives
+      - name: Verify built vector archives
         if: steps.diff.outputs.changed != ''
         env:
           CHANGED: ${{ steps.diff.outputs.changed }}
@@ -195,6 +219,16 @@ jobs:
           EOF
           done
 
+      # Lexical KB: a keyword-searchable snapshot (docs + forum crawl), built
+      # fresh every run this job executes (cheap — no embedding API calls)
+      # and published as its own release asset alongside the vector index.
+      - name: Build lexical KB
+        run: |
+          python scripts/build_lexical_kb.py \
+            --output kb-lexical.json \
+            --docs-pages-limit 200 \
+            --forum-topics-limit 200
+
       # The release is never deleted wholesale — unchanged categories keep
       # their existing asset untouched, only rebuilt ones are re-uploaded.
       - name: Ensure kb-latest release exists
@@ -203,10 +237,10 @@ jobs:
         run: |
           gh release view kb-latest >/dev/null 2>&1 || \
           gh release create kb-latest --title "Knowledge Base Embeddings" \
-            --notes "Per-category preCICE KB embeddings. Rebuilt incrementally by kb-ingest.yml." \
+            --notes "Per-category preCICE vector KB embeddings + a lexical KB snapshot. Rebuilt incrementally by kb-ingest.yml." \
             --latest
 
-      - name: Upload changed category assets
+      - name: Upload changed vector category assets
         if: steps.diff.outputs.changed != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -216,8 +250,20 @@ jobs:
           for category in $CHANGED; do
             gh release upload kb-latest "kb-embeddings-$category.npz" --clobber
           done
+
+      - name: Upload lexical KB asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload kb-latest kb-lexical.json --clobber
+
+      - name: Update release notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHANGED: ${{ steps.diff.outputs.changed }}
+        run: |
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          gh release edit kb-latest --notes "Updated categories [$CHANGED] on ${TIMESTAMP} from precice/precice.github.io, precice/precice, precice/tutorials, precice.discourse.group, precice/precice issues & pulls"
+          gh release edit kb-latest --notes "Updated vector categories [$CHANGED] and lexical KB on ${TIMESTAMP} from precice/precice.github.io, precice/precice, precice/tutorials, precice.discourse.group, precice/precice issues & pulls"
 
       - name: Update kb_state.json and commit
         if: steps.diff.outputs.changed != ''

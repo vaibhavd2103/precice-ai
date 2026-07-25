@@ -5,20 +5,28 @@ State is persisted in kb_state.json (committed to this repo) as:
 
     {
       "categories": {
-        "about": {"signature": "<repo>@<sha>", "updated_at": "..."},
+        "about": {"signature": "<repo>@<path>@<tree-hash>", "updated_at": "..."},
         "forum": {"signature": "2026-07-01T12:00:00Z", "updated_at": "..."}
       }
     }
 
-A category's "signature" is a stable string derived from its sources
-(git commit SHA per {repo, path}, or the latest forum post timestamp).
+A category's "signature" is a stable string derived from its sources.
+Git-backed categories (about, community, documentation, tutorials) use a
+*content* hash: the git tree object id of the category's folder at HEAD in
+a fresh clone (`git rev-parse HEAD:<path>`). Unlike a commit SHA, this only
+changes when the actual file contents change, so history-only commits
+(rebases, unrelated merges) don't force a spurious rebuild. Categories with
+no git repo (forum, issues, pulls) keep a lightweight live signature: the
+latest forum post timestamp, or the latest issue/PR updated_at, fetched via
+API rather than a full clone (there's nothing to clone).
+
 If the signature differs from what's stored, the category is stale.
 
 CLI usage:
-    python scripts/kb_state.py git-sha --repo-dir precice-docs --path content/docs
+    python scripts/kb_state.py tree-hash --repo-dir precice-docs --path content/docs
     python scripts/kb_state.py forum-sig --url https://precice.discourse.group
-    python scripts/kb_state.py check --state-file kb_state.json --category docs --signature "a@sha1+b@sha2"
-    python scripts/kb_state.py update --state-file kb_state.json --category docs --signature "a@sha1+b@sha2"
+    python scripts/kb_state.py check --state-file kb_state.json --category docs --signature "a@path@treehash1+b@path@treehash2"
+    python scripts/kb_state.py update --state-file kb_state.json --category docs --signature "a@path@treehash1+b@path@treehash2"
 """
 
 from __future__ import annotations
@@ -35,23 +43,21 @@ import httpx
 USER_AGENT = "precice-ai-mcp/1.0 (+https://github.com/precice)"
 
 
-def git_sha_for_path(repo_dir: Path, rel_path: str) -> str:
-    """Latest commit SHA touching rel_path (or HEAD if rel_path is empty)."""
-    args = ["git", "-C", str(repo_dir), "log", "-1", "--format=%H"]
-    if rel_path:
-        args += ["--", rel_path]
-    result = subprocess.run(args, capture_output=True, text=True, check=True)
-    sha = result.stdout.strip()
-    if not sha:
-        # No commit touched this exact path (e.g. empty dir) — fall back to HEAD.
-        head = subprocess.run(
-            ["git", "-C", str(repo_dir), "rev-parse", "HEAD"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        sha = head.stdout.strip()
-    return sha
+def content_tree_hash(repo_dir: Path, rel_path: str) -> str:
+    """Git tree object id for rel_path at HEAD (whole-repo tree if empty).
+
+    This is a pure content hash: it only changes when file contents under
+    rel_path change, unlike a commit SHA which also changes on
+    history-only commits (rebases, unrelated merges elsewhere in the repo).
+    """
+    ref = f"HEAD:{rel_path}" if rel_path else "HEAD^{tree}"
+    result = subprocess.run(
+        ["git", "-C", str(repo_dir), "rev-parse", ref],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout.strip()
 
 
 def forum_signature(forum_url: str, timeout_seconds: int = 20) -> str:
@@ -138,8 +144,8 @@ def category_signature(
         local_dir = checkout_map.get(repo)
         if not local_dir:
             raise SystemExit(f"No --checkout-dir given for repo {repo}")
-        sha = git_sha_for_path(Path(local_dir), checkout_path)
-        parts.append(f"{repo}@{checkout_path}@{sha}")
+        tree_hash = content_tree_hash(Path(local_dir), checkout_path)
+        parts.append(f"{repo}@{checkout_path}@{tree_hash}")
     return "+".join(parts)
 
 
@@ -157,7 +163,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p_git = sub.add_parser("git-sha", help="Print latest commit SHA for a path")
+    p_git = sub.add_parser("tree-hash", help="Print content tree hash for a path")
     p_git.add_argument("--repo-dir", required=True)
     p_git.add_argument("--path", default="")
 
@@ -191,8 +197,8 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    if args.command == "git-sha":
-        print(git_sha_for_path(Path(args.repo_dir), args.path))
+    if args.command == "tree-hash":
+        print(content_tree_hash(Path(args.repo_dir), args.path))
     elif args.command == "forum-sig":
         print(forum_signature(args.url))
     elif args.command == "github-sig":

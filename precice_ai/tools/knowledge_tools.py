@@ -20,24 +20,38 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
         github_token: str | None = None,
         category: str | None = None,
     ) -> str:
-        """Download the latest pre-built vector KB embeddings from GitHub Releases.
+        """Sync the local KB (vector + lexical) from GitHub Releases.
 
-        The embeddings are built per category (about, community, documentation,
-        tutorials, forum, issues, pulls) by a scheduled GitHub Action that only
-        rebuilds a category when its underlying pages/repo/issues actually
-        changed, and are published as separate Release assets. Call this once
-        (or whenever you want a fresher index) — subsequent queries use the
-        cached local files.
+        The vector embeddings are built per category (about, community,
+        documentation, tutorials, forum, issues, pulls) and the lexical
+        (keyword) index is built as a single snapshot, both by a scheduled
+        GitHub Action (kb-ingest.yml) that runs every other day and always
+        rebuilds and republishes every category, regardless of whether the
+        underlying content changed. This tool treats that release as the
+        source of truth: each asset is trusted locally for up to 48h after
+        the last check (no network call within that window), then always
+        re-downloaded (replacing the old local copy) once the window
+        elapses — so the KB is never more than ~48h stale. Call this once
+        (or whenever you want to force a freshness check) — subsequent
+        queries use the cached local files.
 
-        Pass category to refresh just one category (e.g. "issues") instead
-        of downloading all of them. Optionally pass github_token if the
-        repository is private; otherwise the public release assets are
-        downloaded without authentication.
+        Pass category to refresh just one vector category (e.g. "issues")
+        instead of all of them; the lexical snapshot is always checked too.
+        Optionally pass github_token if the repository is private; otherwise
+        the public release assets are downloaded without authentication.
         """
         token = github_token or os.environ.get("GITHUB_TOKEN")
         try:
-            result = vector_kb.download_from_release(github_token=token, category=category)
-            return json.dumps(result, indent=2)
+            vector_result = vector_kb.download_from_release(github_token=token, category=category)
+            lexical_result = kb_service.sync_from_release(github_token=token)
+            return json.dumps(
+                {
+                    "status": vector_result.get("status"),
+                    "vector": vector_result,
+                    "lexical": lexical_result,
+                },
+                indent=2,
+            )
         except Exception as exc:
             return json.dumps({"status": "error", "message": str(exc)}, indent=2)
 
@@ -68,9 +82,12 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
 
         Use this for ALL preCICE questions (configuration, adapters, coupling
         schemes, errors, etc.), including questions that may be answered by a
-        past bug report or pull request discussion. Automatically downloads
-        the vector KB on first use if it is not present locally, then runs
-        cosine-similarity search.
+        past bug report or pull request discussion. The published vector KB
+        release is the source of truth: the local copy is trusted for up to
+        48h after the last check (a no-op network call if checked recently),
+        then always re-downloaded once that window elapses — the KB is
+        never more than ~48h stale, matching the alternate-day publish
+        cadence — before running cosine-similarity search.
 
         Pass category ("about", "community", "documentation", "tutorials",
         "forum", "issues", or "pulls") to restrict the search to that category
@@ -80,13 +97,30 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
         question can be embedded at query time.
         """
         try:
-            if not vector_kb.is_available(category=category):
-                token = os.environ.get("GITHUB_TOKEN")
-                dl = vector_kb.download_from_release(github_token=token, category=category)
-                if dl.get("status") == "error":
-                    return json.dumps(dl, indent=2)
+            token = os.environ.get("GITHUB_TOKEN")
+            dl = vector_kb.download_from_release(github_token=token, category=category)
+            if dl.get("status") == "error":
+                return json.dumps(dl, indent=2)
 
             result = vector_kb.query(question=question, top_k=top_k, category=category)
+            return json.dumps(result, indent=2)
+        except Exception as exc:
+            return json.dumps({"status": "error", "message": str(exc)}, indent=2)
+
+    @mcp.tool()
+    def kb_query_precice_lexical(question: str, top_k: int = 5) -> str:
+        """Keyword (BM25-style) search over the local preCICE lexical KB.
+
+        Useful as a fast, no-embedding-API-key-required complement to the
+        semantic search tools, or for exact-term lookups (error strings,
+        config keys). The published lexical KB release (kb-lexical.json) is
+        the source of truth: the local copy is trusted for up to 48h after
+        the last check, then always re-downloaded fresh once that window
+        elapses, falling back to a live docs/forum crawl only if the
+        release is unreachable and there's no local cache at all.
+        """
+        try:
+            result = kb_service.query_with_optional_live_refresh(question=question, top_k=top_k)
             return json.dumps(result, indent=2)
         except Exception as exc:
             return json.dumps({"status": "error", "message": str(exc)}, indent=2)

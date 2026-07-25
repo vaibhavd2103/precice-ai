@@ -31,6 +31,154 @@ DOCS_START_URL = "https://precice.org/"
 FORUM_RECENT_URL = "https://precice.discourse.group/latest.json"
 USER_AGENT = "precice-ai-mcp/1.0 (+https://github.com/precice)"
 
+# How often (in hours) a locally cached release asset is re-checked against
+# GitHub before being trusted as-is. 48h matches kb-ingest.yml's alternate-day
+# publish cadence, so this never checks more often than the source can change.
+RELEASE_ASSET_MAX_AGE_HOURS = 48
+
+
+# ---------------------------------------------------------------------------
+# Release asset sync — shared "source of truth" logic for both the vector KB
+# (per-category .npz files) and the lexical KB (kb-lexical.json), all
+# published to the same kb-latest GitHub Release by kb-ingest.yml.
+#
+# For RELEASE_ASSET_MAX_AGE_HOURS after the last check, the local copy is
+# trusted as-is — no network call at all. Once that window elapses, the
+# asset is always re-downloaded (old file deleted first), since kb-ingest.yml
+# rebuilds and republishes every category unconditionally on every one of
+# its ~48h runs — the KB is never allowed to go stale for longer than that,
+# regardless of whether the underlying content actually changed. The remote
+# digest is still fetched and compared, purely to distinguish "genuinely new
+# content" from "same content, refreshed on schedule" in the returned action.
+# ---------------------------------------------------------------------------
+
+
+def _meta_path(local_path: Path) -> Path:
+    return local_path.parent / f"{local_path.name}.meta.json"
+
+
+def _load_asset_meta(local_path: Path) -> dict[str, str] | None:
+    meta_file = _meta_path(local_path)
+    if not meta_file.exists():
+        return None
+    try:
+        data = json.loads(meta_file.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _save_asset_meta(local_path: Path, remote_signature: str) -> None:
+    _meta_path(local_path).write_text(
+        json.dumps({"remote_signature": remote_signature, "checked_at": _now_iso()}),
+        encoding="utf-8",
+    )
+
+
+def _meta_expired(meta: dict[str, str], max_age_hours: int) -> bool:
+    checked_at = meta.get("checked_at")
+    if not isinstance(checked_at, str):
+        return True
+    try:
+        dt = datetime.fromisoformat(checked_at.replace("Z", "+00:00"))
+    except ValueError:
+        return True
+    age_hours = (datetime.now(timezone.utc) - dt).total_seconds() / 3600.0
+    return age_hours > max_age_hours
+
+
+def _fetch_release_assets(
+    repo: str, tag: str, github_token: str | None, timeout_seconds: int = 20
+) -> dict[str, dict[str, str]]:
+    """Map of asset name -> {digest, url} for a GitHub Release, via the API
+    (metadata only — doesn't download asset bytes)."""
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": USER_AGENT}
+    if github_token:
+        headers["Authorization"] = f"Bearer {github_token}"
+    url = f"https://api.github.com/repos/{repo}/releases/tags/{tag}"
+    with httpx.Client(timeout=timeout_seconds, headers=headers) as client:
+        response = client.get(url)
+        response.raise_for_status()
+        data = response.json()
+
+    assets: dict[str, dict[str, str]] = {}
+    for asset in data.get("assets", []):
+        name = asset.get("name")
+        if not name:
+            continue
+        # digest is a real content hash (sha256:...) when GitHub reports one;
+        # updated_at is a reasonable fallback signal (assets are replaced via
+        # --clobber, which bumps this even when digest isn't exposed).
+        assets[name] = {
+            "digest": asset.get("digest") or asset.get("updated_at") or "",
+            "url": asset.get("browser_download_url", ""),
+        }
+    return assets
+
+
+def sync_release_asset(
+    *,
+    local_path: Path,
+    asset_name: str,
+    repo: str,
+    tag: str,
+    github_token: str | None = None,
+    max_age_hours: int = RELEASE_ASSET_MAX_AGE_HOURS,
+    timeout_seconds: int = 180,
+) -> dict[str, object]:
+    """Ensure local_path mirrors the named release asset, treating the
+    release as the source of truth on a fixed refresh cadence.
+
+    Within max_age_hours of the last check, the local copy is trusted as-is
+    (no network call at all). Once that window elapses, the asset is always
+    re-downloaded — the publish side (kb-ingest.yml) rebuilds and republishes
+    unconditionally every cycle, so a fresh copy is pulled every time the
+    window elapses regardless of whether the digest happens to match; the
+    digest is only used to decide *whether the old file needs deleting first*,
+    not whether to skip the download.
+    """
+    local_path.parent.mkdir(parents=True, exist_ok=True)
+    meta = _load_asset_meta(local_path)
+
+    if local_path.exists() and meta and not _meta_expired(meta, max_age_hours):
+        return {"status": "ok", "action": "cached", "path": str(local_path)}
+
+    try:
+        assets = _fetch_release_assets(repo, tag, github_token)
+    except Exception as exc:
+        if local_path.exists():
+            # Can't reach GitHub right now — keep serving what we already have.
+            return {"status": "ok", "action": "cached_offline", "path": str(local_path), "message": str(exc)}
+        return {"status": "error", "message": f"Failed to fetch release metadata: {exc}"}
+
+    asset = assets.get(asset_name)
+    if asset is None:
+        if local_path.exists():
+            return {"status": "ok", "action": "cached_missing_remote", "path": str(local_path)}
+        return {"status": "error", "message": f"No asset named {asset_name!r} found in {repo}@{tag}"}
+
+    remote_signature = asset["digest"]
+    content_unchanged = bool(local_path.exists() and meta and meta.get("remote_signature") == remote_signature)
+
+    headers: dict[str, str] = {}
+    if github_token:
+        headers["Authorization"] = f"token {github_token}"
+    with httpx.Client(follow_redirects=True, timeout=timeout_seconds, headers=headers) as client:
+        response = client.get(asset["url"])
+        response.raise_for_status()
+        content = response.content
+
+    if local_path.exists():
+        local_path.unlink()
+    local_path.write_bytes(content)
+    _save_asset_meta(local_path, remote_signature)
+    return {
+        "status": "ok",
+        "action": "downloaded_unchanged_content" if content_unchanged else "downloaded",
+        "path": str(local_path),
+        "size_mb": round(len(content) / 1_048_576, 2),
+    }
+
 
 @dataclass
 class KBDocument:
@@ -174,30 +322,56 @@ class KnowledgeBaseService:
             ],
         }
 
+    def sync_from_release(self, github_token: str | None = None) -> dict[str, object]:
+        """Sync kb_file from the kb-latest Release's kb-lexical.json asset.
+
+        The release is the source of truth: the local copy is trusted as-is
+        for RELEASE_ASSET_MAX_AGE_HOURS (alternate days, matching
+        kb-ingest.yml's publish cadence — kb-ingest.yml republishes every
+        category unconditionally on every run, so once that window elapses
+        the asset is always re-downloaded, old file deleted first). Falls
+        back to a hard error if there's no asset and no cached file,
+        letting the caller decide whether to fall back to a live crawl.
+        """
+        repo = os.environ.get("PRECICE_AI_GITHUB_REPO", _DEFAULT_GITHUB_REPO)
+        return sync_release_asset(
+            local_path=self.kb_file,
+            asset_name="kb-lexical.json",
+            repo=repo,
+            tag=_RELEASE_TAG,
+            github_token=github_token,
+        )
+
     def query_with_optional_live_refresh(
         self,
         question: str,
         top_k: int = 5,
+        github_token: str | None = None,
         refresh_if_older_than_hours: int = 24,
     ) -> dict[str, object]:
-        payload = self._read_kb()
+        sync_result = self.sync_from_release(github_token=github_token)
 
-        if self._is_stale(payload, refresh_if_older_than_hours):
-            ingest_result = self.ingest_precice_sources(
-                docs_pages_limit=10,
-                forum_topics_limit=10,
-            )
-            ingest_status = ingest_result.get("status")
-            # "ok" = fresh data written; "warning" = kept old data — both allow querying.
-            # On hard failure with no existing KB, surface the error.
-            if ingest_status == "error" and not self._read_kb():
-                return {
-                    "status": "error",
-                    "message": (
-                        "Could not fetch preCICE docs/forum and no cached KB exists. "
-                        f"Details: {ingest_result.get('message', '')}"
-                    ),
-                }
+        if sync_result.get("status") == "error":
+            # No release asset reachable and nothing cached locally — fall
+            # back to the live docs/forum crawl as a last resort.
+            payload = self._read_kb()
+            if self._is_stale(payload, refresh_if_older_than_hours):
+                ingest_result = self.ingest_precice_sources(
+                    docs_pages_limit=10,
+                    forum_topics_limit=10,
+                )
+                ingest_status = ingest_result.get("status")
+                # "ok" = fresh data written; "warning" = kept old data — both allow querying.
+                # On hard failure with no existing KB, surface the error.
+                if ingest_status == "error" and not self._read_kb():
+                    return {
+                        "status": "error",
+                        "message": (
+                            "Could not sync the lexical KB release, fetch docs/forum live, "
+                            f"or find a cached KB. Sync error: {sync_result.get('message', '')}; "
+                            f"live fetch error: {ingest_result.get('message', '')}"
+                        ),
+                    }
 
         return self.query(question=question, top_k=top_k)
 
@@ -468,51 +642,42 @@ class VectorKnowledgeBase:
     def download_from_release(
         self, github_token: str | None = None, category: str | None = None
     ) -> dict[str, object]:
+        """Sync each category's .npz from the kb-latest Release.
+
+        The release is the source of truth: each category's local file is
+        trusted for RELEASE_ASSET_MAX_AGE_HOURS (alternate days) after the
+        last check, then always re-downloaded (old file deleted first) once
+        that window elapses, since kb-ingest.yml republishes every category
+        unconditionally on every run. If no asset exists yet for a category
+        and there's no local copy either, falls back to building it locally.
+        """
         categories = [category] if category else CATEGORIES
         repo = os.environ.get("PRECICE_AI_GITHUB_REPO", _DEFAULT_GITHUB_REPO)
-        headers: dict[str, str] = {}
-        if github_token:
-            headers["Authorization"] = f"token {github_token}"
 
         per_category: dict[str, object] = {}
         any_ok = False
-        with httpx.Client(follow_redirects=True, timeout=180, headers=headers) as client:
-            for cat in categories:
-                asset_url = (
-                    f"https://github.com/{repo}/releases/download/{_RELEASE_TAG}/{_asset_name(cat)}"
-                )
-                try:
-                    response = client.get(asset_url)
-                    response.raise_for_status()
-                    self._npz_files[cat].write_bytes(response.content)
-                except httpx.HTTPStatusError as exc:
-                    if exc.response.status_code == 404:
-                        # No release/asset published yet (e.g. the scheduled
-                        # workflow hasn't run) — build this category locally
-                        # instead of failing outright.
-                        per_category[cat] = self._build_category_locally(cat)
-                        if per_category[cat].get("status") == "ok":
-                            any_ok = True
-                        continue
-                    per_category[cat] = {
-                        "status": "error",
-                        "message": f"Failed to download release asset ({exc.response.status_code}): {asset_url}",
-                    }
-                    continue
-                except Exception as exc:
-                    per_category[cat] = {"status": "error", "message": str(exc)}
-                    continue
-
-                # Invalidate in-memory cache so next query reloads from fresh file
+        for cat in categories:
+            result = sync_release_asset(
+                local_path=self._npz_files[cat],
+                asset_name=_asset_name(cat),
+                repo=repo,
+                tag=_RELEASE_TAG,
+                github_token=github_token,
+            )
+            if result.get("status") == "error":
+                # No release asset published yet and nothing cached locally —
+                # build this category locally instead of failing outright.
+                result = self._build_category_locally(cat)
+            elif str(result.get("action", "")).startswith("downloaded"):
+                # File on disk was replaced (fresh 48h cycle, or genuinely
+                # changed content) — drop the in-memory cache so the next
+                # query reloads from the fresh file.
                 self._embeddings.pop(cat, None)
                 self._chunks.pop(cat, None)
+
+            per_category[cat] = result
+            if result.get("status") == "ok":
                 any_ok = True
-                size_mb = self._npz_files[cat].stat().st_size / 1_048_576
-                per_category[cat] = {
-                    "status": "ok",
-                    "npz_file": str(self._npz_files[cat]),
-                    "size_mb": round(size_mb, 2),
-                }
 
         return {
             "status": "ok" if any_ok else "error",

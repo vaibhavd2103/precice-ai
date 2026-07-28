@@ -37,27 +37,35 @@ After installation, the `precice-ai` CLI is available in the venv.
 Notes:
 - `source .venv/bin/activate` is for macOS/Linux shells.
 - Windows users should activate the virtual environment with `.venv\Scripts\Activate.ps1` in PowerShell or `.venv\Scripts\activate.bat` in Command Prompt.
-- `python3` is usually the safest choice on macOS/Linux, while `py` is common on Windows.
+- `python3` is usually the safest choice on macOS/Linux.
+- If `precice-ai` is not recognized on Windows, use one of these equivalents from the repo root:
+  `python -m precice_ai.cli.main ...`
+  `.venv\Scripts\precice-ai.exe ...`
 
 ## Quick start
 
 Once the environment is active, use one command to register the MCP server with your agentic client:
 
-```bash
+```text
+macOS / Linux:
 precice-ai bootstrap auto --projects-dir /path/to/preCICE/cases
+
+Windows fallback:
+python -m precice_ai.cli.main bootstrap auto --projects-dir C:\path\to\preCICE\cases
 ```
 
 Pass configuration as CLI arguments when needed:
 
-```bash
+```text
+macOS / Linux:
 precice-ai bootstrap codex \
   --projects-dir /path/to/preCICE/cases \
   --openrouter-api-key sk-or-...
 
-precice-ai bootstrap claude-code \
-  --projects-dir /path/to/preCICE/cases \
-  --scope user \
-  --embedding-model openai/text-embedding-3-small
+Windows fallback:
+python -m precice_ai.cli.main bootstrap codex `
+  --projects-dir C:\path\to\preCICE\cases `
+  --openrouter-api-key sk-or-...
 ```
 
 This command:

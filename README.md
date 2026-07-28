@@ -27,7 +27,7 @@ pip install -e .
 ```powershell
 git clone https://github.com/vaibhavd2103/precice-ai
 cd precice-ai
-py -m venv .venv
+python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -e .
 ```

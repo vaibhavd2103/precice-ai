@@ -80,6 +80,78 @@ The `precice-ai bootstrap ...` command works on macOS, Windows, and Linux. The m
 
 ---
 
+## Manual local setup
+
+If you prefer not to use the CLI, or if the `precice-ai` command is not available in your shell, you can register the MCP server manually by editing your client config.
+
+Use the Python executable inside the local virtual environment:
+- macOS / Linux: `.venv/bin/python`
+- Windows: `.venv\\Scripts\\python.exe`
+
+Use this MCP server command:
+- `-m precice_ai.server`
+
+### Step 1: choose your client config file
+
+- Claude Code project scope: `.mcp.json` in the project directory where you open Claude Code
+- Claude Code user scope: `~/.claude/settings.json`
+- Claude Desktop macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Claude Desktop Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+- Claude Desktop Linux: `~/.config/Claude/claude_desktop_config.json`
+- Cursor: `~/.cursor/mcp.json`
+- Codex: `~/.codex/mcp.json`
+- Windsurf: `~/.codeium/windsurf/mcp_config.json`
+
+### Step 2: add the MCP entry
+
+macOS / Linux:
+
+```json
+{
+  "mcpServers": {
+    "precice-ai": {
+      "command": "/absolute/path/to/precice-ai/.venv/bin/python",
+      "args": ["-m", "precice_ai.server"],
+      "env": {
+        "PRECICE_PROJECTS_DIR": "/absolute/path/to/preCICE/cases",
+        "OPENROUTER_API_KEY": "sk-or-..."
+      }
+    }
+  }
+}
+```
+
+Windows:
+
+```json
+{
+  "mcpServers": {
+    "precice-ai": {
+      "command": "C:\\absolute\\path\\to\\precice-ai\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "precice_ai.server"],
+      "env": {
+        "PRECICE_PROJECTS_DIR": "C:\\absolute\\path\\to\\preCICE\\cases",
+        "OPENROUTER_API_KEY": "sk-or-..."
+      }
+    }
+  }
+}
+```
+
+If you use Blablador instead of OpenRouter, replace `OPENROUTER_API_KEY` with `BLABLADOR_API_KEY` and also add:
+- `EMBEDDING_BASE_URL=https://helmholtz-blablador.fz-juelich.de:8000/v1`
+- `EMBEDDING_MODEL=alias-embeddings`
+
+### Step 3: reload the client
+
+- Claude Code: reopen the project, or restart the app for user-scope config
+- Claude Desktop: restart the app
+- Cursor: reload the window
+- Codex: restart Codex
+- Windsurf: restart the app
+
+---
+
 ## Client setup
 
 ```bash

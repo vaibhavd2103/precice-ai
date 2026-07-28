@@ -21,7 +21,7 @@ class Platform(ABC):
         """Return True if this platform appears to be installed."""
         ...
 
-    def mcp_entry(self, projects_dir: Path) -> dict[str, Any]:
+    def mcp_entry(self, projects_dir: Path, extra_env: dict[str, str] | None = None) -> dict[str, Any]:
         """Return the standard MCP server config block for this package."""
         entry: dict[str, Any] = {
             "command": sys.executable,
@@ -29,7 +29,10 @@ class Platform(ABC):
         }
         # Only embed env var if it differs from the convention-based default.
         # Users running from the repo root won't need it; global installs will.
-        entry["env"] = {"PRECICE_PROJECTS_DIR": str(projects_dir)}
+        env = {"PRECICE_PROJECTS_DIR": str(projects_dir)}
+        if extra_env:
+            env.update(extra_env)
+        entry["env"] = env
         return entry
 
     def _merge_json_config(self, config_path: Path, entry: dict[str, Any]) -> None:

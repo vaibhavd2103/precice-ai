@@ -17,7 +17,7 @@ class CursorPlatform(Platform):
 
     def install(self, projects_dir: Path, **kwargs: Any) -> None:
         config_path = Path.home() / ".cursor" / "mcp.json"
-        entry = self.mcp_entry(projects_dir)
+        entry = self.mcp_entry(projects_dir, extra_env=kwargs.get("extra_env"))
         self._merge_json_config(config_path, entry)
         print(
             f"\n[{self.display_name}] Registered 'precice-ai' in:\n"

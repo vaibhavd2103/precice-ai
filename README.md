@@ -21,6 +21,33 @@ pip install -e .
 
 After installation, the `precice-ai` CLI is available in the venv.
 
+### One-command bootstrap for a supervisor / teammate
+
+For the smoothest local handoff after cloning the repo, use the repo bootstrap script:
+
+```bash
+./install.sh auto \
+  --projects-dir /path/to/preCICE/cases \
+  --openrouter-api-key sk-or-...
+```
+
+What this does:
+- creates `.venv`
+- installs the package in editable mode
+- creates or updates `.env`
+- auto-detects a supported MCP client when possible
+- writes the MCP server entry into that client's config
+
+If you want to target a specific client instead of auto-detect:
+
+```bash
+./install.sh codex --projects-dir /path/to/preCICE/cases --openrouter-api-key sk-or-...
+./install.sh claude-code --projects-dir /path/to/preCICE/cases --openrouter-api-key sk-or-...
+./install.sh claude-code --scope user --projects-dir /path/to/preCICE/cases --openrouter-api-key sk-or-...
+```
+
+This is the recommended path for a supervisor using a local clone with Codex or Claude Code.
+
 ---
 
 ## Platform setup
@@ -28,6 +55,7 @@ After installation, the `precice-ai` CLI is available in the venv.
 Register the MCP server with your AI coding platform:
 
 ```bash
+precice-ai setup auto
 precice-ai setup claude-code
 precice-ai setup claude-desktop
 precice-ai setup cursor
@@ -41,6 +69,18 @@ Pass `--projects-dir` to point at a custom location (defaults to `./test-project
 ```bash
 precice-ai setup claude-code --projects-dir /path/to/my/precice-cases
 ```
+
+### Bootstrap command
+
+If dependencies are already installed and you want the CLI to create `.env` and register the MCP server in one shot:
+
+```bash
+precice-ai bootstrap auto \
+  --projects-dir /path/to/my/precice-cases \
+  --openrouter-api-key sk-or-...
+```
+
+This writes `.env` in the repo root by default and also injects the same runtime variables into the MCP client config so the server still works even if the client does not inherit shell environment.
 
 ### Check which platforms are detected
 
@@ -101,6 +141,28 @@ precice-ai setup codex
 
 Writes to `~/.codex/mcp.json`.
 
+### Automatic vs manual setup options
+
+There are three practical ways to distribute this MCP server locally:
+
+1. Clone + one command
+   Recommended for teammates. They clone the repo and run `./install.sh ...`.
+
+2. Install first, then bootstrap
+   Useful if they already manage the Python environment themselves. Run `precice-ai bootstrap ...`.
+
+3. Manual MCP config
+   Use `precice-ai setup generic` to print the JSON snippet, then paste it into the agent client's MCP config file manually.
+
+Auto-detection works by checking for known client installs/config directories in this order:
+- `claude-code`
+- `codex`
+- `cursor`
+- `windsurf`
+- `claude-desktop`
+
+If nothing is detected, use an explicit platform name or `generic`.
+
 ### Manual / generic
 
 ```bash
@@ -131,13 +193,21 @@ Prints the JSON block to paste into any MCP-compatible config file:
 |---|---|---|
 | `PRECICE_PROJECTS_DIR` | `./test-projects` | Directory scanned by `list_precice_projects` and all project tools. |
 | `PRECICE_KB_STORE_DIR` | `~/.precice-ai/kb_store` | Where the vector KB archive is stored locally. |
-| `OPENROUTER_API_KEY` | — | **Required for KB queries.** API key used to embed questions at query time. |
+| `OPENROUTER_API_KEY` | — | **Required for KB queries.** API key used to embed questions at query time. Can be stored in `.env`, injected into MCP client config, or both. |
 | `EMBEDDING_BASE_URL` | `https://openrouter.ai/api/v1` | OpenAI-compatible base URL for the embedding API. Override to switch providers (e.g. Blablador). |
 | `EMBEDDING_MODEL` | `openai/text-embedding-3-small` | Embedding model name passed to the API. |
 | `PRECICE_AI_GITHUB_REPO` | `vaibhavd2103/precice-ai` | GitHub repo from which `kb_ingest_precice_data` downloads the release asset. |
 | `GITHUB_TOKEN` | — | Optional. Set if the release asset is in a private repo. |
 
-The `setup` command automatically injects `PRECICE_PROJECTS_DIR` into the platform config. Add the embedding variables manually for KB query support:
+The `setup` command automatically injects `PRECICE_PROJECTS_DIR` into the platform config. You can also pass the key material directly:
+
+```bash
+precice-ai setup codex \
+  --projects-dir /path/to/your/projects \
+  --openrouter-api-key sk-or-...
+```
+
+If you prefer to manage the config yourself, add the embedding variables manually:
 
 ```json
 {

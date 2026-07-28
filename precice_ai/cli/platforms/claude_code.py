@@ -20,7 +20,7 @@ class ClaudeCodePlatform(Platform):
         return result.returncode == 0
 
     def install(self, projects_dir: Path, scope: str = "project", **kwargs: Any) -> None:
-        entry = self.mcp_entry(projects_dir)
+        entry = self.mcp_entry(projects_dir, extra_env=kwargs.get("extra_env"))
 
         if scope == "user":
             config_path = Path.home() / ".claude" / "settings.json"

@@ -9,7 +9,6 @@ This project implements an MCP server for assisting users with local preCICE sim
 - Always inspect `precice-config.xml` before modifying it.
 - Always create a backup before applying config changes.
 - Prefer MCP tools over raw shell commands.
-- Only run commands inside `test-projects/`.
 - Explain simulation/configuration errors in simple language.
 
 ## preCICE knowledge base
@@ -58,6 +57,7 @@ Future scope:
 A knowledge graph is available at `graphify-out/` if graphify is installed.
 
 Rules (only apply when `graphify-out/graph.json` exists):
+
 - For codebase questions, first run `graphify query "<question>"`. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts.
 - Read `graphify-out/GRAPH_REPORT.md` only for broad architecture review.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).

@@ -48,6 +48,14 @@ If you want to target a specific client instead of auto-detect:
 
 This is the recommended path for a supervisor using a local clone with Codex or Claude Code.
 
+If you want the current folder to become the active preCICE projects directory automatically, first `cd` into that folder and then run:
+
+```bash
+precice-ai open auto --openrouter-api-key sk-or-...
+```
+
+That command uses the current working directory as `PRECICE_PROJECTS_DIR`, updates MCP config, and launches a supported agent client there when available.
+
 ---
 
 ## Platform setup
@@ -81,6 +89,35 @@ precice-ai bootstrap auto \
 ```
 
 This writes `.env` in the repo root by default and also injects the same runtime variables into the MCP client config so the server still works even if the client does not inherit shell environment.
+
+### Open from the current directory
+
+If you want behavior closer to `code .`, navigate into the folder you want the MCP server to use and run:
+
+```bash
+precice-ai open auto
+```
+
+Examples:
+
+```bash
+cd "C:\Users\YourName\Desktop\precice-projects"
+precice-ai open codex --openrouter-api-key sk-or-...
+
+cd /path/to/other/cases
+precice-ai open claude-code
+```
+
+This command:
+- uses the current working directory by default
+- writes that path into the MCP config as `PRECICE_PROJECTS_DIR`
+- launches the selected client from that same directory when launch is supported
+
+Supported launch targets currently:
+- `claude-code`
+- `codex`
+- `cursor`
+- `windsurf`
 
 ### Check which platforms are detected
 

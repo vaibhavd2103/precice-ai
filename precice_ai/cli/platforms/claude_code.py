@@ -37,3 +37,9 @@ class ClaudeCodePlatform(Platform):
                 f"\n[{self.display_name}] Registered 'precice-ai' in {config_path}.\n"
                 f"  Open this directory in Claude Code and the server will be available."
             )
+
+    def can_launch(self) -> bool:
+        return True
+
+    def launch(self, workspace_dir: Path, **kwargs: Any) -> None:
+        self._spawn(["claude"], cwd=workspace_dir)

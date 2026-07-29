@@ -71,8 +71,10 @@ python -m precice_ai.cli.main bootstrap codex `
 This command:
 
 - creates or updates `.env`
-- writes the MCP server entry into the selected client config
+- registers the MCP server with the selected client
 - injects the same runtime variables into that config for reliable startup
+
+For Codex specifically, `precice-ai bootstrap codex` now uses the native `codex mcp add ...` flow, which writes to `~/.codex/config.toml`.
 
 Use `auto` to detect a supported client automatically, or pass an explicit client such as `codex`, `claude-code`, `cursor`, `windsurf`, or `claude-desktop`.
 
@@ -82,7 +84,7 @@ The `precice-ai bootstrap ...` command works on macOS, Windows, and Linux. The m
 
 ## Manual local setup
 
-If you prefer not to use the CLI, or if the `precice-ai` command is not available in your shell, you can register the MCP server manually by editing your client config.
+If you prefer not to use `precice-ai bootstrap`, or if the `precice-ai` command is not available in your shell, you can register the MCP server manually in your client config. For Claude Code and Codex, you can also use each client's own MCP CLI.
 
 Use the Python executable inside the local virtual environment:
 - macOS / Linux: `.venv/bin/python`
@@ -98,11 +100,20 @@ Use this MCP server command:
 - Claude Desktop macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Claude Desktop Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 - Claude Desktop Linux: `~/.config/Claude/claude_desktop_config.json`
-- Cursor: `~/.cursor/mcp.json`
-- Codex: `~/.codex/mcp.json`
+- Cursor project scope: `.cursor/mcp.json`
+- Cursor global scope: `~/.cursor/mcp.json`
+- Codex: `~/.codex/config.toml`
 - Windsurf: `~/.codeium/windsurf/mcp_config.json`
 
 ### Step 2: add the MCP entry
+
+For Claude Code, you can also use the native CLI:
+
+```bash
+claude mcp add-json --scope project precice-ai '{"type":"stdio","command":"/absolute/path/to/precice-ai/.venv/bin/python","args":["-m","precice_ai.server"],"env":{"PRECICE_PROJECTS_DIR":"/absolute/path/to/preCICE/cases","OPENROUTER_API_KEY":"sk-or-..."}}'
+```
+
+For Cursor, Claude Desktop, Windsurf, and Claude Code's JSON config files, use this structure.
 
 macOS / Linux:
 
@@ -136,6 +147,27 @@ Windows:
     }
   }
 }
+```
+
+For Codex, use the native CLI:
+
+```bash
+codex mcp add precice-ai \
+  --env PRECICE_PROJECTS_DIR=/absolute/path/to/preCICE/cases \
+  --env OPENROUTER_API_KEY=sk-or-... \
+  -- /absolute/path/to/precice-ai/.venv/bin/python -m precice_ai.server
+```
+
+Or edit `~/.codex/config.toml` directly:
+
+```toml
+[mcp_servers."precice-ai"]
+command = "/absolute/path/to/precice-ai/.venv/bin/python"
+args = ["-m", "precice_ai.server"]
+
+[mcp_servers."precice-ai".env]
+PRECICE_PROJECTS_DIR = "/absolute/path/to/preCICE/cases"
+OPENROUTER_API_KEY = "sk-or-..."
 ```
 
 If you use Blablador instead of OpenRouter, replace `OPENROUTER_API_KEY` with `BLABLADOR_API_KEY` and also add:
@@ -189,6 +221,8 @@ precice-ai bootstrap claude-code --scope user
 
 After setup, open the directory in Claude Code — the server is picked up automatically.
 
+Cross-check: Claude Code also supports `claude mcp add` / `claude mcp add-json` with `--scope project` or `--scope user`, plus `.mcp.json` for project-shared config and `~/.claude/settings.json` for user config.
+
 #### Claude Desktop
 
 ```bash
@@ -209,7 +243,7 @@ Restart Claude Desktop after running setup.
 precice-ai bootstrap cursor
 ```
 
-Writes to `~/.cursor/mcp.json`. Reload the window after setup.
+Writes to `~/.cursor/mcp.json`. Cursor's docs also support project-local MCP config in `.cursor/mcp.json`. Reload the window after setup.
 
 #### Windsurf
 
@@ -225,7 +259,9 @@ Writes to `~/.codeium/windsurf/mcp_config.json`. Restart Windsurf after setup.
 precice-ai bootstrap codex
 ```
 
-Writes to `~/.codex/mcp.json`.
+Runs `codex mcp add precice-ai ...`, which updates `~/.codex/config.toml`.
+
+Cross-check: current Codex uses TOML-based MCP config under `~/.codex/config.toml`, and the native `codex mcp add|get|list|remove` commands manage that config.
 
 ---
 

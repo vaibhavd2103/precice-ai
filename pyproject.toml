@@ -8,6 +8,8 @@ version = "0.1.0"
 description = "MCP server for preCICE simulation project management"
 readme = "README.md"
 requires-python = ">=3.10"
+authors = [{ name = "Vaibhav Dange", email = "dangevaibhav21@gmail.com" }]
+maintainers = [{ name = "Vaibhav Dange", email = "dangevaibhav21@gmail.com" }]
 dependencies = [
     "fastmcp>=3.0",
     "httpx>=0.24",

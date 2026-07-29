@@ -20,7 +20,7 @@ class ClaudeCodePlatform(Platform):
         return result.returncode == 0
 
     def install(self, projects_dir: Path, scope: str = "project", **kwargs: Any) -> None:
-        entry = self.mcp_entry(projects_dir)
+        entry = self.mcp_entry(projects_dir, extra_env=kwargs.get("extra_env"))
 
         if scope == "user":
             config_path = Path.home() / ".claude" / "settings.json"
@@ -37,3 +37,9 @@ class ClaudeCodePlatform(Platform):
                 f"\n[{self.display_name}] Registered 'precice-ai' in {config_path}.\n"
                 f"  Open this directory in Claude Code and the server will be available."
             )
+
+    def can_launch(self) -> bool:
+        return True
+
+    def launch(self, workspace_dir: Path, **kwargs: Any) -> None:
+        self._spawn(["claude"], cwd=workspace_dir)

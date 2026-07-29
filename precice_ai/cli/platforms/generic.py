@@ -18,7 +18,7 @@ class GenericPlatform(Platform):
         return True
 
     def install(self, projects_dir: Path, **kwargs: Any) -> None:
-        entry = self.mcp_entry(projects_dir)
+        entry = self.mcp_entry(projects_dir, extra_env=kwargs.get("extra_env"))
         snippet = {"mcpServers": {"precice-ai": entry}}
         print(
             "\n[Generic] Add this block to your MCP client's config file:\n"

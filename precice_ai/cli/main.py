@@ -9,6 +9,7 @@ from typing import Optional
 import typer
 from dotenv import load_dotenv
 
+from precice_ai.cli.bootstrap import build_client_env, write_env_file
 from precice_ai.cli.platforms import REGISTRY
 
 # Same .env lookup as precice_ai/server.py, so OPENROUTER_API_KEY / GITHUB_TOKEN
@@ -44,13 +45,58 @@ def _configure_logging(verbose: bool) -> None:
         logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
 
 
+def _detect_platform(launchable_only: bool = False) -> str | None:
+    for key in ("claude-code", "codex", "cursor", "windsurf", "claude-desktop"):
+        platform_cls = REGISTRY.get(key)
+        if not platform_cls:
+            continue
+        instance = platform_cls()
+        if not instance.is_available():
+            continue
+        if launchable_only and not instance.can_launch():
+            continue
+        return key
+    return None
+
+
+def _resolve_platform(platform: str, launchable_only: bool = False) -> str:
+    key = platform.lower().replace("_", "-")
+    if key == "auto":
+        detected = _detect_platform(launchable_only=launchable_only)
+        if detected is None:
+            available = ", ".join(sorted(REGISTRY))
+            typer.echo(
+                "Could not auto-detect a supported MCP client. "
+                f"Run `precice-ai list-platforms` or choose one manually: {available}",
+                err=True,
+            )
+            raise typer.Exit(1)
+        typer.echo(f"Auto-detected MCP client: {detected}")
+        return detected
+    return key
+
+
+def _build_extra_env(
+    openrouter_api_key: Optional[str],
+    embedding_base_url: Optional[str],
+    embedding_model: Optional[str],
+    github_token: Optional[str],
+) -> dict[str, str]:
+    return build_client_env(
+        openrouter_api_key=openrouter_api_key,
+        embedding_base_url=embedding_base_url,
+        embedding_model=embedding_model,
+        github_token=github_token,
+    )
+
+
 @app.command()
 def setup(
     platform: str = typer.Argument(
         ...,
         help=(
             "Platform to configure. "
-            "Choices: claude-code, claude-desktop, codex, cursor, windsurf, generic"
+            "Choices: auto, claude-code, claude-desktop, codex, cursor, windsurf, generic"
         ),
     ),
     projects_dir: Optional[Path] = typer.Option(
@@ -69,9 +115,29 @@ def setup(
         "-s",
         help="[claude-code only] Config scope: 'project' (.mcp.json) or 'user' (~/.claude/settings.json).",
     ),
+    openrouter_api_key: Optional[str] = typer.Option(
+        None,
+        "--openrouter-api-key",
+        help="Also inject OPENROUTER_API_KEY into the MCP client config.",
+    ),
+    embedding_base_url: Optional[str] = typer.Option(
+        None,
+        "--embedding-base-url",
+        help="Also inject EMBEDDING_BASE_URL into the MCP client config.",
+    ),
+    embedding_model: Optional[str] = typer.Option(
+        None,
+        "--embedding-model",
+        help="Also inject EMBEDDING_MODEL into the MCP client config.",
+    ),
+    github_token: Optional[str] = typer.Option(
+        None,
+        "--github-token",
+        help="Also inject GITHUB_TOKEN into the MCP client config.",
+    ),
 ) -> None:
     """Register the precice-ai MCP server with a supported AI coding platform."""
-    key = platform.lower().replace("_", "-")
+    key = _resolve_platform(platform)
     platform_cls = REGISTRY.get(key)
 
     if platform_cls is None:
@@ -80,9 +146,185 @@ def setup(
         raise typer.Exit(1)
 
     resolved_projects_dir = projects_dir or (Path.cwd() / "test-projects")
+    extra_env = _build_extra_env(
+        openrouter_api_key=openrouter_api_key,
+        embedding_base_url=embedding_base_url,
+        embedding_model=embedding_model,
+        github_token=github_token,
+    )
 
     instance = platform_cls()
-    instance.install(projects_dir=resolved_projects_dir, scope=scope)
+    instance.install(projects_dir=resolved_projects_dir, scope=scope, extra_env=extra_env)
+
+
+@app.command()
+def bootstrap(
+    platform: str = typer.Argument(
+        "auto",
+        help=(
+            "Platform to configure. "
+            "Choices: auto, claude-code, claude-desktop, codex, cursor, windsurf, generic"
+        ),
+    ),
+    projects_dir: Optional[Path] = typer.Option(
+        None,
+        "--projects-dir",
+        "-p",
+        help=(
+            "Absolute path to the directory that contains your preCICE projects. "
+            "Defaults to ./test-projects relative to the current working directory."
+        ),
+        resolve_path=True,
+    ),
+    scope: str = typer.Option(
+        "project",
+        "--scope",
+        "-s",
+        help="[claude-code only] Config scope: 'project' (.mcp.json) or 'user' (~/.claude/settings.json).",
+    ),
+    openrouter_api_key: Optional[str] = typer.Option(
+        None,
+        "--openrouter-api-key",
+        help="Write OPENROUTER_API_KEY to .env and inject it into the MCP client config.",
+    ),
+    embedding_base_url: str = typer.Option(
+        "https://openrouter.ai/api/v1",
+        "--embedding-base-url",
+        help="Write EMBEDDING_BASE_URL to .env and inject it into the MCP client config.",
+    ),
+    embedding_model: str = typer.Option(
+        "openai/text-embedding-3-small",
+        "--embedding-model",
+        help="Write EMBEDDING_MODEL to .env and inject it into the MCP client config.",
+    ),
+    github_token: Optional[str] = typer.Option(
+        None,
+        "--github-token",
+        help="Write GITHUB_TOKEN to .env and inject it into the MCP client config.",
+    ),
+    env_file: Path = typer.Option(
+        Path(".env"),
+        "--env-file",
+        help="Path to the .env file to create or update.",
+        resolve_path=False,
+    ),
+    force_env: bool = typer.Option(
+        False,
+        "--force-env",
+        help="Overwrite the env file if it already exists.",
+    ),
+) -> None:
+    """Create .env values and register the MCP server with a supported client."""
+    resolved_projects_dir = projects_dir or (Path.cwd() / "test-projects")
+    resolved_platform = _resolve_platform(platform)
+    resolved_env_file = env_file if env_file.is_absolute() else (Path.cwd() / env_file)
+
+    write_env_file(
+        env_path=resolved_env_file,
+        openrouter_api_key=openrouter_api_key,
+        embedding_base_url=embedding_base_url,
+        embedding_model=embedding_model,
+        github_token=github_token,
+        force=force_env,
+    )
+
+    if force_env:
+        typer.echo(f"Wrote environment file: {resolved_env_file}")
+    elif resolved_env_file.exists():
+        typer.echo(f"Environment file ready: {resolved_env_file}")
+
+    extra_env = _build_extra_env(
+        openrouter_api_key=openrouter_api_key,
+        embedding_base_url=embedding_base_url,
+        embedding_model=embedding_model,
+        github_token=github_token,
+    )
+
+    platform_cls = REGISTRY.get(resolved_platform)
+    if platform_cls is None:
+        available = ", ".join(sorted(REGISTRY))
+        typer.echo(f"Unknown platform '{platform}'. Available: {available}", err=True)
+        raise typer.Exit(1)
+
+    instance = platform_cls()
+    instance.install(projects_dir=resolved_projects_dir, scope=scope, extra_env=extra_env)
+
+
+@app.command()
+def open(
+    platform: str = typer.Argument(
+        "auto",
+        help=(
+            "Platform to configure and launch. "
+            "Choices: auto, claude-code, codex, cursor, windsurf"
+        ),
+    ),
+    projects_dir: Optional[Path] = typer.Option(
+        None,
+        "--projects-dir",
+        "-p",
+        help=(
+            "Project directory to expose to the MCP server. "
+            "Defaults to the current working directory."
+        ),
+        resolve_path=True,
+    ),
+    scope: str = typer.Option(
+        "project",
+        "--scope",
+        "-s",
+        help="[claude-code only] Config scope: 'project' (.mcp.json) or 'user' (~/.claude/settings.json).",
+    ),
+    openrouter_api_key: Optional[str] = typer.Option(
+        None,
+        "--openrouter-api-key",
+        help="Also inject OPENROUTER_API_KEY into the MCP client config.",
+    ),
+    embedding_base_url: Optional[str] = typer.Option(
+        None,
+        "--embedding-base-url",
+        help="Also inject EMBEDDING_BASE_URL into the MCP client config.",
+    ),
+    embedding_model: Optional[str] = typer.Option(
+        None,
+        "--embedding-model",
+        help="Also inject EMBEDDING_MODEL into the MCP client config.",
+    ),
+    github_token: Optional[str] = typer.Option(
+        None,
+        "--github-token",
+        help="Also inject GITHUB_TOKEN into the MCP client config.",
+    ),
+) -> None:
+    """Use the current folder as projects dir, register the MCP server, and launch the client."""
+    resolved_platform = _resolve_platform(platform, launchable_only=True)
+    resolved_projects_dir = (projects_dir or Path.cwd()).resolve()
+    extra_env = _build_extra_env(
+        openrouter_api_key=openrouter_api_key,
+        embedding_base_url=embedding_base_url,
+        embedding_model=embedding_model,
+        github_token=github_token,
+    )
+
+    platform_cls = REGISTRY.get(resolved_platform)
+    if platform_cls is None:
+        available = ", ".join(sorted(REGISTRY))
+        typer.echo(f"Unknown platform '{platform}'. Available: {available}", err=True)
+        raise typer.Exit(1)
+
+    instance = platform_cls()
+    instance.install(projects_dir=resolved_projects_dir, scope=scope, extra_env=extra_env)
+    typer.echo(f"Active preCICE projects directory: {resolved_projects_dir}")
+
+    if not instance.can_launch():
+        typer.echo(
+            f"{instance.display_name} was configured, but launching it from `precice-ai open` "
+            "is not supported on this machine."
+        )
+        raise typer.Exit(0)
+
+    instance.launch(workspace_dir=resolved_projects_dir, scope=scope)
+    typer.echo(f"Launched {instance.display_name} in: {resolved_projects_dir}")
 
 
 @app.command(name="list-platforms")

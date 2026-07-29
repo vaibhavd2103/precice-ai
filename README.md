@@ -12,146 +12,262 @@ Working with multi-physics coupling means jumping between project folders, XML c
 
 ## Installation
 
+### macOS / Linux
+
 ```bash
 git clone https://github.com/vaibhavd2103/precice-ai
 cd precice-ai
-python -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+### Windows PowerShell
+
+```powershell
+git clone https://github.com/vaibhavd2103/precice-ai
+cd precice-ai
+python -m venv .venv
+.venv\Scripts\Activate.ps1
 pip install -e .
 ```
 
 After installation, the `precice-ai` CLI is available in the venv.
 
+Notes:
+- `source .venv/bin/activate` is for macOS/Linux shells.
+- Windows users should activate the virtual environment with `.venv\Scripts\Activate.ps1` in PowerShell or `.venv\Scripts\activate.bat` in Command Prompt.
+- `python3` is usually the safest choice on macOS/Linux.
+- If `precice-ai` is not recognized on Windows, use one of these equivalents from the repo root:
+  `python -m precice_ai.cli.main ...`
+  `.venv\Scripts\precice-ai.exe ...`
+
+## Quick start
+
+Once the environment is active, use one command to register the MCP server with your agentic client:
+
+```text
+macOS / Linux:
+precice-ai bootstrap auto --projects-dir /path/to/preCICE/cases
+
+Windows fallback:
+python -m precice_ai.cli.main bootstrap auto --projects-dir C:\path\to\preCICE\cases
+```
+
+Pass configuration as CLI arguments when needed:
+
+```text
+macOS / Linux:
+precice-ai bootstrap codex \
+  --projects-dir /path/to/preCICE/cases \
+  --openrouter-api-key sk-or-...
+
+Windows fallback:
+python -m precice_ai.cli.main bootstrap codex `
+  --projects-dir C:\path\to\preCICE\cases `
+  --openrouter-api-key sk-or-...
+```
+
+This command:
+
+- creates or updates `.env`
+- writes the MCP server entry into the selected client config
+- injects the same runtime variables into that config for reliable startup
+
+Use `auto` to detect a supported client automatically, or pass an explicit client such as `codex`, `claude-code`, `cursor`, `windsurf`, or `claude-desktop`.
+
+The `precice-ai bootstrap ...` command works on macOS, Windows, and Linux. The main OS-specific differences are Python launcher names, shell syntax, and where each client stores its config.
+
 ---
 
-## Platform setup
+## Manual local setup
 
-Register the MCP server with your AI coding platform:
+If you prefer not to use the CLI, or if the `precice-ai` command is not available in your shell, you can register the MCP server manually by editing your client config.
 
-```bash
-precice-ai setup claude-code
-precice-ai setup claude-desktop
-precice-ai setup cursor
-precice-ai setup codex
-precice-ai setup windsurf
-precice-ai setup generic   # prints the JSON snippet for manual use
+Use the Python executable inside the local virtual environment:
+- macOS / Linux: `.venv/bin/python`
+- Windows: `.venv\\Scripts\\python.exe`
+
+Use this MCP server command:
+- `-m precice_ai.server`
+
+### Step 1: choose your client config file
+
+- Claude Code project scope: `.mcp.json` in the project directory where you open Claude Code
+- Claude Code user scope: `~/.claude/settings.json`
+- Claude Desktop macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Claude Desktop Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+- Claude Desktop Linux: `~/.config/Claude/claude_desktop_config.json`
+- Cursor: `~/.cursor/mcp.json`
+- Codex: `~/.codex/mcp.json`
+- Windsurf: `~/.codeium/windsurf/mcp_config.json`
+
+### Step 2: add the MCP entry
+
+macOS / Linux:
+
+```json
+{
+  "mcpServers": {
+    "precice-ai": {
+      "command": "/absolute/path/to/precice-ai/.venv/bin/python",
+      "args": ["-m", "precice_ai.server"],
+      "env": {
+        "PRECICE_PROJECTS_DIR": "/absolute/path/to/preCICE/cases",
+        "OPENROUTER_API_KEY": "sk-or-..."
+      }
+    }
+  }
+}
 ```
 
-Pass `--projects-dir` to point at a custom location (defaults to `./test-projects`):
+Windows:
 
-```bash
-precice-ai setup claude-code --projects-dir /path/to/my/precice-cases
+```json
+{
+  "mcpServers": {
+    "precice-ai": {
+      "command": "C:\\absolute\\path\\to\\precice-ai\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "precice_ai.server"],
+      "env": {
+        "PRECICE_PROJECTS_DIR": "C:\\absolute\\path\\to\\preCICE\\cases",
+        "OPENROUTER_API_KEY": "sk-or-..."
+      }
+    }
+  }
+}
 ```
 
-### Check which platforms are detected
+If you use Blablador instead of OpenRouter, replace `OPENROUTER_API_KEY` with `BLABLADOR_API_KEY` and also add:
+- `EMBEDDING_BASE_URL=https://helmholtz-blablador.fz-juelich.de:8000/v1`
+- `EMBEDDING_MODEL=alias-embeddings`
+
+### Step 3: reload the client
+
+- Claude Code: reopen the project, or restart the app for user-scope config
+- Claude Desktop: restart the app
+- Cursor: reload the window
+- Codex: restart Codex
+- Windsurf: restart the app
+
+---
+
+## Client setup
 
 ```bash
 precice-ai list-platforms
 ```
 
-### Claude Code
+Use `precice-ai list-platforms` to see which supported clients are available locally.
+
+### Supported clients
+
+The bootstrap command supports:
+
+- `auto`
+- `claude-code`
+- `claude-desktop`
+- `cursor`
+- `codex`
+- `windsurf`
+
+### Client config locations
+
+#### Claude Code
 
 Writes the server entry to `.mcp.json` in the current directory (project scope, the default):
 
 ```bash
-precice-ai setup claude-code
+precice-ai bootstrap claude-code
 ```
 
 Or to `~/.claude/settings.json` (user scope, available in every project):
 
 ```bash
-precice-ai setup claude-code --scope user
+precice-ai bootstrap claude-code --scope user
 ```
 
 After setup, open the directory in Claude Code — the server is picked up automatically.
 
-### Claude Desktop
+#### Claude Desktop
 
 ```bash
-precice-ai setup claude-desktop
+precice-ai bootstrap claude-desktop
 ```
 
 Config file locations:
+
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 - Linux: `~/.config/Claude/claude_desktop_config.json`
 
 Restart Claude Desktop after running setup.
 
-### Cursor
+#### Cursor
 
 ```bash
-precice-ai setup cursor
+precice-ai bootstrap cursor
 ```
 
 Writes to `~/.cursor/mcp.json`. Reload the window after setup.
 
-### Windsurf
+#### Windsurf
 
 ```bash
-precice-ai setup windsurf
+precice-ai bootstrap windsurf
 ```
 
 Writes to `~/.codeium/windsurf/mcp_config.json`. Restart Windsurf after setup.
 
-### OpenAI Codex
+#### OpenAI Codex
 
 ```bash
-precice-ai setup codex
+precice-ai bootstrap codex
 ```
 
 Writes to `~/.codex/mcp.json`.
-
-### Manual / generic
-
-```bash
-precice-ai setup generic
-```
-
-Prints the JSON block to paste into any MCP-compatible config file:
-
-```json
-{
-  "mcpServers": {
-    "precice-ai": {
-      "command": "python",
-      "args": ["-m", "precice_ai.server"],
-      "env": {
-        "PRECICE_PROJECTS_DIR": "/absolute/path/to/your/projects"
-      }
-    }
-  }
-}
-```
 
 ---
 
 ## Environment variables
 
-| Variable | Default | Description |
-|---|---|---|
-| `PRECICE_PROJECTS_DIR` | `./test-projects` | Directory scanned by `list_precice_projects` and all project tools. |
-| `PRECICE_KB_STORE_DIR` | `~/.precice-ai/kb_store` | Where the vector KB archive is stored locally. |
-| `OPENROUTER_API_KEY` | — | **Required for KB queries.** API key used to embed questions at query time. |
-| `EMBEDDING_BASE_URL` | `https://openrouter.ai/api/v1` | OpenAI-compatible base URL for the embedding API. Override to switch providers (e.g. Blablador). |
-| `EMBEDDING_MODEL` | `openai/text-embedding-3-small` | Embedding model name passed to the API. |
-| `PRECICE_AI_GITHUB_REPO` | `vaibhavd2103/precice-ai` | GitHub repo from which `kb_ingest_precice_data` downloads the release asset. |
-| `GITHUB_TOKEN` | — | Optional. Set if the release asset is in a private repo. |
+Required for KB queries:
+- One of `OPENROUTER_API_KEY` or `BLABLADOR_API_KEY`
 
-The `setup` command automatically injects `PRECICE_PROJECTS_DIR` into the platform config. Add the embedding variables manually for KB query support:
+Optional:
+- `PRECICE_PROJECTS_DIR`
+- `PRECICE_KB_STORE_DIR`
+- `EMBEDDING_BASE_URL`
+- `EMBEDDING_MODEL`
+- `PRECICE_AI_GITHUB_REPO`
+- `GITHUB_TOKEN`
 
-```json
-{
-  "mcpServers": {
-    "precice-ai": {
-      "command": "python",
-      "args": ["-m", "precice_ai.server"],
-      "env": {
-        "PRECICE_PROJECTS_DIR": "/path/to/your/projects",
-        "OPENROUTER_API_KEY": "sk-or-..."
-      }
-    }
-  }
-}
+| Variable                 | Default                         | Description                                                                                                                                                                                        |
+| ------------------------ | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PRECICE_PROJECTS_DIR`   | `./test-projects`               | Directory scanned by `list_precice_projects` and all project tools.                                                                                                                                |
+| `PRECICE_KB_STORE_DIR`   | `~/.precice-ai/kb_store`        | Where the vector KB archive is stored locally.                                                                                                                                                     |
+| `OPENROUTER_API_KEY`     | —                               | API key for OpenRouter. Required for KB queries if you are using OpenRouter as the embedding provider. It can be passed as a CLI argument during bootstrap and is then written to `.env` and injected into MCP client config. |
+| `BLABLADOR_API_KEY`      | —                               | API key for Blablador. Required for KB queries if you are using Blablador as the embedding provider. Set this in your environment or `.env` when using Blablador.                                |
+| `EMBEDDING_BASE_URL`     | `https://openrouter.ai/api/v1`  | OpenAI-compatible base URL for the embedding API. Override to switch providers (e.g. Blablador).                                                                                                   |
+| `EMBEDDING_MODEL`        | `openai/text-embedding-3-small` | Embedding model name passed to the API.                                                                                                                                                            |
+| `PRECICE_AI_GITHUB_REPO` | `vaibhavd2103/precice-ai`       | GitHub repo from which `kb_ingest_precice_data` downloads the release asset.                                                                                                                       |
+| `GITHUB_TOKEN`           | —                               | Optional. Set if the release asset is in a private repo.                                                                                                                                           |
+
+The `bootstrap` command automatically injects `PRECICE_PROJECTS_DIR` into the platform config. You can pass configuration directly as arguments:
+
+```bash
+precice-ai bootstrap codex \
+  --projects-dir /path/to/your/projects \
+  --openrouter-api-key sk-or-...
+```
+
+If you use Blablador instead of OpenRouter, set `BLABLADOR_API_KEY` in your environment or `.env`, then configure the provider settings:
+
+```bash
+precice-ai bootstrap codex \
+  --projects-dir /path/to/your/projects \
+  --embedding-base-url https://helmholtz-blablador.fz-juelich.de:8000/v1 \
+  --embedding-model alias-embeddings
 ```
 
 ### Knowledge base storage
@@ -184,49 +300,49 @@ kb_precice_status()
 
 ### Knowledge base
 
-| Tool | Description |
-|---|---|
-| `kb_ingest_precice_data(github_token?)` | Downloads the latest pre-built embeddings archive from the GitHub Release (`kb-latest`). Run once to populate the local index. |
-| `kb_query_precice(question, top_k)` | Semantic search over the local vector KB. Embeds the question and returns the top-k most similar doc chunks with source URLs and scores. |
-| `kb_query_precice_live(question, top_k)` | Same as above but auto-downloads the archive if it is not yet present locally. Use this for all preCICE questions. |
-| `kb_precice_status()` | Returns the local archive size, download timestamp, and chunk count. |
+| Tool                                     | Description                                                                                                                              |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `kb_ingest_precice_data(github_token?)`  | Downloads the latest pre-built embeddings archive from the GitHub Release (`kb-latest`). Run once to populate the local index.           |
+| `kb_query_precice(question, top_k)`      | Semantic search over the local vector KB. Embeds the question and returns the top-k most similar doc chunks with source URLs and scores. |
+| `kb_query_precice_live(question, top_k)` | Same as above but auto-downloads the archive if it is not yet present locally. Use this for all preCICE questions.                       |
+| `kb_precice_status()`                    | Returns the local archive size, download timestamp, and chunk count.                                                                     |
 
 **Typical first use:** `kb_query_precice_live` handles everything — it downloads the archive on first use and runs semantic search. Requires `OPENROUTER_API_KEY` (or `BLABLADOR_API_KEY`) to embed the question at query time.
 
 ### Project discovery
 
-| Tool | Description |
-|---|---|
-| `list_precice_projects()` | Lists all directories under `PRECICE_PROJECTS_DIR`. |
+| Tool                                                 | Description                                                    |
+| ---------------------------------------------------- | -------------------------------------------------------------- |
+| `list_precice_projects()`                            | Lists all directories under `PRECICE_PROJECTS_DIR`.            |
 | `inspect_project_structure(project_name, max_depth)` | Prints the folder tree for a project up to `max_depth` levels. |
-| `find_precice_config(project_name)` | Finds all `precice-config.xml` files within a project. |
+| `find_precice_config(project_name)`                  | Finds all `precice-config.xml` files within a project.         |
 
 ### Configuration
 
-| Tool | Description |
-|---|---|
-| `inspect_precice_config(project_name)` | Returns the raw contents of `precice-config.xml`. |
-| `summarize_precice_config(project_name)` | Extracts participants, meshes, data items, and coupling scheme tags from the XML. |
-| `check_precice_config(project_name)` | Runs `precice-cli config check` (falls back to `precice-tools check`) and returns the output. |
-| `backup_precice_config(project_name)` | Creates a timestamped backup of `precice-config.xml` in the same directory. |
-| `visualize_precice_config(project_name)` | Runs `precice-cli config visualize` to generate a diagram (requires preCICE CLI). |
+| Tool                                     | Description                                                                                   |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `inspect_precice_config(project_name)`   | Returns the raw contents of `precice-config.xml`.                                             |
+| `summarize_precice_config(project_name)` | Extracts participants, meshes, data items, and coupling scheme tags from the XML.             |
+| `check_precice_config(project_name)`     | Runs `precice-cli config check` (falls back to `precice-tools check`) and returns the output. |
+| `backup_precice_config(project_name)`    | Creates a timestamped backup of `precice-config.xml` in the same directory.                   |
+| `visualize_precice_config(project_name)` | Runs `precice-cli config visualize` to generate a diagram (requires preCICE CLI).             |
 
 ### Command execution
 
-| Tool | Description |
-|---|---|
+| Tool                                            | Description                                                                           |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------- |
 | `run_command_in_project(project_name, command)` | Runs a command inside the project directory. Only allowlisted prefixes are permitted. |
 
 Allowed command prefixes: `ls`, `pwd`, `cat`, `find`, `grep`, `tail`, `head`, `precice-tools`, `precice-cli`, `python3`, `./run.sh`
 
 ### Logs
 
-| Tool | Description |
-|---|---|
-| `list_project_logs(project_name)` | Lists all `*.log` and `*.txt` files in the project. |
-| `read_project_logs(project_name, max_chars_per_file)` | Returns contents of all log files (truncated per file). |
-| `read_latest_log(project_name, lines)` | Returns the last N lines of the most recently modified log file. |
-| `analyze_precice_logs(project_name)` | Scans each log for error/warning/convergence/failure keywords and appends the last 30 lines. |
+| Tool                                                  | Description                                                                                  |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `list_project_logs(project_name)`                     | Lists all `*.log` and `*.txt` files in the project.                                          |
+| `read_project_logs(project_name, max_chars_per_file)` | Returns contents of all log files (truncated per file).                                      |
+| `read_latest_log(project_name, lines)`                | Returns the last N lines of the most recently modified log file.                             |
+| `analyze_precice_logs(project_name)`                  | Scans each log for error/warning/convergence/failure keywords and appends the last 30 lines. |
 
 ---
 
@@ -294,13 +410,13 @@ There is also a second, older code path — `KnowledgeBaseService` (BM25-style l
 
 ### When it runs
 
-| Event | What happens |
-|---|---|
-| Weekly, Sunday 02:00 UTC | `kb-ingest.yml` runs automatically, rebuilding only categories whose sources changed. |
-| `gh workflow run kb-ingest.yml` / Actions tab "Run workflow" | Same pipeline, triggered on demand. |
+| Event                                                        | What happens                                                                                                                                                                                                            |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Weekly, Sunday 02:00 UTC                                     | `kb-ingest.yml` runs automatically, rebuilding only categories whose sources changed.                                                                                                                                   |
+| `gh workflow run kb-ingest.yml` / Actions tab "Run workflow" | Same pipeline, triggered on demand.                                                                                                                                                                                     |
 | First call to `kb_query_precice_live` in a fresh environment | The server downloads whichever categories aren't yet cached in `~/.precice-ai/kb_store/`, then queries. Subsequent calls in the same environment reuse the cache — no network round-trip beyond embedding the question. |
-| `kb_ingest_precice_data(category?)` called explicitly | Forces a fresh download of one or all categories, overwriting the local cache. |
-| `kb_query_precice(...)` (non-live) | Never downloads — errors out if the local cache is empty. Use this when you want to control ingestion timing explicitly. |
+| `kb_ingest_precice_data(category?)` called explicitly        | Forces a fresh download of one or all categories, overwriting the local cache.                                                                                                                                          |
+| `kb_query_precice(...)` (non-live)                           | Never downloads — errors out if the local cache is empty. Use this when you want to control ingestion timing explicitly.                                                                                                |
 
 Ingestion (building the embeddings) and querying (using them) are fully decoupled: the MCP server never computes embeddings for documents, only for the question text at query time.
 
@@ -370,19 +486,54 @@ Edit [`kb_sources.json`](kb_sources.json) at the repo root to control which cate
 ```json
 {
   "categories": {
-    "about":         { "sources": [{ "repo": "precice/precice.github.io", "checkout_path": "content/about" }] },
-    "community":     { "sources": [{ "repo": "precice/precice.github.io", "checkout_path": "content/community" }] },
-    "documentation": { "sources": [
-      { "repo": "precice/precice.github.io", "checkout_path": "content/docs" },
-      { "repo": "precice/precice", "checkout_path": "docs", "branch": "develop" }
-    ]},
-    "tutorials": { "sources": [
-      { "repo": "precice/precice.github.io", "checkout_path": "content/tutorials" },
-      { "repo": "precice/tutorials", "checkout_path": "", "branch": "develop" }
-    ]},
-    "forum":  { "type": "discourse",     "forum_url": "https://precice.discourse.group" },
+    "about": {
+      "sources": [
+        {
+          "repo": "precice/precice.github.io",
+          "checkout_path": "content/about"
+        }
+      ]
+    },
+    "community": {
+      "sources": [
+        {
+          "repo": "precice/precice.github.io",
+          "checkout_path": "content/community"
+        }
+      ]
+    },
+    "documentation": {
+      "sources": [
+        {
+          "repo": "precice/precice.github.io",
+          "checkout_path": "content/docs"
+        },
+        {
+          "repo": "precice/precice",
+          "checkout_path": "docs",
+          "branch": "develop"
+        }
+      ]
+    },
+    "tutorials": {
+      "sources": [
+        {
+          "repo": "precice/precice.github.io",
+          "checkout_path": "content/tutorials"
+        },
+        {
+          "repo": "precice/tutorials",
+          "checkout_path": "",
+          "branch": "develop"
+        }
+      ]
+    },
+    "forum": {
+      "type": "discourse",
+      "forum_url": "https://precice.discourse.group"
+    },
     "issues": { "type": "github_issues", "repo": "precice/precice" },
-    "pulls":  { "type": "github_prs",    "repo": "precice/precice" }
+    "pulls": { "type": "github_prs", "repo": "precice/precice" }
   }
 }
 ```
@@ -413,6 +564,7 @@ The GitHub Action reads this file on every run — no changes to the workflow or
 Actions → "Build & Publish Knowledge Base Embeddings" → "Run workflow"
 
 **Manual trigger (CLI):**
+
 ```bash
 gh workflow run kb-ingest.yml --repo vaibhavd2103/precice-ai
 ```
@@ -433,11 +585,11 @@ Or call `kb_ingest_precice_data()` (optionally with `category="tutorials"`) from
 
 To switch from OpenRouter to Blablador (or any OpenAI-compatible provider), set these env vars in your MCP config — no code changes required:
 
-| Variable | OpenRouter | Blablador |
-|---|---|---|
-| `OPENROUTER_API_KEY` / `BLABLADOR_API_KEY` | `sk-or-...` | your Blablador key |
-| `EMBEDDING_BASE_URL` | `https://openrouter.ai/api/v1` | `https://helmholtz-blablador.fz-juelich.de:8000/v1` |
-| `EMBEDDING_MODEL` | `openai/text-embedding-3-small` | `alias-embeddings` |
+| Variable                                   | OpenRouter                      | Blablador                                           |
+| ------------------------------------------ | ------------------------------- | --------------------------------------------------- |
+| `OPENROUTER_API_KEY` / `BLABLADOR_API_KEY` | `sk-or-...`                     | your Blablador key                                  |
+| `EMBEDDING_BASE_URL`                       | `https://openrouter.ai/api/v1`  | `https://helmholtz-blablador.fz-juelich.de:8000/v1` |
+| `EMBEDDING_MODEL`                          | `openai/text-embedding-3-small` | `alias-embeddings`                                  |
 
 Also update `OPENROUTER_API_KEY` → `BLABLADOR_API_KEY` in the `OPENROUTER_API_KEY` GitHub Secret when rebuilding the index with Blablador.
 
@@ -445,8 +597,8 @@ Also update `OPENROUTER_API_KEY` → `BLABLADOR_API_KEY` in the `OPENROUTER_API_
 
 Add this secret in **Settings → Secrets and variables → Actions → New repository secret** before running the Action:
 
-| Secret | Value |
-|---|---|
+| Secret               | Value                                           |
+| -------------------- | ----------------------------------------------- |
 | `OPENROUTER_API_KEY` | Your OpenRouter API key from openrouter.ai/keys |
 
 ---

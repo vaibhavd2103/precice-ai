@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -21,7 +22,18 @@ class Platform(ABC):
         """Return True if this platform appears to be installed."""
         ...
 
-    def mcp_entry(self, projects_dir: Path) -> dict[str, Any]:
+    def can_launch(self) -> bool:
+        """Return True if this platform can be launched from the CLI."""
+        return False
+
+    def launch(self, workspace_dir: Path, **kwargs: Any) -> None:
+        """Launch the platform, opening the given workspace when supported."""
+        raise NotImplementedError(f"{self.display_name} does not support launch from this CLI.")
+
+    def _spawn(self, args: list[str], cwd: Path) -> None:
+        subprocess.Popen(args, cwd=str(cwd))
+
+    def mcp_entry(self, projects_dir: Path, extra_env: dict[str, str] | None = None) -> dict[str, Any]:
         """Return the standard MCP server config block for this package."""
         entry: dict[str, Any] = {
             "command": sys.executable,
@@ -29,7 +41,10 @@ class Platform(ABC):
         }
         # Only embed env var if it differs from the convention-based default.
         # Users running from the repo root won't need it; global installs will.
-        entry["env"] = {"PRECICE_PROJECTS_DIR": str(projects_dir)}
+        env = {"PRECICE_PROJECTS_DIR": str(projects_dir)}
+        if extra_env:
+            env.update(extra_env)
+        entry["env"] = env
         return entry
 
     def _merge_json_config(self, config_path: Path, entry: dict[str, Any]) -> None:

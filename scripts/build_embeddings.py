@@ -1,16 +1,24 @@
-"""Build a vector KB from preCICE docs.
+"""Build a vector KB category from one or more Markdown source trees.
 
-Walks a checkout of precice/precice.github.io (content/ directory),
-chunks every Markdown file, embeds chunks via an OpenAI-compatible
-API (OpenRouter by default, Blablador later), and saves the result as
-a compressed NumPy archive (.npz) ready to be uploaded as a GitHub
-Release asset.
+Chunks every Markdown file under each configured source directory, embeds
+chunks via an OpenAI-compatible API (OpenRouter by default, Blablador
+later), and saves the result as a compressed NumPy archive (.npz) tagged
+with a category, ready to be uploaded as a GitHub Release asset.
+
+Sources are passed as a JSON list, each entry:
+    {"label": str, "path": str, "url_mode": "website" | "github",
+     "url_base": str, "exclude_patterns": [str, ...]}
+
+"website" mode builds precice.org URLs from frontmatter permalinks (or the
+file's relative path). "github" mode builds GitHub blob URLs by joining
+url_base with the file's path relative to its source directory.
 
 Usage:
     python scripts/build_embeddings.py \
-        --docs-dir precice-docs/content \
+        --category documentation \
+        --sources-json "$(python scripts/render_sources_json.py --config kb_sources.json --category documentation --checkout-dir precice/precice.github.io=precice-docs)" \
         --api-key $OPENROUTER_API_KEY \
-        --output kb-embeddings.npz
+        --output kb-embeddings-documentation.npz
 """
 
 from __future__ import annotations
@@ -31,7 +39,6 @@ MIN_CHUNK_WORDS = 30
 BASE_URL_DEFAULT = "https://openrouter.ai/api/v1"
 MODEL_DEFAULT = "openai/text-embedding-3-small"
 BATCH_SIZE_DEFAULT = 64
-PRECICE_BASE_URL = "https://precice.org"
 
 
 # ---------------------------------------------------------------------------
@@ -81,14 +88,20 @@ def _chunk(text: str) -> list[str]:
     return chunks
 
 
-def _file_to_url(filepath: Path, docs_dir: Path, meta: dict[str, str]) -> str:
-    permalink = meta.get("permalink", "")
-    if permalink:
-        return PRECICE_BASE_URL + ("" if permalink.startswith("/") else "/") + permalink
-    rel = filepath.relative_to(docs_dir)
-    # content/docs/configuration-overview.md → /configuration-overview.html
-    stem = rel.stem
-    return f"{PRECICE_BASE_URL}/{stem}.html"
+def _file_to_url(filepath: Path, source_dir: Path, source: dict) -> str:
+    url_base = source["url_base"].rstrip("/")
+    rel = filepath.relative_to(source_dir)
+
+    if source["url_mode"] == "website":
+        meta, _ = _parse_frontmatter(filepath.read_text(encoding="utf-8", errors="replace"))
+        permalink = meta.get("permalink", "")
+        if permalink:
+            return url_base + ("" if permalink.startswith("/") else "/") + permalink
+        # content/docs/configuration-overview.md → /configuration-overview.html
+        return f"{url_base}/{rel.stem}.html"
+
+    # github mode: link straight to the file in the repo, on its configured branch
+    return f"{url_base}/{rel.as_posix()}"
 
 
 # ---------------------------------------------------------------------------
@@ -117,90 +130,74 @@ def _embed_batch(
 # Main
 # ---------------------------------------------------------------------------
 
-def _load_config(config_path: Path) -> dict:
-    if not config_path.exists():
-        return {}
-    try:
-        return json.loads(config_path.read_text(encoding="utf-8"))
-    except Exception as exc:
-        print(f"Warning: could not read {config_path}: {exc}", file=sys.stderr)
-        return {}
+def _collect_md_files(source_dir: Path, exclude_patterns: list[str]) -> list[Path]:
+    if not source_dir.exists():
+        print(f"  warning: source dir not found: {source_dir}", file=sys.stderr)
+        return []
 
-
-def _collect_md_files(docs_dir: Path, config: dict) -> list[Path]:
-    include = config.get("include_subfolders", [])
-    exclude = config.get("exclude_patterns", [])
-
-    if include:
-        files: list[Path] = []
-        for folder in include:
-            folder_path = docs_dir / folder
-            if not folder_path.exists():
-                print(f"  warning: folder not found: {folder_path}", file=sys.stderr)
-                continue
-            files.extend(sorted(folder_path.rglob("*.md")))
-    else:
-        files = sorted(docs_dir.rglob("*.md"))
-
-    if exclude:
+    files = sorted(source_dir.rglob("*.md"))
+    if exclude_patterns:
         def _is_excluded(p: Path) -> bool:
-            rel = str(p.relative_to(docs_dir))
-            return any(pat in rel for pat in exclude)
+            rel = str(p.relative_to(source_dir))
+            return any(pat in rel for pat in exclude_patterns)
         files = [f for f in files if not _is_excluded(f)]
-
     return files
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--docs-dir", required=True, help="Path to checked-out content/ folder")
+    parser.add_argument("--category", required=True, help="Category tag stored with every chunk")
+    parser.add_argument(
+        "--sources-json",
+        required=True,
+        help="JSON list of {label, path, url_mode, url_base, exclude_patterns}",
+    )
     parser.add_argument("--api-key", required=True, help="OpenRouter / Blablador API key")
     parser.add_argument("--base-url", default=BASE_URL_DEFAULT, help="OpenAI-compatible base URL")
     parser.add_argument("--model", default=MODEL_DEFAULT, help="Embedding model name")
     parser.add_argument("--output", default="kb-embeddings.npz", help="Output .npz path")
     parser.add_argument("--batch-size", type=int, default=BATCH_SIZE_DEFAULT)
-    parser.add_argument("--config", default="kb_sources.json", help="Path to kb_sources.json")
     args = parser.parse_args()
 
-    config = _load_config(Path(args.config))
-    if config:
-        print(f"Loaded config from {args.config}", file=sys.stderr)
-
-    docs_dir = Path(args.docs_dir).resolve()
-    if not docs_dir.exists():
-        sys.exit(f"docs-dir not found: {docs_dir}")
+    sources = json.loads(args.sources_json)
+    if not sources:
+        sys.exit("--sources-json is empty")
 
     client = OpenAI(api_key=args.api_key, base_url=args.base_url)
 
-    md_files = _collect_md_files(docs_dir, config)
-    print(f"Found {len(md_files)} markdown files in {docs_dir}", file=sys.stderr)
-
     all_chunks: list[dict[str, str | int]] = []
-    for filepath in md_files:
-        try:
-            raw = filepath.read_text(encoding="utf-8", errors="replace")
-        except Exception as exc:
-            print(f"  skip {filepath}: {exc}", file=sys.stderr)
-            continue
+    for source in sources:
+        source_dir = Path(source["path"]).resolve()
+        exclude_patterns = source.get("exclude_patterns", [])
+        md_files = _collect_md_files(source_dir, exclude_patterns)
+        print(f"[{source['label']}] {len(md_files)} markdown files in {source_dir}", file=sys.stderr)
 
-        meta, body = _parse_frontmatter(raw)
-        title = meta.get("title") or filepath.stem.replace("-", " ").title()
-        url = _file_to_url(filepath, docs_dir, meta)
-        plain = _strip_markdown(body)
+        for filepath in md_files:
+            try:
+                raw = filepath.read_text(encoding="utf-8", errors="replace")
+            except Exception as exc:
+                print(f"  skip {filepath}: {exc}", file=sys.stderr)
+                continue
 
-        for i, chunk_text in enumerate(_chunk(plain)):
-            all_chunks.append(
-                {
-                    "title": title,
-                    "url": url,
-                    "source": "precice-docs",
-                    "chunk_index": i,
-                    "text": chunk_text,
-                }
-            )
+            meta, body = _parse_frontmatter(raw)
+            title = meta.get("title") or filepath.stem.replace("-", " ").title()
+            url = _file_to_url(filepath, source_dir, source)
+            plain = _strip_markdown(body)
+
+            for i, chunk_text in enumerate(_chunk(plain)):
+                all_chunks.append(
+                    {
+                        "title": title,
+                        "url": url,
+                        "source": source["label"],
+                        "category": args.category,
+                        "chunk_index": i,
+                        "text": chunk_text,
+                    }
+                )
 
     if not all_chunks:
-        sys.exit("No chunks produced — check --docs-dir path.")
+        sys.exit("No chunks produced — check --sources-json paths.")
 
     print(f"Total chunks to embed: {len(all_chunks)}", file=sys.stderr)
 

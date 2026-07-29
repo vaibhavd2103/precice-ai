@@ -161,16 +161,16 @@ Required for semantic KB queries:
 
 Common optional variables:
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `PRECICE_PROJECTS_DIR` | `./test-projects` when running from repo root | Directory scanned by the project tools. |
-| `PRECICE_KB_STORE_DIR` | `~/.precice-ai/kb_store` | Local storage for downloaded KB assets. |
-| `OPENROUTER_API_KEY` | none | Embedding API key when using OpenRouter. |
-| `BLABLADOR_API_KEY` | none | Embedding API key when using Blablador. |
-| `EMBEDDING_BASE_URL` | `https://openrouter.ai/api/v1` | OpenAI-compatible embeddings base URL. |
-| `EMBEDDING_MODEL` | `openai/text-embedding-3-small` | Embedding model name. |
-| `PRECICE_AI_GITHUB_REPO` | `vaibhavd2103/precice-ai` | GitHub repo used for KB asset downloads. |
-| `GITHUB_TOKEN` | none | Optional token for private release access or higher rate limits. |
+| Variable                 | Default                                       | Purpose                                                          |
+| ------------------------ | --------------------------------------------- | ---------------------------------------------------------------- |
+| `PRECICE_PROJECTS_DIR`   | `./test-projects` when running from repo root | Directory scanned by the project tools.                          |
+| `PRECICE_KB_STORE_DIR`   | `~/.precice-ai/kb_store`                      | Local storage for downloaded KB assets.                          |
+| `OPENROUTER_API_KEY`     | none                                          | Embedding API key when using OpenRouter.                         |
+| `BLABLADOR_API_KEY`      | none                                          | Embedding API key when using Blablador.                          |
+| `EMBEDDING_BASE_URL`     | `https://openrouter.ai/api/v1`                | OpenAI-compatible embeddings base URL.                           |
+| `EMBEDDING_MODEL`        | `openai/text-embedding-3-small`               | Embedding model name.                                            |
+| `PRECICE_AI_GITHUB_REPO` | `vaibhavd2103/precice-ai`                     | GitHub repo used for KB asset downloads.                         |
+| `GITHUB_TOKEN`           | none                                          | Optional token for private release access or higher rate limits. |
 
 To use Blablador instead of OpenRouter:
 
@@ -315,6 +315,6 @@ scripts/    # KB build and maintenance scripts
 server.py   # convenience entry point for local dev
 ```
 
-## License
+<!-- ## License
 
-MIT
+MIT -->

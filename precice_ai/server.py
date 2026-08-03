@@ -12,7 +12,7 @@ from precice_ai.tools import register_all_tools
 # config. Doesn't override already-set env vars (e.g. from the client config).
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
-mcp = FastMCP("preCICE AI")
+mcp = FastMCP("preCICE AI", instructions="preCICE AI assistant is used for reading and writing code, and for answering questions about code. It can also answer general questions, but it is optimized for code-related tasks and preCICE related questions.")
 register_all_tools(mcp)
 
 

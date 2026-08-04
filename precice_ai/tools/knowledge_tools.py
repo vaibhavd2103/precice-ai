@@ -37,6 +37,8 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
 
         Pass category to refresh just one vector category (e.g. "issues")
         instead of all of them; the lexical snapshot is always checked too.
+        Agents should use this refresh path when kb_precice_status shows the
+        relevant category is missing or at least 48h old.
         Optionally pass github_token if the repository is private; otherwise
         the public release assets are downloaded without authentication.
         """
@@ -67,8 +69,10 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
         "forum", "issues", or "pulls") to restrict the search to that category
         only; omit it to search across every downloaded category.
 
-        Run kb_ingest_precice_data first if the local index is not yet
-        downloaded.
+        Preferred when kb_precice_status shows the relevant local category is
+        present and fresh (checked less than 48h ago). If the category is
+        missing or stale, refresh it first with kb_query_precice_live or
+        kb_ingest_precice_data.
         """
         try:
             result = vector_kb.query(question=question, top_k=top_k, category=category)
@@ -80,14 +84,12 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
     def kb_query_precice_live(question: str, top_k: int = 5, category: str | None = None) -> str:
         """Answer any question about preCICE using semantic search.
 
-        Use this for ALL preCICE questions (configuration, adapters, coupling
-        schemes, errors, etc.), including questions that may be answered by a
-        past bug report or pull request discussion. The published vector KB
-        release is the source of truth: the local copy is trusted for up to
-        48h after the last check (a no-op network call if checked recently),
-        then always re-downloaded once that window elapses — the KB is
-        never more than ~48h stale, matching the alternate-day publish
-        cadence — before running cosine-similarity search.
+        Use this when the relevant local KB category is missing, its
+        freshness is unknown, or kb_precice_status shows it is at least 48h
+        old. This refreshes the requested category from the published vector
+        KB release first, then runs cosine-similarity search so the answer
+        comes from updated local data. It is not the default for categories
+        that are already present and fresh.
 
         Pass category ("about", "community", "documentation", "tutorials",
         "forum", "issues", or "pulls") to restrict the search to that category
@@ -127,9 +129,18 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     def kb_precice_status() -> str:
-        """Show the status of the local vector KB (file size, download time, chunk count)."""
+        """Show local KB status and freshness for agent tool selection.
+
+        Use this before choosing between kb_query_precice and
+        kb_query_precice_live. The result includes per-category presence,
+        checked_at, age_hours, and is_fresh (<48h) for the vector KB plus
+        the lexical KB status.
+        """
         try:
-            result = vector_kb.status()
+            result = {
+                "vector": vector_kb.status(),
+                "lexical": kb_service.kb_status(),
+            }
             return json.dumps(result, indent=2)
         except Exception as exc:
             return json.dumps({"status": "error", "message": str(exc)}, indent=2)

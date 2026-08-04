@@ -8,7 +8,7 @@ import subprocess
 import sys
 import tempfile
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import httpx
 from lxml import html
@@ -85,6 +85,71 @@ def _meta_expired(meta: dict[str, str], max_age_hours: int) -> bool:
         return True
     age_hours = (datetime.now(timezone.utc) - dt).total_seconds() / 3600.0
     return age_hours > max_age_hours
+
+
+def _parse_iso_datetime(value: str | None) -> datetime | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def _freshness_details(
+    local_path: Path,
+    *,
+    max_age_hours: int = RELEASE_ASSET_MAX_AGE_HOURS,
+    fallback_checked_at: str | None = None,
+) -> dict[str, object]:
+    """Return cache-freshness metadata for a local KB asset.
+
+    Prefer the release-asset metadata timestamp when available because the
+    48h trust window is defined in terms of the last successful freshness
+    check. Fall back to a logical payload timestamp (for live-ingested
+    lexical KBs) or the file mtime so agents still get a useful answer for
+    locally built or legacy files that have no sidecar metadata yet.
+    """
+    if not local_path.exists():
+        return {
+            "present": False,
+            "checked_at": None,
+            "age_hours": None,
+            "expires_at": None,
+            "is_fresh": False,
+            "freshness_source": "missing",
+            "max_age_hours": max_age_hours,
+        }
+
+    meta = _load_asset_meta(local_path)
+    checked_dt: datetime | None = None
+    freshness_source = "unknown"
+
+    if meta:
+        checked_dt = _parse_iso_datetime(meta.get("checked_at"))
+        if checked_dt is not None:
+            freshness_source = "release_meta"
+
+    if checked_dt is None:
+        checked_dt = _parse_iso_datetime(fallback_checked_at)
+        if checked_dt is not None:
+            freshness_source = "payload_timestamp"
+
+    if checked_dt is None:
+        checked_dt = datetime.fromtimestamp(local_path.stat().st_mtime, tz=timezone.utc)
+        freshness_source = "file_mtime"
+
+    age_hours = (datetime.now(timezone.utc) - checked_dt).total_seconds() / 3600.0
+    expires_at = checked_dt + timedelta(hours=max_age_hours)
+    return {
+        "present": True,
+        "checked_at": checked_dt.isoformat().replace("+00:00", "Z"),
+        "age_hours": round(age_hours, 2),
+        "expires_at": expires_at.isoformat().replace("+00:00", "Z"),
+        "is_fresh": age_hours < max_age_hours,
+        "freshness_source": freshness_source,
+        "max_age_hours": max_age_hours,
+    }
 
 
 def _fetch_release_assets(
@@ -377,11 +442,16 @@ class KnowledgeBaseService:
 
     def kb_status(self) -> dict[str, object]:
         payload = self._read_kb()
+        freshness = _freshness_details(
+            self.kb_file,
+            fallback_checked_at=payload.get("updated_at") if isinstance(payload, dict) else None,
+        )
         if not payload:
             return {
                 "status": "empty",
                 "kb_file": str(self.kb_file),
                 "message": "No ingested data yet.",
+                **freshness,
             }
 
         documents = payload.get("documents", [])
@@ -390,6 +460,7 @@ class KnowledgeBaseService:
             "kb_file": str(self.kb_file),
             "updated_at": payload.get("updated_at", "unknown"),
             "documents": len(documents) if isinstance(documents, list) else 0,
+            **freshness,
         }
 
     def _fetch_docs_documents(self, client: httpx.Client, pages_limit: int) -> list[KBDocument]:
@@ -823,8 +894,13 @@ class VectorKnowledgeBase:
     def status(self) -> dict[str, object]:
         categories: dict[str, object] = {}
         for cat, npz_file in self._npz_files.items():
+            freshness = _freshness_details(npz_file)
             if not npz_file.exists():
-                categories[cat] = {"status": "empty", "message": "No embeddings downloaded yet."}
+                categories[cat] = {
+                    "status": "empty",
+                    "message": "No embeddings downloaded yet.",
+                    **freshness,
+                }
                 continue
             mtime = datetime.fromtimestamp(npz_file.stat().st_mtime, tz=timezone.utc)
             size_mb = npz_file.stat().st_size / 1_048_576
@@ -835,6 +911,7 @@ class VectorKnowledgeBase:
                 "size_mb": round(size_mb, 2),
                 "downloaded_at": mtime.isoformat().replace("+00:00", "Z"),
                 "chunks_in_memory": len(self._chunks[cat]) if loaded else None,
+                **freshness,
             }
 
         if not any(npz_file.exists() for npz_file in self._npz_files.values()):

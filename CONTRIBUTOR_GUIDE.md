@@ -223,7 +223,7 @@ If you are onboarding onto a clean machine and want a full working dev environme
 7. Run `precice-ai bootstrap <client> --projects-dir /path/to/cases`.
 8. If you want semantic KB queries, provide `--openrouter-api-key ...` or configure Blablador variables.
 9. Restart the target client.
-10. In the client, call `list_precice_projects()` and `kb_query_precice_live("what is preCICE?")` to verify both the project tools and KB path.
+10. In the client, call `list_precice_projects()`, then `kb_precice_status()`, then use `kb_query_precice("what is preCICE?", category="about")` if that category is fresh or `kb_query_precice_live("what is preCICE?", category="about")` if it is missing or stale.
 
 If you do not have a client installed yet, you can still develop the code locally by:
 
@@ -577,12 +577,13 @@ The main helper scripts are:
 
 This is what happens inside the installed server:
 
-1. `kb_query_precice_live(...)` ensures the requested assets are present locally.
-2. `VectorKnowledgeBase` downloads missing or stale release assets into `~/.precice-ai/kb_store/` by default.
-3. it lazy-loads those `.npz` files
-4. it embeds the user’s question using the configured embedding provider
-5. it computes cosine similarity against the stored chunk embeddings
-6. it returns the best-matching chunks with metadata and snippets
+1. `kb_precice_status(...)` reports whether the relevant category is present and fresh enough to trust locally.
+2. `kb_query_precice(...)` uses the local vector KB directly when that category is fresh.
+3. `kb_query_precice_live(...)` refreshes missing or stale release assets in `~/.precice-ai/kb_store/` before querying.
+4. `VectorKnowledgeBase` lazy-loads the relevant `.npz` files.
+5. it embeds the user’s question using the configured embedding provider
+6. it computes cosine similarity against the stored chunk embeddings
+7. it returns the best-matching chunks with metadata and snippets
 
 Important design note:
 
@@ -643,9 +644,12 @@ run_command_in_project(project_name, command)
 ### Flow 4: semantic KB query
 
 ```text
-kb_query_precice_live(question)
-  -> VectorKnowledgeBase.download_from_release(...)
-  -> VectorKnowledgeBase.query(...)
+kb_precice_status()
+  -> if category fresh: kb_query_precice(question, category=...)
+     -> VectorKnowledgeBase.query(...)
+  -> else: kb_query_precice_live(question, category=...)
+     -> VectorKnowledgeBase.download_from_release(...)
+     -> VectorKnowledgeBase.query(...)
   -> embed question
   -> cosine similarity against stored chunk vectors
   -> return top-k results

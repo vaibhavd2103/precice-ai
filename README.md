@@ -191,7 +191,7 @@ Once your MCP client sees the server, the main workflow is:
 2. Inspect the project structure and locate `precice-config.xml`.
 3. Read or summarize the config.
 4. Read logs or run safe read-only commands in the project.
-5. Ask KB-backed preCICE questions with `kb_query_precice_live`.
+5. Check KB freshness with `kb_precice_status()`, then use `kb_query_precice(...)` for fresh categories or `kb_query_precice_live(...)` to refresh stale/missing ones.
 
 Typical tool calls:
 
@@ -203,7 +203,11 @@ inspect_precice_config("partitioned-heat-conduction")
 summarize_precice_config("partitioned-heat-conduction")
 read_latest_log("partitioned-heat-conduction")
 analyze_precice_logs("partitioned-heat-conduction")
-kb_query_precice_live("how does implicit coupling work in preCICE?")
+kb_precice_status()
+# If the documentation category is fresh:
+kb_query_precice("how does implicit coupling work in preCICE?", category="documentation")
+# If the documentation category is missing or stale:
+kb_query_precice_live("how does implicit coupling work in preCICE?", category="documentation")
 ```
 
 Safe command execution is available through:

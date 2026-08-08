@@ -10,7 +10,7 @@ time with larger limits so queries don't pay the crawl cost.
 
 CLI usage:
     python scripts/build_lexical_kb.py --output kb-lexical.json \
-        --docs-pages-limit 200 --forum-topics-limit 200
+        --docs-pages-limit 200 --forum-topics-limit 0
 """
 
 from __future__ import annotations
@@ -29,15 +29,21 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", required=True, help="Path to write knowledge_base.json to")
     parser.add_argument("--docs-pages-limit", type=int, default=200)
-    parser.add_argument("--forum-topics-limit", type=int, default=200)
+    parser.add_argument(
+        "--forum-topics-limit",
+        type=int,
+        default=0,
+        help="Maximum number of forum topics to fetch; use 0 to fetch every visible topic.",
+    )
     parser.add_argument("--timeout-seconds", type=int, default=30)
     args = parser.parse_args()
 
     output_path = Path(args.output)
     service = KnowledgeBaseService(kb_file=output_path)
+    forum_topics_limit = args.forum_topics_limit if args.forum_topics_limit > 0 else None
     result = service.ingest_precice_sources(
         docs_pages_limit=args.docs_pages_limit,
-        forum_topics_limit=args.forum_topics_limit,
+        forum_topics_limit=forum_topics_limit,
         timeout_seconds=args.timeout_seconds,
     )
     print(json.dumps(result, indent=2))

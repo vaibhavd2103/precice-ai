@@ -94,7 +94,10 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
         Pass category ("about", "community", "documentation", "tutorials",
         "forum", "issues", or "pulls") to restrict the search to that category
         only.
-
+        
+        If answer not found in "issues" or "pulls" categories, then search in "forum" because it
+        contains the most up-to-date information about preCICE, including discussions, bug reports, and user experiences.
+        
         Requires OPENROUTER_API_KEY (or BLABLADOR_API_KEY) to be set so the
         question can be embedded at query time.
         """

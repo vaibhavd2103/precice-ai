@@ -13,6 +13,8 @@ from pathlib import Path
 import httpx
 from lxml import html
 
+from precice_ai.core.discourse_api import fetch_discourse_topic_documents
+
 
 def _get_kb_dir() -> Path:
     """Return the KB store directory.
@@ -28,7 +30,6 @@ def _get_kb_dir() -> Path:
 
 
 DOCS_START_URL = "https://precice.org/"
-FORUM_RECENT_URL = "https://precice.discourse.group/latest.json"
 USER_AGENT = "precice-ai-mcp/1.0 (+https://github.com/precice)"
 
 # How often (in hours) a locally cached release asset is re-checked against
@@ -271,7 +272,7 @@ class KnowledgeBaseService:
     def ingest_precice_sources(
         self,
         docs_pages_limit: int = 20,
-        forum_topics_limit: int = 20,
+        forum_topics_limit: int | None = None,
         timeout_seconds: int = 20,
     ) -> dict[str, str | int]:
         docs_documents: list[KBDocument] = []
@@ -423,7 +424,7 @@ class KnowledgeBaseService:
             if self._is_stale(payload, refresh_if_older_than_hours):
                 ingest_result = self.ingest_precice_sources(
                     docs_pages_limit=10,
-                    forum_topics_limit=10,
+                    forum_topics_limit=None,
                 )
                 ingest_status = ingest_result.get("status")
                 # "ok" = fresh data written; "warning" = kept old data — both allow querying.
@@ -497,48 +498,24 @@ class KnowledgeBaseService:
 
         return docs
 
-    def _fetch_forum_documents(self, client: httpx.Client, topics_limit: int) -> list[KBDocument]:
-        response = client.get(FORUM_RECENT_URL)
-        response.raise_for_status()
-
-        data = response.json()
-        topic_list = data.get("topic_list", {})
-        topics = topic_list.get("topics", [])
-
+    def _fetch_forum_documents(
+        self, client: httpx.Client, topics_limit: int | None
+    ) -> list[KBDocument]:
         docs: list[KBDocument] = []
-        for topic in topics[:topics_limit]:
-            slug = topic.get("slug")
-            topic_id = topic.get("id")
-            title = topic.get("title", "")
-            last_posted_at = topic.get("last_posted_at") or _now_iso()
-
-            if not slug or not topic_id:
-                continue
-
-            topic_url = f"https://precice.discourse.group/t/{slug}/{topic_id}.json"
-            try:
-                topic_response = client.get(topic_url)
-                topic_response.raise_for_status()
-                topic_data = topic_response.json()
-                post_stream = topic_data.get("post_stream", {})
-                posts = post_stream.get("posts", [])
-                merged = "\n\n".join(
-                    _strip_html(post.get("cooked", ""))
-                    for post in posts
-                    if isinstance(post, dict)
+        for topic in fetch_discourse_topic_documents(
+            client,
+            "https://precice.discourse.group",
+            topics_limit=topics_limit,
+        ):
+            docs.append(
+                KBDocument(
+                    source="precice-forum",
+                    url=topic.url,
+                    title=topic.title,
+                    content=topic.text,
+                    updated_at=topic.updated_at,
                 )
-                if merged.strip():
-                    docs.append(
-                        KBDocument(
-                            source="precice-forum",
-                            url=f"https://precice.discourse.group/t/{slug}/{topic_id}",
-                            title=title,
-                            content=merged,
-                            updated_at=last_posted_at,
-                        )
-                    )
-            except Exception:
-                continue
+            )
 
         return docs
 
@@ -595,10 +572,6 @@ def _extract_html_document(raw_html: str, url: str, source: str) -> KBDocument:
         content=content,
         updated_at=_now_iso(),
     )
-
-
-def _strip_html(value: str) -> str:
-    return re.sub(r"<[^>]+>", " ", value).replace("\n", " ").strip()
 
 
 def _tokenize(text: str) -> list[str]:

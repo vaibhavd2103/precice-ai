@@ -8,10 +8,12 @@ import subprocess
 import sys
 import tempfile
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import httpx
 from lxml import html
+
+from precice_ai.core.discourse_api import fetch_discourse_topic_documents
 
 
 def _get_kb_dir() -> Path:
@@ -28,7 +30,6 @@ def _get_kb_dir() -> Path:
 
 
 DOCS_START_URL = "https://precice.org/"
-FORUM_RECENT_URL = "https://precice.discourse.group/latest.json"
 USER_AGENT = "precice-ai-mcp/1.0 (+https://github.com/precice)"
 
 # How often (in hours) a locally cached release asset is re-checked against
@@ -85,6 +86,71 @@ def _meta_expired(meta: dict[str, str], max_age_hours: int) -> bool:
         return True
     age_hours = (datetime.now(timezone.utc) - dt).total_seconds() / 3600.0
     return age_hours > max_age_hours
+
+
+def _parse_iso_datetime(value: str | None) -> datetime | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def _freshness_details(
+    local_path: Path,
+    *,
+    max_age_hours: int = RELEASE_ASSET_MAX_AGE_HOURS,
+    fallback_checked_at: str | None = None,
+) -> dict[str, object]:
+    """Return cache-freshness metadata for a local KB asset.
+
+    Prefer the release-asset metadata timestamp when available because the
+    48h trust window is defined in terms of the last successful freshness
+    check. Fall back to a logical payload timestamp (for live-ingested
+    lexical KBs) or the file mtime so agents still get a useful answer for
+    locally built or legacy files that have no sidecar metadata yet.
+    """
+    if not local_path.exists():
+        return {
+            "present": False,
+            "checked_at": None,
+            "age_hours": None,
+            "expires_at": None,
+            "is_fresh": False,
+            "freshness_source": "missing",
+            "max_age_hours": max_age_hours,
+        }
+
+    meta = _load_asset_meta(local_path)
+    checked_dt: datetime | None = None
+    freshness_source = "unknown"
+
+    if meta:
+        checked_dt = _parse_iso_datetime(meta.get("checked_at"))
+        if checked_dt is not None:
+            freshness_source = "release_meta"
+
+    if checked_dt is None:
+        checked_dt = _parse_iso_datetime(fallback_checked_at)
+        if checked_dt is not None:
+            freshness_source = "payload_timestamp"
+
+    if checked_dt is None:
+        checked_dt = datetime.fromtimestamp(local_path.stat().st_mtime, tz=timezone.utc)
+        freshness_source = "file_mtime"
+
+    age_hours = (datetime.now(timezone.utc) - checked_dt).total_seconds() / 3600.0
+    expires_at = checked_dt + timedelta(hours=max_age_hours)
+    return {
+        "present": True,
+        "checked_at": checked_dt.isoformat().replace("+00:00", "Z"),
+        "age_hours": round(age_hours, 2),
+        "expires_at": expires_at.isoformat().replace("+00:00", "Z"),
+        "is_fresh": age_hours < max_age_hours,
+        "freshness_source": freshness_source,
+        "max_age_hours": max_age_hours,
+    }
 
 
 def _fetch_release_assets(
@@ -206,7 +272,7 @@ class KnowledgeBaseService:
     def ingest_precice_sources(
         self,
         docs_pages_limit: int = 20,
-        forum_topics_limit: int = 20,
+        forum_topics_limit: int | None = None,
         timeout_seconds: int = 20,
     ) -> dict[str, str | int]:
         docs_documents: list[KBDocument] = []
@@ -358,7 +424,7 @@ class KnowledgeBaseService:
             if self._is_stale(payload, refresh_if_older_than_hours):
                 ingest_result = self.ingest_precice_sources(
                     docs_pages_limit=10,
-                    forum_topics_limit=10,
+                    forum_topics_limit=None,
                 )
                 ingest_status = ingest_result.get("status")
                 # "ok" = fresh data written; "warning" = kept old data — both allow querying.
@@ -377,11 +443,16 @@ class KnowledgeBaseService:
 
     def kb_status(self) -> dict[str, object]:
         payload = self._read_kb()
+        freshness = _freshness_details(
+            self.kb_file,
+            fallback_checked_at=payload.get("updated_at") if isinstance(payload, dict) else None,
+        )
         if not payload:
             return {
                 "status": "empty",
                 "kb_file": str(self.kb_file),
                 "message": "No ingested data yet.",
+                **freshness,
             }
 
         documents = payload.get("documents", [])
@@ -390,6 +461,7 @@ class KnowledgeBaseService:
             "kb_file": str(self.kb_file),
             "updated_at": payload.get("updated_at", "unknown"),
             "documents": len(documents) if isinstance(documents, list) else 0,
+            **freshness,
         }
 
     def _fetch_docs_documents(self, client: httpx.Client, pages_limit: int) -> list[KBDocument]:
@@ -426,48 +498,24 @@ class KnowledgeBaseService:
 
         return docs
 
-    def _fetch_forum_documents(self, client: httpx.Client, topics_limit: int) -> list[KBDocument]:
-        response = client.get(FORUM_RECENT_URL)
-        response.raise_for_status()
-
-        data = response.json()
-        topic_list = data.get("topic_list", {})
-        topics = topic_list.get("topics", [])
-
+    def _fetch_forum_documents(
+        self, client: httpx.Client, topics_limit: int | None
+    ) -> list[KBDocument]:
         docs: list[KBDocument] = []
-        for topic in topics[:topics_limit]:
-            slug = topic.get("slug")
-            topic_id = topic.get("id")
-            title = topic.get("title", "")
-            last_posted_at = topic.get("last_posted_at") or _now_iso()
-
-            if not slug or not topic_id:
-                continue
-
-            topic_url = f"https://precice.discourse.group/t/{slug}/{topic_id}.json"
-            try:
-                topic_response = client.get(topic_url)
-                topic_response.raise_for_status()
-                topic_data = topic_response.json()
-                post_stream = topic_data.get("post_stream", {})
-                posts = post_stream.get("posts", [])
-                merged = "\n\n".join(
-                    _strip_html(post.get("cooked", ""))
-                    for post in posts
-                    if isinstance(post, dict)
+        for topic in fetch_discourse_topic_documents(
+            client,
+            "https://precice.discourse.group",
+            topics_limit=topics_limit,
+        ):
+            docs.append(
+                KBDocument(
+                    source="precice-forum",
+                    url=topic.url,
+                    title=topic.title,
+                    content=topic.text,
+                    updated_at=topic.updated_at,
                 )
-                if merged.strip():
-                    docs.append(
-                        KBDocument(
-                            source="precice-forum",
-                            url=f"https://precice.discourse.group/t/{slug}/{topic_id}",
-                            title=title,
-                            content=merged,
-                            updated_at=last_posted_at,
-                        )
-                    )
-            except Exception:
-                continue
+            )
 
         return docs
 
@@ -524,10 +572,6 @@ def _extract_html_document(raw_html: str, url: str, source: str) -> KBDocument:
         content=content,
         updated_at=_now_iso(),
     )
-
-
-def _strip_html(value: str) -> str:
-    return re.sub(r"<[^>]+>", " ", value).replace("\n", " ").strip()
 
 
 def _tokenize(text: str) -> list[str]:
@@ -823,8 +867,13 @@ class VectorKnowledgeBase:
     def status(self) -> dict[str, object]:
         categories: dict[str, object] = {}
         for cat, npz_file in self._npz_files.items():
+            freshness = _freshness_details(npz_file)
             if not npz_file.exists():
-                categories[cat] = {"status": "empty", "message": "No embeddings downloaded yet."}
+                categories[cat] = {
+                    "status": "empty",
+                    "message": "No embeddings downloaded yet.",
+                    **freshness,
+                }
                 continue
             mtime = datetime.fromtimestamp(npz_file.stat().st_mtime, tz=timezone.utc)
             size_mb = npz_file.stat().st_size / 1_048_576
@@ -835,6 +884,7 @@ class VectorKnowledgeBase:
                 "size_mb": round(size_mb, 2),
                 "downloaded_at": mtime.isoformat().replace("+00:00", "Z"),
                 "chunks_in_memory": len(self._chunks[cat]) if loaded else None,
+                **freshness,
             }
 
         if not any(npz_file.exists() for npz_file in self._npz_files.values()):

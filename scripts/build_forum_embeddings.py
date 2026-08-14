@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 from pathlib import Path
 
@@ -25,60 +24,38 @@ import httpx
 import numpy as np
 from openai import OpenAI
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from build_embeddings import BASE_URL_DEFAULT, BATCH_SIZE_DEFAULT, MODEL_DEFAULT, _chunk, _embed_batch
+from precice_ai.core.discourse_api import fetch_discourse_topic_documents
 
 USER_AGENT = "precice-ai-mcp/1.0 (+https://github.com/precice)"
 
-
-def _strip_html(value: str) -> str:
-    return re.sub(r"<[^>]+>", " ", value).replace("\n", " ").strip()
-
-
-def _fetch_topics(forum_url: str, topics_limit: int, timeout_seconds: int) -> list[dict]:
+def _fetch_topics(forum_url: str, topics_limit: int | None, timeout_seconds: int) -> list[dict]:
     with httpx.Client(
         timeout=timeout_seconds,
         headers={"User-Agent": USER_AGENT},
         follow_redirects=True,
     ) as client:
-        response = client.get(forum_url.rstrip("/") + "/latest.json")
-        response.raise_for_status()
-        topics = response.json().get("topic_list", {}).get("topics", [])[:topics_limit]
-
-        docs: list[dict] = []
-        for topic in topics:
-            slug = topic.get("slug")
-            topic_id = topic.get("id")
-            title = topic.get("title", "")
-            if not slug or not topic_id:
-                continue
-
-            topic_url = f"{forum_url.rstrip('/')}/t/{slug}/{topic_id}.json"
-            try:
-                topic_response = client.get(topic_url)
-                topic_response.raise_for_status()
-                posts = topic_response.json().get("post_stream", {}).get("posts", [])
-                merged = "\n\n".join(
-                    _strip_html(post.get("cooked", "")) for post in posts if isinstance(post, dict)
-                )
-                if merged.strip():
-                    docs.append(
-                        {
-                            "title": title,
-                            "url": f"{forum_url.rstrip('/')}/t/{slug}/{topic_id}",
-                            "text": merged,
-                        }
-                    )
-            except Exception as exc:
-                print(f"  skip topic {topic_id}: {exc}", file=sys.stderr)
-                continue
-
-        return docs
+        return [
+            {"title": topic.title, "url": topic.url, "text": topic.text}
+            for topic in fetch_discourse_topic_documents(
+                client,
+                forum_url,
+                topics_limit=topics_limit,
+            )
+        ]
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--forum-url", default="https://precice.discourse.group")
-    parser.add_argument("--topics-limit", type=int, default=50)
+    parser.add_argument(
+        "--topics-limit",
+        type=int,
+        default=0,
+        help="Maximum number of topics to fetch; use 0 to fetch every visible topic.",
+    )
     parser.add_argument("--timeout-seconds", type=int, default=20)
     parser.add_argument("--api-key", required=True)
     parser.add_argument("--base-url", default=BASE_URL_DEFAULT)
@@ -87,7 +64,8 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=BATCH_SIZE_DEFAULT)
     args = parser.parse_args()
 
-    topics = _fetch_topics(args.forum_url, args.topics_limit, args.timeout_seconds)
+    topics_limit = args.topics_limit if args.topics_limit > 0 else None
+    topics = _fetch_topics(args.forum_url, topics_limit, args.timeout_seconds)
     print(f"Fetched {len(topics)} forum topics", file=sys.stderr)
 
     all_chunks: list[dict[str, str | int]] = []

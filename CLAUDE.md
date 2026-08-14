@@ -1,6 +1,13 @@
 ## preCICE knowledge base
 
-**Always** call `kb_query_precice_live` before answering any question about preCICE — what it is, how it works, configuration, errors, adapters, coupling schemes, or any comparison. Do not answer from training data alone. The tool auto-ingests on first use and caches results for 1 hour; subsequent calls in the same session are instant.
+Before answering any question about preCICE — what it is, how it works, configuration, errors, adapters, coupling schemes, or any comparison — first call `kb_precice_status()` and inspect the relevant category in `.precice-ai/kb_store`.
+
+Use this decision tree:
+
+- If the relevant category is present and `is_fresh` is true (less than 48 hours old), use `kb_query_precice(...)`.
+- If the relevant category is missing, freshness is unknown, or it is 48 hours old or older, use `kb_query_precice_live(...)` so it refreshes the category first and then answers from the updated local KB.
+- If you need an explicit refresh step before querying, call `kb_ingest_precice_data(...)` for that category.
+- Do not answer from training data alone when a KB tool should be used.
 
 ---
 

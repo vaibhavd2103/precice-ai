@@ -1,3 +1,32 @@
 {
-  "categories": {}
+  "categories": {
+    "about": {
+      "signature": "precice/precice.github.io@content/about@8b12f6afb0666e09044c19f2078eb1515ae6dbe7",
+      "updated_at": "2026-08-17T11:33:28.576191Z"
+    },
+    "community": {
+      "signature": "precice/precice.github.io@content/community@a29f4a29dd42a9612a3acc5d43b58457b7fd2615",
+      "updated_at": "2026-08-17T11:33:28.701122Z"
+    },
+    "documentation": {
+      "signature": "precice/precice.github.io@content/docs@59bf6044d869adb009e10b7e8cda54442e911ba5+precice/precice@docs@fbf1a5aac0c8ba56009843aaf19b6cdebbacb263",
+      "updated_at": "2026-08-17T11:33:28.828677Z"
+    },
+    "forum": {
+      "signature": "2026-08-17T11:12:21.660Z",
+      "updated_at": "2026-08-17T11:33:29.078606Z"
+    },
+    "issues": {
+      "signature": "2026-08-17T00:16:23Z",
+      "updated_at": "2026-08-17T11:33:29.205960Z"
+    },
+    "pulls": {
+      "signature": "2026-08-17T00:16:23Z",
+      "updated_at": "2026-08-17T11:33:29.332654Z"
+    },
+    "tutorials": {
+      "signature": "precice/precice.github.io@content/tutorials@ae1f8d2490217968fc06c6b0d4efd19def1eb831+precice/tutorials@@78002901e9385c274430010b5b386c769db3eb40",
+      "updated_at": "2026-08-17T11:33:28.954413Z"
+    }
+  }
 }

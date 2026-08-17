@@ -1,5 +1,9 @@
 name: Build & Publish Knowledge Base Embeddings
 
+concurrency:
+  group: kb-ingest
+  cancel-in-progress: false
+
 on:
   schedule:
     - cron: '0 2 * * *'   # every day at 02:00 UTC; gate job restricts to alternate days
@@ -10,6 +14,7 @@ permissions:
 
 env:
   GIT_CATEGORIES: "about community documentation tutorials"
+  VECTOR_CATEGORIES: "about community documentation tutorials forum issues pulls"
 
 jobs:
   gate:
@@ -229,16 +234,24 @@ jobs:
             --docs-pages-limit 200 \
             --forum-topics-limit 200
 
-      # The release is never deleted wholesale — unchanged categories keep
-      # their existing asset untouched, only rebuilt ones are re-uploaded.
+      # The release is never deleted wholesale. The API-based lookup/create is
+      # idempotent and also works when a tag exists without a Release object.
       - name: Ensure kb-latest release exists
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release view kb-latest >/dev/null 2>&1 || \
-          gh release create kb-latest --title "Knowledge Base Embeddings" \
-            --notes "Per-category preCICE vector KB embeddings + a lexical KB snapshot. Rebuilt incrementally by kb-ingest.yml." \
-            --latest
+          set -euo pipefail
+          release_endpoint="repos/${GITHUB_REPOSITORY}/releases/tags/kb-latest"
+          if ! gh api "$release_endpoint" >/dev/null 2>&1; then
+            gh api --method POST "repos/${GITHUB_REPOSITORY}/releases" \
+              -f tag_name=kb-latest \
+              -f name="Knowledge Base Embeddings" \
+              -f body="Per-category preCICE vector KB embeddings plus the lexical KB snapshot." \
+              -F draft=false \
+              -F prerelease=false \
+              -F make_latest=true >/dev/null
+          fi
+          gh api "$release_endpoint" --jq '.tag_name + " release ready"'
 
       - name: Upload changed vector category assets
         if: steps.diff.outputs.changed != ''
@@ -264,6 +277,26 @@ jobs:
         run: |
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           gh release edit kb-latest --notes "Updated vector categories [$CHANGED] and lexical KB on ${TIMESTAMP} from precice/precice.github.io, precice/precice, precice/tutorials, precice.discourse.group, precice/precice issues & pulls"
+
+      - name: Verify complete KB release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VECTOR_CATEGORIES: ${{ env.VECTOR_CATEGORIES }}
+        run: |
+          set -euo pipefail
+          assets=$(gh release view kb-latest --json assets --jq '.assets[].name')
+          for category in $VECTOR_CATEGORIES; do
+            asset="kb-embeddings-${category}.npz"
+            if ! grep -Fxq "$asset" <<< "$assets"; then
+              echo "Missing required vector release asset: $asset" >&2
+              exit 1
+            fi
+          done
+          if ! grep -Fxq "kb-lexical.json" <<< "$assets"; then
+            echo "Missing required lexical release asset: kb-lexical.json" >&2
+            exit 1
+          fi
+          echo "Verified complete KB release: ${VECTOR_CATEGORIES} + kb-lexical.json"
 
       - name: Update kb_state.json and commit
         if: steps.diff.outputs.changed != ''

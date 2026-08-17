@@ -36,6 +36,11 @@ from openai import OpenAI, RateLimitError
 CHUNK_WORDS = 450
 OVERLAP_WORDS = 50
 MIN_CHUNK_WORDS = 30
+# Keep a safety margin below the embedding model's 8192-token limit.  A byte
+# cap is deliberately used instead of a model-specific tokenizer: this script
+# also targets OpenAI-compatible providers with different tokenizers, and a
+# UTF-8 token cannot contain fewer than one byte.
+MAX_CHUNK_BYTES = 7_000
 BASE_URL_DEFAULT = "https://openrouter.ai/api/v1"
 MODEL_DEFAULT = "openai/text-embedding-3-small"
 BATCH_SIZE_DEFAULT = 64
@@ -77,15 +82,71 @@ def _strip_markdown(text: str) -> str:
 
 
 def _chunk(text: str) -> list[str]:
+    """Split text into bounded chunks suitable for embedding APIs.
+
+    Word counts alone are not enough here: GitHub issues and pasted logs can
+    contain very long words (URLs, stack traces, minified code), causing a
+    nominally small chunk to exceed the provider's token limit.
+    """
     words = text.split()
     chunks: list[str] = []
     i = 0
     while i < len(words):
-        chunk_words = words[i : i + CHUNK_WORDS]
-        if len(chunk_words) >= MIN_CHUNK_WORDS:
+        chunk_words: list[str] = []
+        chunk_bytes = 0
+        j = i
+
+        while j < len(words) and len(chunk_words) < CHUNK_WORDS:
+            word = words[j]
+            word_bytes = len(word.encode("utf-8"))
+
+            # A single oversized word must be split independently.  This is
+            # uncommon, but is the exact case that a word-count-only chunker
+            # cannot protect against.
+            if word_bytes > MAX_CHUNK_BYTES:
+                if chunk_words:
+                    break
+                chunks.extend(_split_utf8(word, MAX_CHUNK_BYTES))
+                j += 1
+                break
+
+            added_bytes = word_bytes + (1 if chunk_words else 0)
+            if chunk_words and chunk_bytes + added_bytes > MAX_CHUNK_BYTES:
+                break
+            chunk_words.append(word)
+            chunk_bytes += added_bytes
+            j += 1
+
+        if chunk_words:
             chunks.append(" ".join(chunk_words))
-        i += CHUNK_WORDS - OVERLAP_WORDS
+            next_i = j
+        else:
+            next_i = i
+
+        if next_i >= len(words):
+            break
+        # Retain the existing word overlap, while guaranteeing progress when
+        # the byte limit (rather than CHUNK_WORDS) ended the chunk.
+        i = max(i + 1, next_i - OVERLAP_WORDS)
     return chunks
+
+
+def _split_utf8(text: str, max_bytes: int) -> list[str]:
+    """Split a string at character boundaries without exceeding max_bytes."""
+    pieces: list[str] = []
+    current: list[str] = []
+    current_bytes = 0
+    for char in text:
+        char_bytes = len(char.encode("utf-8"))
+        if current and current_bytes + char_bytes > max_bytes:
+            pieces.append("".join(current))
+            current = []
+            current_bytes = 0
+        current.append(char)
+        current_bytes += char_bytes
+    if current:
+        pieces.append("".join(current))
+    return pieces
 
 
 def _file_to_url(filepath: Path, source_dir: Path, source: dict) -> str:

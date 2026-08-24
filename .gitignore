@@ -238,3 +238,4 @@ kb_store/
 .venv/
 
 out.json
+.mcp.json

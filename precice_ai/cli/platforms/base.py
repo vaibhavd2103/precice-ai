@@ -47,17 +47,31 @@ class Platform(ABC):
         entry["env"] = env
         return entry
 
+    def _load_json_config(self, config_path: Path) -> dict[str, Any]:
+        """Read a JSON config, or {} if it doesn't exist yet.
+
+        Raises instead of silently discarding the file's contents if it exists
+        but fails to parse — this may be a large, otherwise-unrelated config
+        file (e.g. ~/.claude.json), and clobbering it on a parse error would
+        destroy state that has nothing to do with this installer.
+        """
+        if not config_path.exists():
+            return {}
+        text = config_path.read_text(encoding="utf-8")
+        if not text.strip():
+            return {}
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError(
+                f"{config_path} exists but isn't valid JSON ({exc}). "
+                "Fix or remove it and re-run, so this doesn't overwrite the file."
+            ) from exc
+
     def _merge_json_config(self, config_path: Path, entry: dict[str, Any]) -> None:
         """Read (or create) a JSON config, inject the mcpServers entry, write back."""
         config_path.parent.mkdir(parents=True, exist_ok=True)
-
-        config: dict[str, Any] = {}
-        if config_path.exists():
-            try:
-                config = json.loads(config_path.read_text(encoding="utf-8"))
-            except (json.JSONDecodeError, OSError):
-                config = {}
-
+        config = self._load_json_config(config_path)
         config.setdefault("mcpServers", {})["precice-ai"] = entry
         config_path.write_text(json.dumps(config, indent=2), encoding="utf-8")
         print(f"  Updated: {config_path}")

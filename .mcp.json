@@ -1,13 +1,15 @@
 {
   "mcpServers": {
     "precice-ai": {
-      "command": "/home/vaibhav/precice-ai-workspace/precice-ai/.venv/bin/python3",
+      "command": "/home/vaibhavd2103/Desktop/precice-ai/.venv/bin/python",
       "args": [
         "-m",
         "precice_ai.server"
       ],
       "env": {
-        "PRECICE_PROJECTS_DIR": "/home/vaibhav/precice-ai-workspace/precice-ai/test-projects"
+        "PRECICE_PROJECTS_DIR": "/home/vaibhavd2103/Desktop/precice-ai/test-projects",
+        "EMBEDDING_BASE_URL": "https://openrouter.ai/api/v1",
+        "EMBEDDING_MODEL": "openai/text-embedding-3-small"
       }
     }
   }

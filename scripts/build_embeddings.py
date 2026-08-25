@@ -43,7 +43,14 @@ MIN_CHUNK_WORDS = 30
 MAX_CHUNK_BYTES = 7_000
 BASE_URL_DEFAULT = "https://openrouter.ai/api/v1"
 MODEL_DEFAULT = "openai/text-embedding-3-small"
-BATCH_SIZE_DEFAULT = 64
+# 64 chunks x ~450 words each pushed some batches to ~43.6k prompt tokens,
+# which exceeds OpenRouter's per-request prompt-token cap for accounts
+# without a funded/verified balance (observed ceiling ~21k tokens; see
+# "Prompt tokens limit exceeded" / 402 errors). 16 keeps every batch at
+# roughly half that ceiling with headroom for larger-than-average chunks,
+# regardless of account tier. Override with --batch-size on a funded account
+# that wants fewer, larger requests.
+BATCH_SIZE_DEFAULT = 16
 
 
 # ---------------------------------------------------------------------------

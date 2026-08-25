@@ -8,7 +8,7 @@
     "pylint"
   ],
   "editor.fontFamily": "JetBrains Mono",
-  "editor.fontSize": 16,
+  "editor.fontSize": 14,
   "editor.formatOnSave": true,
   "workbench.colorTheme": "Dark 2026"
 }

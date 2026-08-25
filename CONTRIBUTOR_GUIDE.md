@@ -447,6 +447,20 @@ The lexical path still matters because:
 - it provides a fallback or comparison baseline
 - scripts such as `scripts/compare_kb_search.py` depend on it
 
+`KnowledgeBaseService` still owns querying/syncing `kb-lexical.json`
+(`query()`, `sync_from_release()`, `kb_status()`), but it's no longer the
+thing that *builds* that file in CI. `kb-ingest.yml` now has
+`build_embeddings.py` / `build_forum_embeddings.py` /
+`build_github_activity_embeddings.py` each write their chunk list to a
+`--lexical-output` fragment (same chunk schema as the `.npz` files: `title,
+url, source, category, chunk_index, text`) before embedding, then merges
+all 7 fragments into `kb-lexical.json`. This guarantees the lexical and
+vector KBs cover the exact same content by construction. `ingest_precice_sources()`
+(the live HTML/discourse crawl, still driven by `scripts/build_lexical_kb.py`
+for manual use) is now only the runtime fallback used when no release is
+reachable and there's no local cache — its coverage (docs + forum only) is
+intentionally narrower than the primary pipeline.
+
 ## Tool Modules
 
 All MCP tools are registered through `precice_ai/tools/__init__.py`, which calls:

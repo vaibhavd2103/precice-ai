@@ -4,8 +4,8 @@ Before answering any question about preCICE — what it is, how it works, config
 
 Use this decision tree:
 
-- If the relevant category is present and `is_fresh` is true (less than 48 hours old), use `kb_query_precice(...)`.
-- If the relevant category is missing, freshness is unknown, or it is 48 hours old or older, use `kb_query_precice_live(...)` so it refreshes the category first and then answers from the updated local KB.
+- If the relevant category is present and `is_fresh` is true (less than 96 hours old), use `kb_query_precice(...)`.
+- If the relevant category is missing, freshness is unknown, or it is 96 hours old or older, use `kb_query_precice_live(...)` so it refreshes the category first and then answers from the updated local KB.
 - If you need an explicit refresh step before querying, call `kb_ingest_precice_data(...)` for that category.
 - Do not answer from training data alone when a KB tool should be used.
 

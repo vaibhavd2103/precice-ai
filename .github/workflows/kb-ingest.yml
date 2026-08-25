@@ -2,7 +2,7 @@ name: Build & Publish Knowledge Base Embeddings
 
 on:
   schedule:
-    - cron: '0 2 * * *'   # every day at 02:00 UTC; gate job restricts to alternate days
+    - cron: '0 2 * * *'   # every day at 02:00 UTC; gate job restricts to once every 4 days
   workflow_dispatch:        # manual trigger from GitHub UI (always runs, bypasses the gate)
 
 permissions:
@@ -10,6 +10,12 @@ permissions:
 
 env:
   GIT_CATEGORIES: "about community documentation tutorials"
+  # Pinned explicitly (rather than left to script argparse defaults) so the
+  # lexical KB and the vector KB always fetch the same amount of content and
+  # can't silently drift apart again.
+  FORUM_TOPICS_LIMIT: "0"        # 0 = unlimited, matches current behavior
+  GITHUB_ITEMS_LIMIT: "200"
+  GITHUB_COMMENTS_LIMIT: "20"
 
 jobs:
   gate:
@@ -17,22 +23,22 @@ jobs:
     outputs:
       run_today: ${{ steps.check.outputs.run_today }}
     steps:
-      - name: Check alternate-day schedule
+      - name: Check every-4-days schedule
         id: check
         run: |
           set -euo pipefail
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "run_today=true" >> "$GITHUB_OUTPUT"
-            echo "Manual trigger — running regardless of day parity."
+            echo "Manual trigger — running regardless of day-of-year."
             exit 0
           fi
           day_of_year=$(date -u +%j)
-          if (( 10#$day_of_year % 2 == 0 )); then
+          if (( 10#$day_of_year % 4 == 0 )); then
             echo "run_today=true" >> "$GITHUB_OUTPUT"
-            echo "Day of year $day_of_year is even — running today."
+            echo "Day of year $day_of_year is a multiple of 4 — running today."
           else
             echo "run_today=false" >> "$GITHUB_OUTPUT"
-            echo "Day of year $day_of_year is odd — skipping (runs every other day)."
+            echo "Day of year $day_of_year is not a multiple of 4 — skipping (runs every 4 days)."
           fi
 
   build-kb:
@@ -101,13 +107,13 @@ jobs:
             precice/tutorials=precice-tutorials-repo
         run: |
           set -euo pipefail
-          # The gate job already limits this workflow to one run per 48h, so
-          # every category is rebuilt and republished unconditionally on
-          # every run — the KB should never go stale for longer than that,
-          # even if a category's content hash happens to match the last
-          # publish. Signatures are still computed and recorded in
-          # kb_state.json purely as an audit trail (last known hash per
-          # category), not as a build gate.
+          # The gate job already limits this workflow to one run per 96h
+          # (every 4 days), so every category is rebuilt and republished
+          # unconditionally on every run — the KB should never go stale for
+          # longer than that, even if a category's content hash happens to
+          # match the last publish. Signatures are still computed and
+          # recorded in kb_state.json purely as an audit trail (last known
+          # hash per category), not as a build gate.
           changed=""
           : > kb_signatures.txt
           for category in $GIT_CATEGORIES; do
@@ -162,7 +168,8 @@ jobs:
               --api-key "$OPENROUTER_API_KEY" \
               --base-url "https://openrouter.ai/api/v1" \
               --model "openai/text-embedding-3-small" \
-              --output "kb-embeddings-$category.npz"
+              --output "kb-embeddings-$category.npz" \
+              --lexical-output "kb-lexical-$category.json"
           done
 
       - name: Build forum category
@@ -172,10 +179,12 @@ jobs:
         run: |
           python scripts/build_forum_embeddings.py \
             --forum-url "https://precice.discourse.group" \
+            --topics-limit "$FORUM_TOPICS_LIMIT" \
             --api-key "$OPENROUTER_API_KEY" \
             --base-url "https://openrouter.ai/api/v1" \
             --model "openai/text-embedding-3-small" \
-            --output "kb-embeddings-forum.npz"
+            --output "kb-embeddings-forum.npz" \
+            --lexical-output "kb-lexical-forum.json"
 
       - name: Build GitHub issues/pulls categories
         env:
@@ -191,11 +200,14 @@ jobs:
                 python scripts/build_github_activity_embeddings.py \
                   --repo precice/precice \
                   --kind "$kind" \
+                  --items-limit "$GITHUB_ITEMS_LIMIT" \
+                  --comments-limit "$GITHUB_COMMENTS_LIMIT" \
                   --api-key "$OPENROUTER_API_KEY" \
                   --github-token "$GH_TOKEN" \
                   --base-url "https://openrouter.ai/api/v1" \
                   --model "openai/text-embedding-3-small" \
-                  --output "kb-embeddings-$kind.npz"
+                  --output "kb-embeddings-$kind.npz" \
+                  --lexical-output "kb-lexical-$kind.json"
                 ;;
             esac
           done
@@ -216,18 +228,45 @@ jobs:
           print(f"{category}: chunks={len(chunks)} embeddings={emb.shape} dtype={emb.dtype}")
           if emb.shape[0] != len(chunks):
               sys.exit(f"{category}: chunk/embedding count mismatch")
+
+          # Direct proof that the lexical fragment and the vector chunks for
+          # this category are in parity (same extraction step feeds both).
+          lexical = json.load(open(f"kb-lexical-{category}.json"))
+          lexical_chunks = lexical["chunks"]
+          print(f"{category}: lexical_chunks={len(lexical_chunks)}")
+          if len(lexical_chunks) != len(chunks):
+              sys.exit(f"{category}: lexical/vector chunk count mismatch")
           EOF
           done
 
-      # Lexical KB: a keyword-searchable snapshot (docs + forum crawl), built
-      # fresh every run this job executes (cheap — no embedding API calls)
-      # and published as its own release asset alongside the vector index.
-      - name: Build lexical KB
+      # Lexical KB: merge the per-category chunk fragments emitted by the
+      # build steps above (--lexical-output) into the final kb-lexical.json.
+      # Every category is always rebuilt every run (see the "always rebuild"
+      # comment above), so all 7 fragments always exist here — this keeps
+      # the lexical KB in exact chunk-for-chunk parity with the vector KB,
+      # since both come from the same extraction step per category.
+      - name: Merge lexical fragments
         run: |
-          python scripts/build_lexical_kb.py \
-            --output kb-lexical.json \
-            --docs-pages-limit 200 \
-            --forum-topics-limit 200
+          python - <<'EOF'
+          import json
+          from datetime import datetime, timezone
+
+          categories = "about community documentation tutorials forum issues pulls".split()
+          chunks = []
+          for category in categories:
+              with open(f"kb-lexical-{category}.json") as f:
+                  chunks.extend(json.load(f)["chunks"])
+
+          payload = {
+              "updated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+              "categories": categories,
+              "count": len(chunks),
+              "chunks": chunks,
+          }
+          with open("kb-lexical.json", "w") as f:
+              json.dump(payload, f, ensure_ascii=False)
+          print(f"Merged {len(chunks)} chunks across {len(categories)} categories into kb-lexical.json")
+          EOF
 
       # The release is never deleted wholesale — unchanged categories keep
       # their existing asset untouched, only rebuilt ones are re-uploaded.

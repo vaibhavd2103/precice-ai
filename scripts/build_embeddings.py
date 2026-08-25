@@ -166,6 +166,19 @@ def _file_to_url(filepath: Path, source_dir: Path, source: dict) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Lexical fragment (chunks-only, no embeddings) — shared by all three build
+# scripts so the lexical KB and the vector KB are derived from the exact same
+# chunk list, guaranteeing parity instead of relying on two separate crawls.
+# ---------------------------------------------------------------------------
+
+def write_chunk_fragment(chunks: list[dict], category: str, output_path: str) -> None:
+    Path(output_path).write_text(
+        json.dumps({"category": category, "count": len(chunks), "chunks": chunks}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+
+# ---------------------------------------------------------------------------
 # Embedding
 # ---------------------------------------------------------------------------
 
@@ -218,6 +231,11 @@ def main() -> None:
     parser.add_argument("--model", default=MODEL_DEFAULT, help="Embedding model name")
     parser.add_argument("--output", default="kb-embeddings.npz", help="Output .npz path")
     parser.add_argument("--batch-size", type=int, default=BATCH_SIZE_DEFAULT)
+    parser.add_argument(
+        "--lexical-output",
+        default=None,
+        help="If given, also write the chunk list (no embeddings) to this path for the lexical KB.",
+    )
     args = parser.parse_args()
 
     sources = json.loads(args.sources_json)
@@ -259,6 +277,9 @@ def main() -> None:
 
     if not all_chunks:
         sys.exit("No chunks produced — check --sources-json paths.")
+
+    if args.lexical_output:
+        write_chunk_fragment(all_chunks, args.category, args.lexical_output)
 
     print(f"Total chunks to embed: {len(all_chunks)}", file=sys.stderr)
 

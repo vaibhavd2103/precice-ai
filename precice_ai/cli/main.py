@@ -135,6 +135,9 @@ def setup(
         "--github-token",
         help="Also inject GITHUB_TOKEN into the MCP client config.",
     ),
+    skip_kb_ingest: bool = typer.Option(
+        False, "--skip-kb-ingest", help="Don't download the knowledge base during setup (e.g. for CI/offline)."
+    ),
 ) -> None:
     """Register the precice-ai MCP server with a supported AI coding platform."""
     key = _resolve_platform(platform)
@@ -155,6 +158,16 @@ def setup(
 
     instance = platform_cls()
     instance.install(projects_dir=resolved_projects_dir, scope=scope, extra_env=extra_env)
+
+    if not skip_kb_ingest:
+        typer.echo("Downloading preCICE knowledge base (first run only)...")
+        try:
+            typer.echo(json.dumps(_sync_kb(github_token=github_token), indent=2))
+        except Exception as exc:
+            typer.echo(
+                f"Warning: could not pre-populate the knowledge base ({exc}). Run `precice-ai kb ingest` later.",
+                err=True,
+            )
 
 
 @app.command()
@@ -213,6 +226,9 @@ def bootstrap(
         "--force-env",
         help="Overwrite the env file if it already exists.",
     ),
+    skip_kb_ingest: bool = typer.Option(
+        False, "--skip-kb-ingest", help="Don't download the knowledge base during setup (e.g. for CI/offline)."
+    ),
 ) -> None:
     """Create .env values and register the MCP server with a supported client."""
     resolved_projects_dir = projects_dir or (Path.cwd() / "test-projects")
@@ -248,6 +264,16 @@ def bootstrap(
 
     instance = platform_cls()
     instance.install(projects_dir=resolved_projects_dir, scope=scope, extra_env=extra_env)
+
+    if not skip_kb_ingest:
+        typer.echo("Downloading preCICE knowledge base (first run only)...")
+        try:
+            typer.echo(json.dumps(_sync_kb(github_token=github_token), indent=2))
+        except Exception as exc:
+            typer.echo(
+                f"Warning: could not pre-populate the knowledge base ({exc}). Run `precice-ai kb ingest` later.",
+                err=True,
+            )
 
 
 @app.command()
@@ -360,6 +386,29 @@ def kb_status(
     typer.echo(json.dumps(result, indent=2))
 
 
+def _sync_kb(
+    *,
+    category: Optional[str] = None,
+    github_token: Optional[str] = None,
+    skip_lexical: bool = False,
+    skip_vector: bool = False,
+) -> dict[str, object]:
+    """Sync the local KB (vector + lexical) from the kb-latest GitHub Release.
+
+    Shared by the `kb ingest` command and the automatic first-run download
+    in `setup`/`bootstrap` so ingestion logic lives in exactly one place.
+    """
+    from precice_ai.core.knowledge_base import KnowledgeBaseService, VectorKnowledgeBase
+
+    token = github_token or os.environ.get("GITHUB_TOKEN")
+    result: dict[str, object] = {}
+    if not skip_vector:
+        result["vector"] = VectorKnowledgeBase().download_from_release(github_token=token, category=category)
+    if not skip_lexical:
+        result["lexical"] = KnowledgeBaseService().sync_from_release(github_token=token)
+    return result
+
+
 @kb_app.command("ingest")
 def kb_ingest(
     category: Optional[str] = typer.Option(
@@ -375,19 +424,14 @@ def kb_ingest(
 ) -> None:
     """Sync the local KB from the kb-latest GitHub Release (same as kb_ingest_precice_data).
 
-    Trusts the local copy for up to 48h since the last check (no network
+    Trusts the local copy for up to 96h since the last check (no network
     call); past that, always re-downloads. Use --verbose to see exactly
     which HTTP calls are made and why a given asset was (or wasn't) refetched.
     """
     _configure_logging(verbose)
-    from precice_ai.core.knowledge_base import KnowledgeBaseService, VectorKnowledgeBase
-
-    token = github_token or os.environ.get("GITHUB_TOKEN")
-    result: dict[str, object] = {}
-    if not skip_vector:
-        result["vector"] = VectorKnowledgeBase().download_from_release(github_token=token, category=category)
-    if not skip_lexical:
-        result["lexical"] = KnowledgeBaseService().sync_from_release(github_token=token)
+    result = _sync_kb(
+        category=category, github_token=github_token, skip_lexical=skip_lexical, skip_vector=skip_vector
+    )
     typer.echo(json.dumps(result, indent=2))
 
 
@@ -411,7 +455,9 @@ def kb_query(
     from precice_ai.core.knowledge_base import KnowledgeBaseService, VectorKnowledgeBase
 
     if mode == "lexical":
-        result = KnowledgeBaseService().query_with_optional_live_refresh(question=question, top_k=top_k)
+        result = KnowledgeBaseService().query_with_optional_live_refresh(
+            question=question, top_k=top_k, category=category
+        )
     elif mode == "vector":
         result = VectorKnowledgeBase().query(question=question, top_k=top_k, category=category)
     elif mode == "vector-live":

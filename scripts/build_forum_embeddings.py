@@ -26,7 +26,14 @@ from openai import OpenAI
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from build_embeddings import BASE_URL_DEFAULT, BATCH_SIZE_DEFAULT, MODEL_DEFAULT, _chunk, _embed_batch
+from build_embeddings import (
+    BASE_URL_DEFAULT,
+    BATCH_SIZE_DEFAULT,
+    MODEL_DEFAULT,
+    _chunk,
+    _embed_batch,
+    write_chunk_fragment,
+)
 from precice_ai.core.discourse_api import fetch_discourse_topic_documents
 
 USER_AGENT = "precice-ai-mcp/1.0 (+https://github.com/precice)"
@@ -62,6 +69,11 @@ def main() -> None:
     parser.add_argument("--model", default=MODEL_DEFAULT)
     parser.add_argument("--output", default="kb-embeddings-forum.npz")
     parser.add_argument("--batch-size", type=int, default=BATCH_SIZE_DEFAULT)
+    parser.add_argument(
+        "--lexical-output",
+        default=None,
+        help="If given, also write the chunk list (no embeddings) to this path for the lexical KB.",
+    )
     args = parser.parse_args()
 
     topics_limit = args.topics_limit if args.topics_limit > 0 else None
@@ -84,6 +96,9 @@ def main() -> None:
 
     if not all_chunks:
         sys.exit("No forum chunks produced.")
+
+    if args.lexical_output:
+        write_chunk_fragment(all_chunks, "forum", args.lexical_output)
 
     print(f"Total chunks to embed: {len(all_chunks)}", file=sys.stderr)
 

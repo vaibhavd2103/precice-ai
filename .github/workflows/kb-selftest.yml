@@ -36,14 +36,14 @@ jobs:
 
       - name: Build sample embeddings locally
         env:
-          EMBED_MODEL: BAAI/bge-small-en-v1.5
+          EMBEDDING_MODEL: BAAI/bge-m3
         run: |
           python - <<'EOF'
           import os, json, httpx, numpy as np
           from datetime import datetime, timezone
           from sentence_transformers import SentenceTransformer
 
-          MODEL = os.environ["EMBED_MODEL"]
+          MODEL = os.environ["EMBEDDING_MODEL"]
 
           # --- pull a few REAL preCICE forum topics (public, no auth) ---
           # Falls back to a small fixed set if the network hiccups, so the

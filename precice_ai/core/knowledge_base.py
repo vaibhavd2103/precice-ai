@@ -649,8 +649,6 @@ def _now_iso() -> str:
 
 _RELEASE_TAG = "kb-latest"
 _DEFAULT_GITHUB_REPO = "vaibhavd2103/precice-ai"
-_DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
-_DEFAULT_MODEL = "openai/text-embedding-3-small"
 
 # Must match the category keys in kb_sources.json and the asset names the
 # kb-ingest.yml workflow uploads (kb-embeddings-<category>.npz), one per
@@ -773,15 +771,30 @@ class VectorKnowledgeBase:
                 ),
             }
 
-        api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("BLABLADOR_API_KEY")
-        if not api_key:
-            return {
-                "status": "error",
-                "message": (
-                    f"No GitHub Release asset found for category '{category}'. A local build "
-                    "was attempted but OPENROUTER_API_KEY (or BLABLADOR_API_KEY) is not set."
-                ),
-            }
+        embed_provider = os.environ.get("EMBED_PROVIDER", "local")
+        build_env = dict(os.environ)
+        model_args: list[str] = []
+        if embed_provider == "local":
+            # Local embedding needs no API key; the build scripts still take
+            # --api-key as a required argument, so pass a harmless dummy.
+            # EMBED_PROVIDER/--model are made explicit for the subprocess so
+            # the local branch is used regardless of the parent env.
+            build_env["EMBED_PROVIDER"] = "local"
+            api_key = "unused-local"
+            from precice_ai.core.embedding import DEFAULT_MODEL
+
+            model_args = ["--model", os.environ.get("EMBEDDING_MODEL", DEFAULT_MODEL)]
+        else:
+            api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("BLABLADOR_API_KEY")
+            if not api_key:
+                return {
+                    "status": "error",
+                    "message": (
+                        f"No GitHub Release asset found for category '{category}'. A local build "
+                        "was attempted but EMBED_PROVIDER=api and neither OPENROUTER_API_KEY nor "
+                        "BLABLADOR_API_KEY is set."
+                    ),
+                }
 
         config = json.loads(config_path.read_text(encoding="utf-8"))
         cat_config = config.get("categories", {}).get(category)
@@ -800,6 +813,7 @@ class VectorKnowledgeBase:
                         "--forum-url", cat_config["forum_url"],
                         "--api-key", api_key,
                         "--output", str(output_path),
+                        *model_args,
                     ]
                 elif cat_config.get("type") in ("github_issues", "github_prs"):
                     kind = "issues" if cat_config["type"] == "github_issues" else "pulls"
@@ -809,6 +823,7 @@ class VectorKnowledgeBase:
                         "--kind", kind,
                         "--api-key", api_key,
                         "--output", str(output_path),
+                        *model_args,
                     ]
                     github_token = os.environ.get("GITHUB_TOKEN")
                     if github_token:
@@ -857,9 +872,12 @@ class VectorKnowledgeBase:
                         "--sources-json", sources_json,
                         "--api-key", api_key,
                         "--output", str(output_path),
+                        *model_args,
                     ]
 
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_seconds)
+                result = subprocess.run(
+                    cmd, capture_output=True, text=True, timeout=timeout_seconds, env=build_env
+                )
                 if result.returncode != 0:
                     return {
                         "status": "error",
@@ -922,10 +940,7 @@ class VectorKnowledgeBase:
         except ImportError:
             return {"status": "error", "message": "numpy is required: pip install numpy"}
 
-        try:
-            from openai import OpenAI
-        except ImportError:
-            return {"status": "error", "message": "openai is required: pip install openai"}
+        from precice_ai.core.embedding import embed_query
 
         categories = [category] if category else CATEGORIES
         available = [cat for cat in categories if self._npz_files[cat].exists()]
@@ -945,26 +960,13 @@ class VectorKnowledgeBase:
                 except Exception as exc:
                     return {"status": "error", "message": f"Failed to load embeddings for {cat}: {exc}"}
 
-        # Embed the query
-        api_key = (
-            os.environ.get("OPENROUTER_API_KEY")
-            or os.environ.get("BLABLADOR_API_KEY")
-        )
-        if not api_key:
-            return {
-                "status": "error",
-                "message": "Set OPENROUTER_API_KEY (or BLABLADOR_API_KEY) env var for query embedding.",
-            }
-
-        base_url = os.environ.get("EMBEDDING_BASE_URL", _DEFAULT_BASE_URL)
-        model = os.environ.get("EMBEDDING_MODEL", _DEFAULT_MODEL)
-
+        # Embed the query. Local mode (the default) needs no API key and
+        # makes no network call; API mode reads OPENROUTER_API_KEY /
+        # BLABLADOR_API_KEY / EMBEDDING_BASE_URL as before.
         try:
-            client = OpenAI(api_key=api_key, base_url=base_url)
-            resp = client.embeddings.create(input=question, model=model)
-            q_vec = np.array(resp.data[0].embedding, dtype=np.float32)
+            q_vec = np.array(embed_query(question), dtype=np.float32)
         except Exception as exc:
-            return {"status": "error", "message": f"Embedding API error: {exc}"}
+            return {"status": "error", "message": f"Embedding error: {exc}"}
 
         q_norm = float(np.linalg.norm(q_vec))
         if q_norm == 0:
@@ -975,6 +977,18 @@ class VectorKnowledgeBase:
         chunks: list[dict[str, str | int]] = []
         for cat in available:
             chunks.extend(self._chunks[cat])
+
+        if emb.shape[1] != q_vec.shape[0]:
+            return {
+                "status": "error",
+                "message": (
+                    f"Embedding dimension mismatch: stored vectors are {emb.shape[1]}-dim "
+                    f"but the query embedding is {q_vec.shape[0]}-dim. The local .npz assets "
+                    "were built with a different EMBEDDING_MODEL than the one currently "
+                    "configured — re-run kb_ingest_precice_data (or the kb-ingest.yml Action) "
+                    "so build and query use the same model."
+                ),
+            }
 
         norms = np.linalg.norm(emb, axis=1)
         scores = (emb @ q_vec) / (norms * q_norm + 1e-9)

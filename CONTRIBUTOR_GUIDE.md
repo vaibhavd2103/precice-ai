@@ -162,7 +162,7 @@ The CLI and the server are separate on purpose:
 - `git`
 - optionally `precice-cli` if you want to exercise the preCICE wrapper tools
 - optionally a supported MCP client such as Codex, Claude Code, Cursor, or Windsurf
-- optionally an embedding API key for KB queries
+- no embedding API key needed: KB queries embed locally with `sentence-transformers` by default (`EMBED_PROVIDER=local`); an API key is only needed if you opt into `EMBED_PROVIDER=api`
 
 ### Recommended setup
 
@@ -221,7 +221,7 @@ If you are onboarding onto a clean machine and want a full working dev environme
 5. Run `precice-ai list-platforms` to see which clients are available locally.
 6. Decide what directory will contain your local preCICE cases.
 7. Run `precice-ai bootstrap <client> --projects-dir /path/to/cases`.
-8. If you want semantic KB queries, provide `--openrouter-api-key ...` or configure Blablador variables.
+8. Semantic KB queries work with no flags (local embedding by default). To use an API instead, set `EMBED_PROVIDER=api` and provide `--openrouter-api-key ...` or configure Blablador variables.
 9. Restart the target client.
 10. In the client, call `list_precice_projects()`, then `kb_precice_status()`, then use `kb_query_precice("what is preCICE?", category="about")` if that category is fresh or `kb_query_precice_live("what is preCICE?", category="about")` if it is missing or stale.
 
@@ -724,10 +724,11 @@ This is optional. The source code remains the ground truth.
 
 ### Embedding provider configuration
 
-- `OPENROUTER_API_KEY`
-- `BLABLADOR_API_KEY`
-- `EMBEDDING_BASE_URL`
-- `EMBEDDING_MODEL`
+- `EMBED_PROVIDER` — `local` (default; sentence-transformers, no key) or `api`
+- `EMBEDDING_MODEL` — default `BAAI/bge-m3`; must match between build and query
+- `OPENROUTER_API_KEY` — only used when `EMBED_PROVIDER=api`
+- `BLABLADOR_API_KEY` — only used when `EMBED_PROVIDER=api`
+- `EMBEDDING_BASE_URL` — only used when `EMBED_PROVIDER=api`
 
 ### GitHub integration
 
@@ -760,7 +761,7 @@ precice-ai kb status
 python -m precice_ai.cli.main server
 ```
 
-If you changed the KB code and have API credentials:
+If you changed the KB code (local embedding needs no credentials):
 
 ```bash
 precice-ai kb ingest
@@ -795,9 +796,9 @@ A lot of path behavior changes depending on:
 
 Be very conservative when expanding allowed commands or introducing write-capable flows.
 
-### 5. Assuming KB queries are fully offline
+### 5. Assuming KB queries always hit the network
 
-The vector documents are cached locally, but the user’s question still has to be embedded at query time unless you are using the lexical path.
+The vector documents are cached locally, and by default (`EMBED_PROVIDER=local`) the question is also embedded locally with no network call. Only `EMBED_PROVIDER=api` sends the question to an external embedding API.
 
 ## Troubleshooting
 
@@ -827,10 +828,10 @@ Check:
 
 Check:
 
-- embedding API key is present
-- `EMBEDDING_BASE_URL` and `EMBEDDING_MODEL` are valid
-- network access to the embedding provider works
+- `sentence-transformers` is installed (default `EMBED_PROVIDER=local`) and the model download succeeded (~2.2 GB, first run only)
 - the local KB store is writable
+- if you set `EMBED_PROVIDER=api`: an embedding API key is present, and `EMBEDDING_BASE_URL` / `EMBEDDING_MODEL` are valid and reachable
+- `EMBEDDING_MODEL` matches what the local `.npz` assets were built with — a mismatch fails with a clear dimension-mismatch error
 
 ### Project tools return no projects
 

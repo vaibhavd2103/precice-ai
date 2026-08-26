@@ -51,7 +51,17 @@ Register the server with a supported MCP client:
 precice-ai bootstrap auto --projects-dir /path/to/preCICE/cases
 ```
 
-If you want KB queries to work immediately, include an embedding API key:
+Semantic KB queries work out of the box: embeddings are computed locally with
+`sentence-transformers` (model `BAAI/bge-m3`), so no API key or credits are
+needed. The first query or ingest downloads the model (~2.2 GB) once; it's
+cached under `~/.cache/huggingface` after that.
+
+```bash
+precice-ai bootstrap codex --projects-dir /path/to/preCICE/cases
+```
+
+If you'd rather embed via an OpenAI-compatible API (e.g. on a funded
+OpenRouter account), set `EMBED_PROVIDER=api` and pass a key:
 
 ```bash
 precice-ai bootstrap codex \
@@ -109,13 +119,15 @@ Use this structure for Claude Code project config, Claude Desktop, Cursor JSON c
       "command": "/absolute/path/to/precice-ai/.venv/bin/python",
       "args": ["-m", "precice_ai.server"],
       "env": {
-        "PRECICE_PROJECTS_DIR": "/absolute/path/to/preCICE/cases",
-        "OPENROUTER_API_KEY": "sk-or-..."
+        "PRECICE_PROJECTS_DIR": "/absolute/path/to/preCICE/cases"
       }
     }
   }
 }
 ```
+
+Add `"OPENROUTER_API_KEY": "sk-or-..."` (and `"EMBED_PROVIDER": "api"`) to
+`env` only if you want to embed via an API instead of the local default.
 
 ### Codex
 
@@ -124,7 +136,6 @@ Native CLI:
 ```bash
 codex mcp add precice-ai \
   --env PRECICE_PROJECTS_DIR=/absolute/path/to/preCICE/cases \
-  --env OPENROUTER_API_KEY=sk-or-... \
   -- /absolute/path/to/precice-ai/.venv/bin/python -m precice_ai.server
 ```
 
@@ -137,8 +148,10 @@ args = ["-m", "precice_ai.server"]
 
 [mcp_servers."precice-ai".env]
 PRECICE_PROJECTS_DIR = "/absolute/path/to/preCICE/cases"
-OPENROUTER_API_KEY = "sk-or-..."
 ```
+
+Add `OPENROUTER_API_KEY` (and `EMBED_PROVIDER = "api"`) here only if you want
+to embed via an API instead of the local default.
 
 ### Common config locations
 
@@ -155,9 +168,10 @@ Restart or reload the client after editing its config.
 
 ## Environment Variables
 
-Required for semantic KB queries:
-
-- `OPENROUTER_API_KEY` or `BLABLADOR_API_KEY`
+Semantic KB queries work with no configuration: `EMBED_PROVIDER` defaults to
+`local`, which embeds with `sentence-transformers` on your machine — no API
+key needed. The first run downloads the `BAAI/bge-m3` model (~2.2 GB), then
+caches it under `~/.cache/huggingface`.
 
 Common optional variables:
 
@@ -165,14 +179,15 @@ Common optional variables:
 | ------------------------ | --------------------------------------------- | ---------------------------------------------------------------- |
 | `PRECICE_PROJECTS_DIR`   | `./test-projects` when running from repo root | Directory scanned by the project tools.                          |
 | `PRECICE_KB_STORE_DIR`   | `~/.precice-ai/kb_store`                      | Local storage for downloaded KB assets.                          |
-| `OPENROUTER_API_KEY`     | none                                          | Embedding API key when using OpenRouter.                         |
-| `BLABLADOR_API_KEY`      | none                                          | Embedding API key when using Blablador.                          |
-| `EMBEDDING_BASE_URL`     | `https://openrouter.ai/api/v1`                | OpenAI-compatible embeddings base URL.                           |
-| `EMBEDDING_MODEL`        | `openai/text-embedding-3-small`               | Embedding model name.                                            |
+| `EMBED_PROVIDER`         | `local`                                       | `local` (sentence-transformers, no key) or `api` (OpenAI-compatible). |
+| `EMBEDDING_MODEL`        | `BAAI/bge-m3`                                 | Embedding model name (HF repo id in local mode).                 |
+| `OPENROUTER_API_KEY`     | none                                          | Embedding API key when `EMBED_PROVIDER=api` (OpenRouter).        |
+| `BLABLADOR_API_KEY`      | none                                          | Embedding API key when `EMBED_PROVIDER=api` (Blablador).         |
+| `EMBEDDING_BASE_URL`     | `https://openrouter.ai/api/v1`                | OpenAI-compatible embeddings base URL (`api` mode only).         |
 | `PRECICE_AI_GITHUB_REPO` | `vaibhavd2103/precice-ai`                     | GitHub repo used for KB asset downloads.                         |
 | `GITHUB_TOKEN`           | none                                          | Optional token for private release access or higher rate limits. |
 
-To use Blablador instead of OpenRouter:
+To use Blablador instead of local embeddings:
 
 ```bash
 precice-ai bootstrap codex \
@@ -181,7 +196,9 @@ precice-ai bootstrap codex \
   --embedding-model alias-embeddings
 ```
 
-Then set `BLABLADOR_API_KEY` in `.env` or in the client config.
+Then add `EMBED_PROVIDER=api` and `BLABLADOR_API_KEY` to `.env` (or the client
+config) — the CLI flags above write the URL/model but not the provider
+switch, so `EMBED_PROVIDER` must still be set explicitly to leave local mode.
 
 ## How To Use It
 
@@ -309,7 +326,7 @@ kb_precice_status()
 - `run_command_in_project` is intentionally restrictive and only allows approved command prefixes.
 - The server blocks obviously destructive patterns such as `rm`, `sudo`, `curl`, `wget`, and shutdown commands.
 - Log analysis is heuristic and meant to assist debugging, not replace solver-level validation.
-- Document embeddings are prebuilt offline; only the query text is embedded at query time.
+- Document embeddings are prebuilt offline; only the query text is embedded at query time, and by default that happens locally too (`EMBED_PROVIDER=local`), so no network call or API key is involved.
 
 ## Project Layout
 

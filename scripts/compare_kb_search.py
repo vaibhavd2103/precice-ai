@@ -12,9 +12,11 @@ Usage:
     python scripts/compare_kb_search.py "..." --include-vectors --save out.json
     python scripts/compare_kb_search.py "How do I configure a nearest-neighbor mapping?" --top-k 8 --include-vectors --save out.json
 
-Requires OPENROUTER_API_KEY (or BLABLADOR_API_KEY) for the vector search leg
-(question embedding), and a locally ingested lexical KB / downloaded vector
-KB (falls back to auto-download for the vector KB if missing).
+The vector search leg embeds the question via precice_ai.core.embedding
+(EMBED_PROVIDER=local by default — sentence-transformers, no API key; set
+EMBED_PROVIDER=api with OPENROUTER_API_KEY/BLABLADOR_API_KEY to use an API
+instead). Requires a locally ingested lexical KB / downloaded vector KB
+(falls back to auto-download for the vector KB if missing).
 """
 
 from __future__ import annotations

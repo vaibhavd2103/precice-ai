@@ -2,8 +2,10 @@
 
 Chunks every Markdown file under each configured source directory, embeds
 chunks via an OpenAI-compatible API (OpenRouter by default, Blablador
-later), and saves the result as a compressed NumPy archive (.npz) tagged
-with a category, ready to be uploaded as a GitHub Release asset.
+later) OR locally with sentence-transformers (set EMBED_PROVIDER=local and
+pass a HuggingFace repo id as --model), and saves the result as a compressed
+NumPy archive (.npz) tagged with a category, ready to be uploaded as a
+GitHub Release asset.
 
 Sources are passed as a JSON list, each entry:
     {"label": str, "path": str, "url_mode": "website" | "github",
@@ -13,11 +15,18 @@ Sources are passed as a JSON list, each entry:
 file's relative path). "github" mode builds GitHub blob URLs by joining
 url_base with the file's path relative to its source directory.
 
-Usage:
+Usage (API):
     python scripts/build_embeddings.py \
         --category documentation \
         --sources-json "$(python scripts/render_sources_json.py --config kb_sources.json --category documentation --checkout-dir precice/precice.github.io=precice-docs)" \
         --api-key $OPENROUTER_API_KEY \
+        --output kb-embeddings-documentation.npz
+
+Usage (local, no API key/credits):
+    EMBED_PROVIDER=local python scripts/build_embeddings.py \
+        --category documentation \
+        --sources-json "..." \
+        --model BAAI/bge-m3 \
         --output kb-embeddings-documentation.npz
 """
 
@@ -25,6 +34,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 import time
@@ -40,6 +50,12 @@ MIN_CHUNK_WORDS = 30
 # cap is deliberately used instead of a model-specific tokenizer: this script
 # also targets OpenAI-compatible providers with different tokenizers, and a
 # UTF-8 token cannot contain fewer than one byte.
+#
+# NOTE: when embedding locally, the chosen model MUST have an 8192-token
+# context to honor this margin. BAAI/bge-m3 (8192) does; the bge-*-en-v1.5
+# family is only 512 tokens and would SILENTLY TRUNCATE these chunks. If you
+# switch to a 512-token local model, drop CHUNK_WORDS to ~300 and
+# MAX_CHUNK_BYTES to ~2000 as well.
 MAX_CHUNK_BYTES = 7_000
 BASE_URL_DEFAULT = "https://openrouter.ai/api/v1"
 MODEL_DEFAULT = "openai/text-embedding-3-small"
@@ -49,13 +65,15 @@ MODEL_DEFAULT = "openai/text-embedding-3-small"
 # "Prompt tokens limit exceeded" / 402 errors). 16 keeps every batch at
 # roughly half that ceiling with headroom for larger-than-average chunks,
 # regardless of account tier. Override with --batch-size on a funded account
-# that wants fewer, larger requests.
+# that wants fewer, larger requests. (Batch size is irrelevant in local mode
+# — sentence-transformers batches internally — but is still honored.)
 BATCH_SIZE_DEFAULT = 16
 
 
 # ---------------------------------------------------------------------------
 # Markdown helpers
 # ---------------------------------------------------------------------------
+
 
 def _parse_frontmatter(text: str) -> tuple[dict[str, str], str]:
     """Return (meta, body) stripping YAML frontmatter."""
@@ -65,7 +83,7 @@ def _parse_frontmatter(text: str) -> tuple[dict[str, str], str]:
     if end == -1:
         return {}, text
     fm_raw = text[3:end].strip()
-    body = text[end + 4:].lstrip("\n")
+    body = text[end + 4 :].lstrip("\n")
     meta: dict[str, str] = {}
     for line in fm_raw.splitlines():
         if ":" in line:
@@ -76,15 +94,15 @@ def _parse_frontmatter(text: str) -> tuple[dict[str, str], str]:
 
 def _strip_markdown(text: str) -> str:
     """Best-effort markdown → plain text."""
-    text = re.sub(r"```[\s\S]*?```", " ", text)          # code blocks
-    text = re.sub(r"`[^`]+`", " ", text)                  # inline code
-    text = re.sub(r"!\[.*?\]\(.*?\)", " ", text)          # images
-    text = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", text) # links → text
-    text = re.sub(r"#{1,6}\s+", "", text)                  # headings
+    text = re.sub(r"```[\s\S]*?```", " ", text)  # code blocks
+    text = re.sub(r"`[^`]+`", " ", text)  # inline code
+    text = re.sub(r"!\[.*?\]\(.*?\)", " ", text)  # images
+    text = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", text)  # links → text
+    text = re.sub(r"#{1,6}\s+", "", text)  # headings
     text = re.sub(r"[*_]{1,2}([^*_]+)[*_]{1,2}", r"\1", text)  # bold/italic
     text = re.sub(r"^\s*[-*+]\s+", "", text, flags=re.MULTILINE)  # bullets
     text = re.sub(r"^\s*\d+\.\s+", "", text, flags=re.MULTILINE)  # numbered
-    text = re.sub(r"\|[^\n]+\|", " ", text)               # tables
+    text = re.sub(r"\|[^\n]+\|", " ", text)  # tables
     return text
 
 
@@ -161,7 +179,9 @@ def _file_to_url(filepath: Path, source_dir: Path, source: dict) -> str:
     rel = filepath.relative_to(source_dir)
 
     if source["url_mode"] == "website":
-        meta, _ = _parse_frontmatter(filepath.read_text(encoding="utf-8", errors="replace"))
+        meta, _ = _parse_frontmatter(
+            filepath.read_text(encoding="utf-8", errors="replace")
+        )
         permalink = meta.get("permalink", "")
         if permalink:
             return url_base + ("" if permalink.startswith("/") else "/") + permalink
@@ -178,9 +198,13 @@ def _file_to_url(filepath: Path, source_dir: Path, source: dict) -> str:
 # chunk list, guaranteeing parity instead of relying on two separate crawls.
 # ---------------------------------------------------------------------------
 
+
 def write_chunk_fragment(chunks: list[dict], category: str, output_path: str) -> None:
     Path(output_path).write_text(
-        json.dumps({"category": category, "count": len(chunks), "chunks": chunks}, ensure_ascii=False),
+        json.dumps(
+            {"category": category, "count": len(chunks), "chunks": chunks},
+            ensure_ascii=False,
+        ),
         encoding="utf-8",
     )
 
@@ -189,12 +213,22 @@ def write_chunk_fragment(chunks: list[dict], category: str, output_path: str) ->
 # Embedding
 # ---------------------------------------------------------------------------
 
+
 def _embed_batch(
     client: OpenAI,
     texts: list[str],
     model: str,
     retry: int = 3,
 ) -> list[list[float]]:
+    # Local mode: delegate to the shared embedding helper, which runs
+    # sentence-transformers on the caller's machine. No API key, no credits,
+    # no rate limits. Triggered by EMBED_PROVIDER=local; `model` is a
+    # HuggingFace repo id (e.g. BAAI/bge-m3). `client` is ignored.
+    if os.environ.get("EMBED_PROVIDER") == "local":
+        from precice_ai.core.embedding import embed_texts
+
+        return embed_texts(texts, model=model)
+
     for attempt in range(retry):
         try:
             response = client.embeddings.create(input=texts, model=model)
@@ -211,6 +245,7 @@ def _embed_batch(
 # Main
 # ---------------------------------------------------------------------------
 
+
 def _collect_md_files(source_dir: Path, exclude_patterns: list[str]) -> list[Path]:
     if not source_dir.exists():
         print(f"  warning: source dir not found: {source_dir}", file=sys.stderr)
@@ -218,25 +253,41 @@ def _collect_md_files(source_dir: Path, exclude_patterns: list[str]) -> list[Pat
 
     files = sorted(source_dir.rglob("*.md"))
     if exclude_patterns:
+
         def _is_excluded(p: Path) -> bool:
             rel = str(p.relative_to(source_dir))
             return any(pat in rel for pat in exclude_patterns)
+
         files = [f for f in files if not _is_excluded(f)]
     return files
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--category", required=True, help="Category tag stored with every chunk")
+    parser.add_argument(
+        "--category", required=True, help="Category tag stored with every chunk"
+    )
     parser.add_argument(
         "--sources-json",
         required=True,
         help="JSON list of {label, path, url_mode, url_base, exclude_patterns}",
     )
-    parser.add_argument("--api-key", required=True, help="OpenRouter / Blablador API key")
-    parser.add_argument("--base-url", default=BASE_URL_DEFAULT, help="OpenAI-compatible base URL")
-    parser.add_argument("--model", default=MODEL_DEFAULT, help="Embedding model name")
-    parser.add_argument("--output", default="kb-embeddings.npz", help="Output .npz path")
+    parser.add_argument(
+        "--api-key",
+        required=True,
+        help="OpenRouter / Blablador API key (ignored when EMBED_PROVIDER=local)",
+    )
+    parser.add_argument(
+        "--base-url", default=BASE_URL_DEFAULT, help="OpenAI-compatible base URL"
+    )
+    parser.add_argument(
+        "--model",
+        default=MODEL_DEFAULT,
+        help="Embedding model name (HF repo id when EMBED_PROVIDER=local)",
+    )
+    parser.add_argument(
+        "--output", default="kb-embeddings.npz", help="Output .npz path"
+    )
     parser.add_argument("--batch-size", type=int, default=BATCH_SIZE_DEFAULT)
     parser.add_argument(
         "--lexical-output",
@@ -256,7 +307,10 @@ def main() -> None:
         source_dir = Path(source["path"]).resolve()
         exclude_patterns = source.get("exclude_patterns", [])
         md_files = _collect_md_files(source_dir, exclude_patterns)
-        print(f"[{source['label']}] {len(md_files)} markdown files in {source_dir}", file=sys.stderr)
+        print(
+            f"[{source['label']}] {len(md_files)} markdown files in {source_dir}",
+            file=sys.stderr,
+        )
 
         for filepath in md_files:
             try:

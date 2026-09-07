@@ -129,6 +129,38 @@ Use this structure for Claude Code project config, Claude Desktop, Cursor JSON c
 Add `"OPENROUTER_API_KEY": "sk-or-..."` (and `"EMBED_PROVIDER": "api"`) to
 `env` only if you want to embed via an API instead of the local default.
 
+#### Claude Code project scope (`.mcp.json`)
+
+For Claude Code specifically, a portable, checked-in template lives at
+[`.mcp.json.example`](.mcp.json.example) — copy it to `.mcp.json` (or run
+`precice-ai bootstrap claude-code`, which writes the same thing):
+
+```json
+{
+  "mcpServers": {
+    "precice-ai": {
+      "command": "${PRECICE_AI_PYTHON:-.venv/bin/python}",
+      "args": ["-m", "precice_ai.server"],
+      "env": {
+        "PRECICE_PROJECTS_DIR": "${PRECICE_PROJECTS_DIR:-test-projects}"
+      }
+    }
+  }
+}
+```
+
+Claude Code launches the server with the repo root as the working directory
+and expands `${VAR:-default}`, so this works as-is after `install.sh` /
+`install.ps1` on any OS. Overrides, only if the defaults don't fit your setup:
+
+- `PRECICE_AI_PYTHON` — path to the interpreter (e.g.
+  `.venv\Scripts\python.exe` if a client doesn't pick the POSIX path on
+  Windows, or an absolute path to a global install).
+- `PRECICE_PROJECTS_DIR` — directory holding your preCICE cases.
+
+`.mcp.json` itself is git-ignored so a regenerated copy (or an injected API
+key) is never committed.
+
 ### Codex
 
 Native CLI:

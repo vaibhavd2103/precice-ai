@@ -21,9 +21,8 @@ class ClaudeCodePlatform(Platform):
         return result.returncode == 0
 
     def install(self, projects_dir: Path, scope: str = "project", **kwargs: Any) -> None:
-        entry = self.mcp_entry(projects_dir, extra_env=kwargs.get("extra_env"))
-
         if scope == "user":
+            entry = self.mcp_entry(projects_dir, extra_env=kwargs.get("extra_env"))
             config_path = Path.home() / ".claude.json"
             self._merge_json_config(config_path, entry)
             print(
@@ -32,7 +31,15 @@ class ClaudeCodePlatform(Platform):
             )
         else:
             # Project scope — .mcp.json next to where the user ran the command.
+            # Claude Code launches the server with cwd == this directory, so
+            # emit repo-relative, env-overridable paths (portable across
+            # machines/users) rather than baking in this machine's absolutes.
             config_path = Path.cwd() / ".mcp.json"
+            entry = self.mcp_entry(
+                projects_dir,
+                extra_env=kwargs.get("extra_env"),
+                portable_root=Path.cwd(),
+            )
             self._merge_json_config(config_path, entry)
             self._approve_project_server(Path.cwd())
             print(

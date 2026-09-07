@@ -101,11 +101,6 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
         
         If answer not found in "issues" or "pulls" categories, then search in "forum" because it
         contains the most up-to-date information about preCICE, including discussions, bug reports, and user experiences.
-
-        The question is embedded locally by default (EMBED_PROVIDER=local,
-        EMBEDDING_MODEL=BAAI/bge-m3) — no API key required. Set
-        EMBED_PROVIDER=api with OPENROUTER_API_KEY (or BLABLADOR_API_KEY) to
-        use an OpenAI-compatible API instead.
         """
         try:
             token = os.environ.get("GITHUB_TOKEN")

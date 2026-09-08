@@ -30,7 +30,14 @@ import httpx
 import numpy as np
 from openai import OpenAI
 
-from build_embeddings import BASE_URL_DEFAULT, BATCH_SIZE_DEFAULT, MODEL_DEFAULT, _chunk, _embed_batch
+from build_embeddings import (
+    BASE_URL_DEFAULT,
+    BATCH_SIZE_DEFAULT,
+    MODEL_DEFAULT,
+    _chunk,
+    _embed_batch,
+    write_chunk_fragment,
+)
 
 USER_AGENT = "precice-ai-mcp/1.0 (+https://github.com/precice)"
 API_ROOT = "https://api.github.com"
@@ -139,6 +146,11 @@ def main() -> None:
     parser.add_argument("--model", default=MODEL_DEFAULT)
     parser.add_argument("--output", default=None)
     parser.add_argument("--batch-size", type=int, default=BATCH_SIZE_DEFAULT)
+    parser.add_argument(
+        "--lexical-output",
+        default=None,
+        help="If given, also write the chunk list (no embeddings) to this path for the lexical KB.",
+    )
     args = parser.parse_args()
 
     output = args.output or f"kb-embeddings-{args.kind}.npz"
@@ -168,6 +180,9 @@ def main() -> None:
 
     if not all_chunks:
         sys.exit(f"No {args.kind} chunks produced.")
+
+    if args.lexical_output:
+        write_chunk_fragment(all_chunks, args.kind, args.lexical_output)
 
     print(f"Total chunks to embed: {len(all_chunks)}", file=sys.stderr)
 

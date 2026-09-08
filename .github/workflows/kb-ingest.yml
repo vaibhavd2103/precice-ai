@@ -2,14 +2,31 @@ name: Build & Publish Knowledge Base Embeddings
 
 on:
   schedule:
-    - cron: '0 2 * * *'   # every day at 02:00 UTC; gate job restricts to alternate days
-  workflow_dispatch:        # manual trigger from GitHub UI (always runs, bypasses the gate)
+    - cron: "0 2 * * *" # every day at 02:00 UTC; gate job restricts to once every 4 days
+  workflow_dispatch: # manual trigger from GitHub UI (always runs, bypasses the gate)
 
 permissions:
-  contents: write           # needed to create/upload releases and commit kb_state.json
+  contents: write # needed to create/upload releases and commit kb_state.json
 
 env:
   GIT_CATEGORIES: "about community documentation tutorials"
+  # Pinned explicitly (rather than left to script argparse defaults) so the
+  # lexical KB and the vector KB always fetch the same amount of content and
+  # can't silently drift apart again.
+  #
+  # "No limitations": forum fetches every visible topic (0 = unlimited), and
+  # issues/pulls fetch every item (100000 is an effective "all" — the fetch
+  # loop stops when GitHub returns no more pages). 100 is GitHub's max
+  # comments-per-page.  See the rate-limit note in the build step below.
+  FORUM_TOPICS_LIMIT: "0" # 0 = unlimited (all topics)
+  GITHUB_ITEMS_LIMIT: "100000" # effectively all issues / all pulls
+  GITHUB_COMMENTS_LIMIT: "100" # GitHub's per-page max
+  # Embed via OpenRouter (paid). The build model, the query model
+  # (precice_ai/core/embedding.py DEFAULT_MODEL), and the published manifest
+  # must all agree on EMBEDDING_MODEL — a mismatch means silent garbage
+  # retrieval.
+  EMBEDDING_MODEL: "openai/text-embedding-3-small"
+  EMBEDDING_BASE_URL: "https://openrouter.ai/api/v1"
 
 jobs:
   gate:
@@ -17,22 +34,22 @@ jobs:
     outputs:
       run_today: ${{ steps.check.outputs.run_today }}
     steps:
-      - name: Check alternate-day schedule
+      - name: Check every-4-days schedule
         id: check
         run: |
           set -euo pipefail
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "run_today=true" >> "$GITHUB_OUTPUT"
-            echo "Manual trigger — running regardless of day parity."
+            echo "Manual trigger — running regardless of day-of-year."
             exit 0
           fi
           day_of_year=$(date -u +%j)
-          if (( 10#$day_of_year % 2 == 0 )); then
+          if (( 10#$day_of_year % 4 == 0 )); then
             echo "run_today=true" >> "$GITHUB_OUTPUT"
-            echo "Day of year $day_of_year is even — running today."
+            echo "Day of year $day_of_year is a multiple of 4 — running today."
           else
             echo "run_today=false" >> "$GITHUB_OUTPUT"
-            echo "Day of year $day_of_year is odd — skipping (runs every other day)."
+            echo "Day of year $day_of_year is not a multiple of 4 — skipping (runs every 4 days)."
           fi
 
   build-kb:
@@ -46,9 +63,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Only HEAD content is needed now — signatures are content tree hashes,
-      # not commit history — but fetch-depth: 0 is kept for the other repos
-      # below since git log/tree lookups still expect refs to be resolvable.
       - name: Checkout precice.github.io (content/ only)
         uses: actions/checkout@v4
         with:
@@ -84,10 +98,11 @@ jobs:
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Install dependencies
         run: |
+          # Embedding goes through the OpenRouter API — no torch on the runner.
           pip install --quiet openai numpy httpx
           pip install --quiet -e .
 
@@ -101,28 +116,17 @@ jobs:
             precice/tutorials=precice-tutorials-repo
         run: |
           set -euo pipefail
-          # The gate job already limits this workflow to one run per 48h, so
-          # every category is rebuilt and republished unconditionally on
-          # every run — the KB should never go stale for longer than that,
-          # even if a category's content hash happens to match the last
-          # publish. Signatures are still computed and recorded in
-          # kb_state.json purely as an audit trail (last known hash per
-          # category), not as a build gate.
           changed=""
           : > kb_signatures.txt
           for category in $GIT_CATEGORIES; do
             args=""
             for pair in $CHECKOUT_DIRS; do args="$args --checkout-dir $pair"; done
-            # Content tree hash of a fresh clone — logged for audit purposes.
             sig=$(python scripts/kb_state.py category-signature --config kb_sources.json --category "$category" $args)
             echo "  $category tree hash: $sig -> rebuilding"
             changed="$changed $category"
             echo "$category=$sig" >> kb_signatures.txt
           done
 
-          # forum/issues/pulls have no git repo to hash — keep the lightweight
-          # live signature (latest post/updated_at) fetched from their APIs,
-          # logged the same way.
           forum_sig=$(python scripts/kb_state.py forum-sig --url https://precice.discourse.group)
           echo "  forum signature: $forum_sig -> rebuilding"
           changed="$changed forum"
@@ -160,9 +164,10 @@ jobs:
               --category "$category" \
               --sources-json "$sources_json" \
               --api-key "$OPENROUTER_API_KEY" \
-              --base-url "https://openrouter.ai/api/v1" \
-              --model "openai/text-embedding-3-small" \
-              --output "kb-embeddings-$category.npz"
+              --base-url "$EMBEDDING_BASE_URL" \
+              --model "$EMBEDDING_MODEL" \
+              --output "kb-embeddings-$category.npz" \
+              --lexical-output "kb-lexical-$category.json"
           done
 
       - name: Build forum category
@@ -172,10 +177,12 @@ jobs:
         run: |
           python scripts/build_forum_embeddings.py \
             --forum-url "https://precice.discourse.group" \
+            --topics-limit "$FORUM_TOPICS_LIMIT" \
             --api-key "$OPENROUTER_API_KEY" \
-            --base-url "https://openrouter.ai/api/v1" \
-            --model "openai/text-embedding-3-small" \
-            --output "kb-embeddings-forum.npz"
+            --base-url "$EMBEDDING_BASE_URL" \
+            --model "$EMBEDDING_MODEL" \
+            --output "kb-embeddings-forum.npz" \
+            --lexical-output "kb-lexical-forum.json"
 
       - name: Build GitHub issues/pulls categories
         env:
@@ -191,11 +198,14 @@ jobs:
                 python scripts/build_github_activity_embeddings.py \
                   --repo precice/precice \
                   --kind "$kind" \
+                  --items-limit "$GITHUB_ITEMS_LIMIT" \
+                  --comments-limit "$GITHUB_COMMENTS_LIMIT" \
                   --api-key "$OPENROUTER_API_KEY" \
                   --github-token "$GH_TOKEN" \
-                  --base-url "https://openrouter.ai/api/v1" \
-                  --model "openai/text-embedding-3-small" \
-                  --output "kb-embeddings-$kind.npz"
+                  --base-url "$EMBEDDING_BASE_URL" \
+                  --model "$EMBEDDING_MODEL" \
+                  --output "kb-embeddings-$kind.npz" \
+                  --lexical-output "kb-lexical-$kind.json"
                 ;;
             esac
           done
@@ -216,28 +226,68 @@ jobs:
           print(f"{category}: chunks={len(chunks)} embeddings={emb.shape} dtype={emb.dtype}")
           if emb.shape[0] != len(chunks):
               sys.exit(f"{category}: chunk/embedding count mismatch")
+
+          lexical = json.load(open(f"kb-lexical-{category}.json"))
+          lexical_chunks = lexical["chunks"]
+          print(f"{category}: lexical_chunks={len(lexical_chunks)}")
+          if len(lexical_chunks) != len(chunks):
+              sys.exit(f"{category}: lexical/vector chunk count mismatch")
           EOF
           done
 
-      # Lexical KB: a keyword-searchable snapshot (docs + forum crawl), built
-      # fresh every run this job executes (cheap — no embedding API calls)
-      # and published as its own release asset alongside the vector index.
-      - name: Build lexical KB
+      - name: Merge lexical fragments
         run: |
-          python scripts/build_lexical_kb.py \
-            --output kb-lexical.json \
-            --docs-pages-limit 200 \
-            --forum-topics-limit 200
+          python - <<'EOF'
+          import json
+          from datetime import datetime, timezone
 
-      # The release is never deleted wholesale — unchanged categories keep
-      # their existing asset untouched, only rebuilt ones are re-uploaded.
+          categories = "about community documentation tutorials forum issues pulls".split()
+          chunks = []
+          for category in categories:
+              with open(f"kb-lexical-{category}.json") as f:
+                  chunks.extend(json.load(f)["chunks"])
+
+          payload = {
+              "updated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+              "categories": categories,
+              "count": len(chunks),
+              "chunks": chunks,
+          }
+          with open("kb-lexical.json", "w") as f:
+              json.dump(payload, f, ensure_ascii=False)
+          print(f"Merged {len(chunks)} chunks across {len(categories)} categories into kb-lexical.json")
+          EOF
+
+      - name: Write embedding manifest
+        run: |
+          python - <<'EOF'
+          import json
+          import numpy as np
+          from datetime import datetime, timezone
+
+          categories = "about community documentation tutorials forum issues pulls".split()
+          data = np.load("kb-embeddings-documentation.npz", allow_pickle=True)
+          dim = int(data["embeddings"].shape[1])
+
+          manifest = {
+              "model": "${{ env.EMBEDDING_MODEL }}",
+              "dim": dim,
+              "normalized": True,
+              "categories": categories,
+              "built_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+          }
+          with open("kb-manifest.json", "w") as f:
+              json.dump(manifest, f, indent=2)
+          print(f"Wrote kb-manifest.json: {manifest}")
+          EOF
+
       - name: Ensure kb-latest release exists
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release view kb-latest >/dev/null 2>&1 || \
           gh release create kb-latest --title "Knowledge Base Embeddings" \
-            --notes "Per-category preCICE vector KB embeddings + a lexical KB snapshot. Rebuilt incrementally by kb-ingest.yml." \
+            --notes "Per-category preCICE vector KB embeddings + a lexical KB snapshot. Rebuilt by kb-ingest.yml." \
             --latest
 
       - name: Upload changed vector category assets
@@ -257,13 +307,19 @@ jobs:
         run: |
           gh release upload kb-latest kb-lexical.json --clobber
 
+      - name: Upload embedding manifest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload kb-latest kb-manifest.json --clobber
+
       - name: Update release notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CHANGED: ${{ steps.diff.outputs.changed }}
         run: |
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          gh release edit kb-latest --notes "Updated vector categories [$CHANGED] and lexical KB on ${TIMESTAMP} from precice/precice.github.io, precice/precice, precice/tutorials, precice.discourse.group, precice/precice issues & pulls"
+          gh release edit kb-latest --notes "Updated vector categories [$CHANGED] and lexical KB on ${TIMESTAMP} (model: ${EMBEDDING_MODEL}) from precice/precice.github.io, precice/precice, precice/tutorials, precice.discourse.group, precice/precice issues & pulls"
 
       - name: Update kb_state.json and commit
         if: steps.diff.outputs.changed != ''

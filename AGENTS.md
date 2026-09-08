@@ -17,8 +17,8 @@ Before answering any question about preCICE — what it is, how it works, config
 
 Use this decision rule for the relevant KB category:
 
-- If the category is present and `is_fresh` is true (less than 48 hours old), answer with `kb_query_precice`.
-- If the category is missing, freshness is unknown, or it is 48 hours old or older, answer with `kb_query_precice_live` so the category is refreshed first and then queried.
+- If the category is present and `is_fresh` is true (less than 96 hours old), answer with `kb_query_precice`.
+- If the category is missing, freshness is unknown, or it is 96 hours old or older, answer with `kb_query_precice_live` so the category is refreshed first and then queried.
 - If a separate refresh step is needed, use `kb_ingest_precice_data` for that category before answering.
 - Do not answer preCICE KB questions from model memory alone when a KB tool should be used.
 

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from urllib.parse import urljoin
 
 import httpx
-
 
 JSON_ACCEPT_HEADER = {"Accept": "application/json"}
 
@@ -18,10 +18,54 @@ class DiscourseTopicDocument:
     updated_at: str
 
 
+# ---------------------------------------------------------------------------
+# Rate-limit-aware GET. Discourse returns HTTP 429 (with a Retry-After header)
+# when you fetch topics faster than it allows; fetching ~1,300 topics back to
+# back WILL hit this. Without backoff the caller silently drops every
+# rate-limited topic, which is why an unlimited crawl was returning only ~11.
+# ---------------------------------------------------------------------------
+
+
+def _get_json(
+    client: httpx.Client,
+    url: str,
+    *,
+    params: dict | None = None,
+    retries: int = 5,
+) -> dict:
+    last_exc: Exception | None = None
+    for attempt in range(retries):
+        try:
+            response = client.get(url, params=params, headers=JSON_ACCEPT_HEADER)
+        except httpx.HTTPError as exc:  # transient network error
+            last_exc = exc
+            time.sleep(min(2**attempt, 30))
+            continue
+
+        if response.status_code == 429:
+            # Honor Retry-After when present, else exponential backoff.
+            retry_after = response.headers.get("Retry-After")
+            try:
+                delay = float(retry_after) if retry_after else 2**attempt
+            except ValueError:
+                delay = 2**attempt
+            time.sleep(min(max(delay, 1.0), 60.0))
+            continue
+
+        response.raise_for_status()
+        return response.json()
+
+    raise RuntimeError(
+        f"discourse GET failed after {retries} attempts: {url}"
+    ) from last_exc
+
+
 def fetch_discourse_topic_documents(
     client: httpx.Client,
     forum_url: str,
     topics_limit: int | None = None,
+    *,
+    polite_delay: float = 0.2,
 ) -> list[DiscourseTopicDocument]:
     base_url = forum_url.rstrip("/") + "/"
     categories = _fetch_categories(client, base_url)
@@ -29,56 +73,67 @@ def fetch_discourse_topic_documents(
     documents: list[DiscourseTopicDocument] = []
     seen_topic_ids: set[int] = set()
     remaining = topics_limit if topics_limit and topics_limit > 0 else None
+    dropped = 0
 
     for category in categories:
-        try:
-            for topic in _iter_category_topics(client, base_url, category):
-                topic_id = topic.get("id")
-                slug = topic.get("slug")
-                title = topic.get("title", "")
-                last_posted_at = topic.get("last_posted_at") or _now_iso()
+        for topic in _iter_category_topics(client, base_url, category):
+            topic_id = topic.get("id")
+            slug = topic.get("slug")
+            title = topic.get("title", "")
+            last_posted_at = topic.get("last_posted_at") or _now_iso()
 
-                if not isinstance(topic_id, int) or not isinstance(slug, str) or not slug:
-                    continue
-                if topic_id in seen_topic_ids:
-                    continue
+            if not isinstance(topic_id, int) or not isinstance(slug, str) or not slug:
+                continue
+            if topic_id in seen_topic_ids:
+                continue
 
-                try:
-                    merged = _fetch_topic_text(client, base_url, topic_id=topic_id)
-                except Exception:
-                    continue
-                if not merged:
-                    continue
+            try:
+                merged = _fetch_topic_text(client, base_url, topic_id=topic_id)
+            except Exception as exc:
+                # Log and count instead of silently dropping — after retries
+                # this should be rare, and you want to SEE it if it isn't.
+                dropped += 1
+                print(f"  WARN: dropping topic {topic_id} ({slug}): {exc}", flush=True)
+                continue
 
-                documents.append(
-                    DiscourseTopicDocument(
-                        title=title,
-                        url=urljoin(base_url, f"t/{slug}/{topic_id}"),
-                        text=merged,
-                        updated_at=last_posted_at,
-                    )
+            if not merged:
+                continue
+
+            documents.append(
+                DiscourseTopicDocument(
+                    title=title,
+                    url=urljoin(base_url, f"t/{slug}/{topic_id}"),
+                    text=merged,
+                    updated_at=last_posted_at,
                 )
-                seen_topic_ids.add(topic_id)
+            )
+            seen_topic_ids.add(topic_id)
 
-                if remaining is not None:
-                    remaining -= 1
-                    if remaining <= 0:
-                        return documents
-        except Exception:
-            continue
+            if polite_delay:
+                time.sleep(polite_delay)  # gentle spacing to avoid 429s
 
+            if remaining is not None:
+                remaining -= 1
+                if remaining <= 0:
+                    print(
+                        f"Fetched {len(documents)} topics (limit reached), dropped {dropped}",
+                        flush=True,
+                    )
+                    return documents
+
+    print(
+        f"Fetched {len(documents)} topics across {len(categories)} categories, dropped {dropped}",
+        flush=True,
+    )
     return documents
 
 
 def _fetch_categories(client: httpx.Client, base_url: str) -> list[dict]:
-    response = client.get(
+    data = _get_json(
+        client,
         urljoin(base_url, "categories.json"),
         params={"include_subcategories": "true"},
-        headers=JSON_ACCEPT_HEADER,
     )
-    response.raise_for_status()
-
-    data = response.json()
     category_list = data.get("category_list", {})
     categories = category_list.get("categories", [])
     if not isinstance(categories, list):
@@ -115,10 +170,7 @@ def _iter_category_topics(client: httpx.Client, base_url: str, category: dict):
             break
         seen_page_urls.add(normalized_url)
 
-        response = client.get(normalized_url, headers=JSON_ACCEPT_HEADER)
-        response.raise_for_status()
-        data = response.json()
-
+        data = _get_json(client, normalized_url)
         topic_list = data.get("topic_list", {})
         topics = topic_list.get("topics", [])
         if isinstance(topics, list):
@@ -127,16 +179,15 @@ def _iter_category_topics(client: httpx.Client, base_url: str, category: dict):
                     yield topic
 
         more_topics_url = topic_list.get("more_topics_url")
-        next_page_url = more_topics_url if isinstance(more_topics_url, str) and more_topics_url.strip() else None
+        next_page_url = (
+            more_topics_url
+            if isinstance(more_topics_url, str) and more_topics_url.strip()
+            else None
+        )
 
 
 def _fetch_topic_text(client: httpx.Client, base_url: str, *, topic_id: int) -> str:
-    response = client.get(
-        urljoin(base_url, f"t/{topic_id}.json"),
-        headers=JSON_ACCEPT_HEADER,
-    )
-    response.raise_for_status()
-    topic_data = response.json()
+    topic_data = _get_json(client, urljoin(base_url, f"t/{topic_id}.json"))
 
     post_stream = topic_data.get("post_stream", {})
     posts = post_stream.get("posts", [])
@@ -171,12 +222,7 @@ def _fetch_topic_text(client: httpx.Client, base_url: str, *, topic_id: int) -> 
 
 
 def _fetch_post_raw(client: httpx.Client, base_url: str, post_id: int) -> str:
-    response = client.get(
-        urljoin(base_url, f"posts/{post_id}.json"),
-        headers=JSON_ACCEPT_HEADER,
-    )
-    response.raise_for_status()
-    data = response.json()
+    data = _get_json(client, urljoin(base_url, f"posts/{post_id}.json"))
     raw = data.get("raw")
     return raw.strip() if isinstance(raw, str) and raw.strip() else ""
 

@@ -14,6 +14,7 @@ import httpx
 from lxml import html
 
 from precice_ai.core.discourse_api import fetch_discourse_topic_documents
+from precice_ai.core.text_cleaning import strip_markdown
 
 
 def _get_kb_dir() -> Path:
@@ -33,9 +34,9 @@ DOCS_START_URL = "https://precice.org/"
 USER_AGENT = "precice-ai-mcp/1.0 (+https://github.com/precice)"
 
 # How often (in hours) a locally cached release asset is re-checked against
-# GitHub before being trusted as-is. 48h matches kb-ingest.yml's alternate-day
+# GitHub before being trusted as-is. 96h (4 days) matches kb-ingest.yml's
 # publish cadence, so this never checks more often than the source can change.
-RELEASE_ASSET_MAX_AGE_HOURS = 48
+RELEASE_ASSET_MAX_AGE_HOURS = 96
 
 
 # ---------------------------------------------------------------------------
@@ -47,10 +48,11 @@ RELEASE_ASSET_MAX_AGE_HOURS = 48
 # trusted as-is — no network call at all. Once that window elapses, the
 # asset is always re-downloaded (old file deleted first), since kb-ingest.yml
 # rebuilds and republishes every category unconditionally on every one of
-# its ~48h runs — the KB is never allowed to go stale for longer than that,
-# regardless of whether the underlying content actually changed. The remote
-# digest is still fetched and compared, purely to distinguish "genuinely new
-# content" from "same content, refreshed on schedule" in the returned action.
+# its ~96h (4-day) runs — the KB is never allowed to go stale for longer than
+# that, regardless of whether the underlying content actually changed. The
+# remote digest is still fetched and compared, purely to distinguish
+# "genuinely new content" from "same content, refreshed on schedule" in the
+# returned action.
 # ---------------------------------------------------------------------------
 
 
@@ -106,7 +108,7 @@ def _freshness_details(
     """Return cache-freshness metadata for a local KB asset.
 
     Prefer the release-asset metadata timestamp when available because the
-    48h trust window is defined in terms of the last successful freshness
+    96h trust window is defined in terms of the last successful freshness
     check. Fall back to a logical payload timestamp (for live-ingested
     lexical KBs) or the file mtime so agents still get a useful answer for
     locally built or legacy files that have no sidecar metadata yet.
@@ -254,15 +256,6 @@ class KBDocument:
     content: str
     updated_at: str
 
-    def to_dict(self) -> dict[str, str]:
-        return {
-            "source": self.source,
-            "url": self.url,
-            "title": self.title,
-            "content": self.content,
-            "updated_at": self.updated_at,
-        }
-
 
 class KnowledgeBaseService:
     def __init__(self, kb_file: Path | None = None) -> None:
@@ -322,10 +315,29 @@ class KnowledgeBaseService:
                 "forum_error": forum_error,
             }
 
+        # Wrap each fetched document as a single chunk (chunk_index=0) so this
+        # fallback file matches the chunk-based schema the primary,
+        # release-published kb-lexical.json uses — both are read by the same
+        # query() below. This fallback's coverage (docs + forum only) stays
+        # narrower than the primary pipeline; that's expected for an
+        # emergency-only path.
+        def _to_chunk(doc: KBDocument, category: str) -> dict[str, str | int]:
+            return {
+                "title": doc.title,
+                "url": doc.url,
+                "source": doc.source,
+                "category": category,
+                "chunk_index": 0,
+                "text": doc.content,
+            }
+
+        chunks = [_to_chunk(doc, "documentation") for doc in docs_documents] + [
+            _to_chunk(doc, "forum") for doc in forum_documents
+        ]
         payload = {
             "updated_at": _now_iso(),
-            "count": len(all_documents),
-            "documents": [doc.to_dict() for doc in all_documents],
+            "count": len(chunks),
+            "chunks": chunks,
         }
         self.kb_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
@@ -339,7 +351,7 @@ class KnowledgeBaseService:
             "forum_error": forum_error,
         }
 
-    def query(self, question: str, top_k: int = 5) -> dict[str, object]:
+    def query(self, question: str, top_k: int = 5, category: str | None = None) -> dict[str, object]:
         payload = self._read_kb()
         if not payload:
             return {
@@ -347,12 +359,20 @@ class KnowledgeBaseService:
                 "message": "Knowledge base is empty. Run ingestion first.",
             }
 
-        documents = payload.get("documents", [])
-        if not isinstance(documents, list) or not documents:
+        chunks = payload.get("chunks", [])
+        if not isinstance(chunks, list) or not chunks:
             return {
                 "status": "error",
-                "message": "Knowledge base has no documents. Run ingestion first.",
+                "message": "Knowledge base has no chunks. Run ingestion first.",
             }
+
+        if category:
+            chunks = [c for c in chunks if isinstance(c, dict) and c.get("category") == category]
+            if not chunks:
+                return {
+                    "status": "error",
+                    "message": f"No lexical chunks found for category '{category}'.",
+                }
 
         query_terms = _tokenize(question)
         if not query_terms:
@@ -362,16 +382,16 @@ class KnowledgeBaseService:
             }
 
         scored = []
-        for doc in documents:
-            if not isinstance(doc, dict):
+        for chunk in chunks:
+            if not isinstance(chunk, dict):
                 continue
-            text = f"{doc.get('title', '')}\n{doc.get('content', '')}"
+            text = f"{chunk.get('title', '')}\n{chunk.get('text', '')}"
             score = _bm25_like_score(query_terms, _tokenize(text))
             if score > 0:
-                scored.append((score, doc))
+                scored.append((score, chunk))
 
         scored.sort(key=lambda item: item[0], reverse=True)
-        top_docs = scored[:top_k]
+        top_chunks = scored[:top_k]
 
         return {
             "status": "ok",
@@ -379,12 +399,13 @@ class KnowledgeBaseService:
             "results": [
                 {
                     "score": round(score, 4),
-                    "source": doc.get("source", "unknown"),
-                    "title": doc.get("title", ""),
-                    "url": doc.get("url", ""),
-                    "snippet": _snippet_for_terms(doc.get("content", ""), query_terms),
+                    "source": chunk.get("source", "unknown"),
+                    "title": chunk.get("title", ""),
+                    "url": chunk.get("url", ""),
+                    "category": chunk.get("category", ""),
+                    "snippet": _snippet_for_terms(chunk.get("text", ""), query_terms),
                 }
-                for score, doc in top_docs
+                for score, chunk in top_chunks
             ],
         }
 
@@ -392,7 +413,7 @@ class KnowledgeBaseService:
         """Sync kb_file from the kb-latest Release's kb-lexical.json asset.
 
         The release is the source of truth: the local copy is trusted as-is
-        for RELEASE_ASSET_MAX_AGE_HOURS (alternate days, matching
+        for RELEASE_ASSET_MAX_AGE_HOURS (every 4 days, matching
         kb-ingest.yml's publish cadence — kb-ingest.yml republishes every
         category unconditionally on every run, so once that window elapses
         the asset is always re-downloaded, old file deleted first). Falls
@@ -412,6 +433,7 @@ class KnowledgeBaseService:
         self,
         question: str,
         top_k: int = 5,
+        category: str | None = None,
         github_token: str | None = None,
         refresh_if_older_than_hours: int = 24,
     ) -> dict[str, object]:
@@ -439,7 +461,7 @@ class KnowledgeBaseService:
                         ),
                     }
 
-        return self.query(question=question, top_k=top_k)
+        return self.query(question=question, top_k=top_k, category=category)
 
     def kb_status(self) -> dict[str, object]:
         payload = self._read_kb()
@@ -455,12 +477,12 @@ class KnowledgeBaseService:
                 **freshness,
             }
 
-        documents = payload.get("documents", [])
+        chunks = payload.get("chunks", [])
         return {
             "status": "ok",
             "kb_file": str(self.kb_file),
             "updated_at": payload.get("updated_at", "unknown"),
-            "documents": len(documents) if isinstance(documents, list) else 0,
+            "chunks": len(chunks) if isinstance(chunks, list) else 0,
             **freshness,
         }
 
@@ -563,7 +585,7 @@ def _extract_html_document(raw_html: str, url: str, source: str) -> KBDocument:
     headings = tree.xpath("//h1//text() | //h2//text() | //h3//text()")
 
     pieces = [x.strip() for x in headings + paragraphs if x.strip()]
-    content = "\n".join(pieces)
+    content = strip_markdown("\n".join(pieces))
 
     return KBDocument(
         source=source,
@@ -628,8 +650,6 @@ def _now_iso() -> str:
 
 _RELEASE_TAG = "kb-latest"
 _DEFAULT_GITHUB_REPO = "vaibhavd2103/precice-ai"
-_DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
-_DEFAULT_MODEL = "openai/text-embedding-3-small"
 
 # Must match the category keys in kb_sources.json and the asset names the
 # kb-ingest.yml workflow uploads (kb-embeddings-<category>.npz), one per
@@ -689,7 +709,7 @@ class VectorKnowledgeBase:
         """Sync each category's .npz from the kb-latest Release.
 
         The release is the source of truth: each category's local file is
-        trusted for RELEASE_ASSET_MAX_AGE_HOURS (alternate days) after the
+        trusted for RELEASE_ASSET_MAX_AGE_HOURS (every 4 days) after the
         last check, then always re-downloaded (old file deleted first) once
         that window elapses, since kb-ingest.yml republishes every category
         unconditionally on every run. If no asset exists yet for a category
@@ -713,7 +733,7 @@ class VectorKnowledgeBase:
                 # build this category locally instead of failing outright.
                 result = self._build_category_locally(cat)
             elif str(result.get("action", "")).startswith("downloaded"):
-                # File on disk was replaced (fresh 48h cycle, or genuinely
+                # File on disk was replaced (fresh 96h cycle, or genuinely
                 # changed content) — drop the in-memory cache so the next
                 # query reloads from the fresh file.
                 self._embeddings.pop(cat, None)
@@ -752,13 +772,18 @@ class VectorKnowledgeBase:
                 ),
             }
 
+        from precice_ai.core.embedding import DEFAULT_MODEL
+
+        build_env = dict(os.environ)
+        model_args = ["--model", os.environ.get("EMBEDDING_MODEL", DEFAULT_MODEL)]
         api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("BLABLADOR_API_KEY")
         if not api_key:
             return {
                 "status": "error",
                 "message": (
                     f"No GitHub Release asset found for category '{category}'. A local build "
-                    "was attempted but OPENROUTER_API_KEY (or BLABLADOR_API_KEY) is not set."
+                    "was attempted but neither OPENROUTER_API_KEY nor BLABLADOR_API_KEY is set — "
+                    "embedding requires an OpenAI-compatible API key."
                 ),
             }
 
@@ -779,6 +804,7 @@ class VectorKnowledgeBase:
                         "--forum-url", cat_config["forum_url"],
                         "--api-key", api_key,
                         "--output", str(output_path),
+                        *model_args,
                     ]
                 elif cat_config.get("type") in ("github_issues", "github_prs"):
                     kind = "issues" if cat_config["type"] == "github_issues" else "pulls"
@@ -788,6 +814,7 @@ class VectorKnowledgeBase:
                         "--kind", kind,
                         "--api-key", api_key,
                         "--output", str(output_path),
+                        *model_args,
                     ]
                     github_token = os.environ.get("GITHUB_TOKEN")
                     if github_token:
@@ -836,9 +863,12 @@ class VectorKnowledgeBase:
                         "--sources-json", sources_json,
                         "--api-key", api_key,
                         "--output", str(output_path),
+                        *model_args,
                     ]
 
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_seconds)
+                result = subprocess.run(
+                    cmd, capture_output=True, text=True, timeout=timeout_seconds, env=build_env
+                )
                 if result.returncode != 0:
                     return {
                         "status": "error",
@@ -901,10 +931,7 @@ class VectorKnowledgeBase:
         except ImportError:
             return {"status": "error", "message": "numpy is required: pip install numpy"}
 
-        try:
-            from openai import OpenAI
-        except ImportError:
-            return {"status": "error", "message": "openai is required: pip install openai"}
+        from precice_ai.core.embedding import embed_query
 
         categories = [category] if category else CATEGORIES
         available = [cat for cat in categories if self._npz_files[cat].exists()]
@@ -924,26 +951,13 @@ class VectorKnowledgeBase:
                 except Exception as exc:
                     return {"status": "error", "message": f"Failed to load embeddings for {cat}: {exc}"}
 
-        # Embed the query
-        api_key = (
-            os.environ.get("OPENROUTER_API_KEY")
-            or os.environ.get("BLABLADOR_API_KEY")
-        )
-        if not api_key:
-            return {
-                "status": "error",
-                "message": "Set OPENROUTER_API_KEY (or BLABLADOR_API_KEY) env var for query embedding.",
-            }
-
-        base_url = os.environ.get("EMBEDDING_BASE_URL", _DEFAULT_BASE_URL)
-        model = os.environ.get("EMBEDDING_MODEL", _DEFAULT_MODEL)
-
+        # Embed the query through the OpenAI-compatible embeddings API
+        # (OPENROUTER_API_KEY / BLABLADOR_API_KEY, optional EMBEDDING_BASE_URL
+        # / EMBEDDING_MODEL). Must use the same model the .npz was built with.
         try:
-            client = OpenAI(api_key=api_key, base_url=base_url)
-            resp = client.embeddings.create(input=question, model=model)
-            q_vec = np.array(resp.data[0].embedding, dtype=np.float32)
+            q_vec = np.array(embed_query(question), dtype=np.float32)
         except Exception as exc:
-            return {"status": "error", "message": f"Embedding API error: {exc}"}
+            return {"status": "error", "message": f"Embedding error: {exc}"}
 
         q_norm = float(np.linalg.norm(q_vec))
         if q_norm == 0:
@@ -954,6 +968,18 @@ class VectorKnowledgeBase:
         chunks: list[dict[str, str | int]] = []
         for cat in available:
             chunks.extend(self._chunks[cat])
+
+        if emb.shape[1] != q_vec.shape[0]:
+            return {
+                "status": "error",
+                "message": (
+                    f"Embedding dimension mismatch: stored vectors are {emb.shape[1]}-dim "
+                    f"but the query embedding is {q_vec.shape[0]}-dim. The .npz assets "
+                    "were built with a different EMBEDDING_MODEL than the one currently "
+                    "configured — set EMBEDDING_MODEL to match the published KB (default "
+                    "openai/text-embedding-3-small) or re-run kb_ingest_precice_data."
+                ),
+            }
 
         norms = np.linalg.norm(emb, axis=1)
         scores = (emb @ q_vec) / (norms * q_norm + 1e-9)

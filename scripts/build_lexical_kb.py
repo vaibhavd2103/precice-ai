@@ -1,12 +1,14 @@
-"""Build the lexical (keyword/BM25-style) preCICE knowledge base for release.
+"""Dev/fallback-only tool — NOT part of the primary kb-ingest.yml pipeline.
 
-Wraps KnowledgeBaseService.ingest_precice_sources() with CI-appropriate
-limits and an explicit output path, so the resulting knowledge_base.json can
-be uploaded as a kb-latest release asset (kb-lexical.json) alongside the
-per-category vector embeddings built by build_embeddings.py. This is the
-same docs-crawl + discourse-forum-crawl the MCP server falls back to live
-(precice_ai.core.knowledge_base.KnowledgeBaseService), just run ahead of
-time with larger limits so queries don't pay the crawl cost.
+The primary lexical KB (kb-lexical.json) is now built by merging the
+per-category chunk fragments emitted by build_embeddings.py,
+build_forum_embeddings.py, and build_github_activity_embeddings.py (via
+their --lexical-output flag), so it stays in exact parity with the vector
+KB. This script instead wraps KnowledgeBaseService.ingest_precice_sources(),
+the same live docs-crawl + discourse-forum-crawl the MCP server falls back
+to when no release is reachable and there's no local cache at all. It's
+useful for exercising that fallback path locally, but its coverage (docs +
+forum only, HTML-crawled) is narrower than the primary pipeline.
 
 CLI usage:
     python scripts/build_lexical_kb.py --output kb-lexical.json \

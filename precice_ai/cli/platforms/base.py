@@ -1,11 +1,28 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
+
+
+def _relative_to(path: Path, root: Path) -> str | None:
+    """Return ``path`` as a POSIX string relative to ``root``, or None if it
+    is not inside ``root``. POSIX separators are used deliberately: they work
+    on Windows too and keep the generated config stable across platforms.
+
+    Uses ``os.path.abspath`` rather than ``Path.resolve`` so a venv whose
+    ``bin/python`` is a symlink to the system interpreter still resolves to
+    the repo-relative ``.venv/bin/python``, not the symlink target."""
+    try:
+        abs_path = Path(os.path.abspath(path))
+        abs_root = Path(os.path.abspath(root))
+        return abs_path.relative_to(abs_root).as_posix()
+    except ValueError:
+        return None
 
 
 class Platform(ABC):
@@ -33,15 +50,41 @@ class Platform(ABC):
     def _spawn(self, args: list[str], cwd: Path) -> None:
         subprocess.Popen(args, cwd=str(cwd))
 
-    def mcp_entry(self, projects_dir: Path, extra_env: dict[str, str] | None = None) -> dict[str, Any]:
-        """Return the standard MCP server config block for this package."""
+    def mcp_entry(
+        self,
+        projects_dir: Path,
+        extra_env: dict[str, str] | None = None,
+        portable_root: Path | None = None,
+    ) -> dict[str, Any]:
+        """Return the standard MCP server config block for this package.
+
+        When ``portable_root`` is given (a directory the client launches the
+        server from, i.e. cwd == that dir — currently only Claude Code's
+        project-scoped ``.mcp.json``), any path that lives under it is written
+        as a repo-relative path wrapped in a ``${VAR:-default}`` override so
+        the file is not tied to one machine or user. Absolute paths (the venv
+        outside the repo, a global install, a projects dir elsewhere) are kept
+        verbatim.
+        """
+        command = sys.executable
+        projects_value = str(projects_dir)
+
+        if portable_root is not None:
+            root = portable_root.resolve()
+            rel_python = _relative_to(Path(sys.executable), root)
+            if rel_python is not None:
+                command = "${PRECICE_AI_PYTHON:-" + rel_python + "}"
+            rel_projects = _relative_to(projects_dir, root)
+            if rel_projects is not None:
+                projects_value = "${PRECICE_PROJECTS_DIR:-" + rel_projects + "}"
+
         entry: dict[str, Any] = {
-            "command": sys.executable,
+            "command": command,
             "args": ["-m", "precice_ai.server"],
         }
         # Only embed env var if it differs from the convention-based default.
         # Users running from the repo root won't need it; global installs will.
-        env = {"PRECICE_PROJECTS_DIR": str(projects_dir)}
+        env = {"PRECICE_PROJECTS_DIR": projects_value}
         if extra_env:
             env.update(extra_env)
         entry["env"] = env

@@ -1,11 +1,9 @@
 """Build a vector KB category from one or more Markdown source trees.
 
 Chunks every Markdown file under each configured source directory, embeds
-chunks via an OpenAI-compatible API (OpenRouter by default, Blablador
-later) OR locally with sentence-transformers (set EMBED_PROVIDER=local and
-pass a HuggingFace repo id as --model), and saves the result as a compressed
-NumPy archive (.npz) tagged with a category, ready to be uploaded as a
-GitHub Release asset.
+chunks via an OpenAI-compatible API (OpenRouter by default, Blablador via
+--base-url), and saves the result as a compressed NumPy archive (.npz)
+tagged with a category, ready to be uploaded as a GitHub Release asset.
 
 Sources are passed as a JSON list, each entry:
     {"label": str, "path": str, "url_mode": "website" | "github",
@@ -15,18 +13,11 @@ Sources are passed as a JSON list, each entry:
 file's relative path). "github" mode builds GitHub blob URLs by joining
 url_base with the file's path relative to its source directory.
 
-Usage (API):
+Usage:
     python scripts/build_embeddings.py \
         --category documentation \
         --sources-json "$(python scripts/render_sources_json.py --config kb_sources.json --category documentation --checkout-dir precice/precice.github.io=precice-docs)" \
         --api-key $OPENROUTER_API_KEY \
-        --output kb-embeddings-documentation.npz
-
-Usage (local, no API key/credits):
-    EMBED_PROVIDER=local python scripts/build_embeddings.py \
-        --category documentation \
-        --sources-json "..." \
-        --model BAAI/bge-m3 \
         --output kb-embeddings-documentation.npz
 """
 
@@ -34,7 +25,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import sys
 import time
@@ -51,11 +41,6 @@ MIN_CHUNK_WORDS = 30
 # also targets OpenAI-compatible providers with different tokenizers, and a
 # UTF-8 token cannot contain fewer than one byte.
 #
-# NOTE: when embedding locally, the chosen model MUST have an 8192-token
-# context to honor this margin. BAAI/bge-m3 (8192) does; the bge-*-en-v1.5
-# family is only 512 tokens and would SILENTLY TRUNCATE these chunks. If you
-# switch to a 512-token local model, drop CHUNK_WORDS to ~300 and
-# MAX_CHUNK_BYTES to ~2000 as well.
 MAX_CHUNK_BYTES = 7_000
 BASE_URL_DEFAULT = "https://openrouter.ai/api/v1"
 MODEL_DEFAULT = "openai/text-embedding-3-small"
@@ -65,8 +50,7 @@ MODEL_DEFAULT = "openai/text-embedding-3-small"
 # "Prompt tokens limit exceeded" / 402 errors). 16 keeps every batch at
 # roughly half that ceiling with headroom for larger-than-average chunks,
 # regardless of account tier. Override with --batch-size on a funded account
-# that wants fewer, larger requests. (Batch size is irrelevant in local mode
-# — sentence-transformers batches internally — but is still honored.)
+# that wants fewer, larger requests.
 BATCH_SIZE_DEFAULT = 16
 
 
@@ -220,15 +204,6 @@ def _embed_batch(
     model: str,
     retry: int = 3,
 ) -> list[list[float]]:
-    # Local mode: delegate to the shared embedding helper, which runs
-    # sentence-transformers on the caller's machine. No API key, no credits,
-    # no rate limits. Triggered by EMBED_PROVIDER=local; `model` is a
-    # HuggingFace repo id (e.g. BAAI/bge-m3). `client` is ignored.
-    if os.environ.get("EMBED_PROVIDER") == "local":
-        from precice_ai.core.embedding import embed_texts
-
-        return embed_texts(texts, model=model)
-
     for attempt in range(retry):
         try:
             response = client.embeddings.create(input=texts, model=model)
@@ -275,7 +250,7 @@ def main() -> None:
     parser.add_argument(
         "--api-key",
         required=True,
-        help="OpenRouter / Blablador API key (ignored when EMBED_PROVIDER=local)",
+        help="OpenRouter / Blablador API key",
     )
     parser.add_argument(
         "--base-url", default=BASE_URL_DEFAULT, help="OpenAI-compatible base URL"
@@ -283,7 +258,7 @@ def main() -> None:
     parser.add_argument(
         "--model",
         default=MODEL_DEFAULT,
-        help="Embedding model name (HF repo id when EMBED_PROVIDER=local)",
+        help="Embedding model name",
     )
     parser.add_argument(
         "--output", default="kb-embeddings.npz", help="Output .npz path"

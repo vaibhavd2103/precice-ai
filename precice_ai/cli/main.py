@@ -81,12 +81,14 @@ def _build_extra_env(
     embedding_base_url: Optional[str],
     embedding_model: Optional[str],
     github_token: Optional[str],
+    blablador_api_key: Optional[str] = None,
 ) -> dict[str, str]:
     return build_client_env(
         openrouter_api_key=openrouter_api_key,
         embedding_base_url=embedding_base_url,
         embedding_model=embedding_model,
         github_token=github_token,
+        blablador_api_key=blablador_api_key,
     )
 
 
@@ -120,6 +122,11 @@ def setup(
         "--openrouter-api-key",
         help="Also inject OPENROUTER_API_KEY into the MCP client config.",
     ),
+    blablador_api_key: Optional[str] = typer.Option(
+        None,
+        "--blablador-api-key",
+        help="Also inject BLABLADOR_API_KEY into the MCP client config.",
+    ),
     embedding_base_url: Optional[str] = typer.Option(
         None,
         "--embedding-base-url",
@@ -151,6 +158,7 @@ def setup(
     resolved_projects_dir = projects_dir or (Path.cwd() / "test-projects")
     extra_env = _build_extra_env(
         openrouter_api_key=openrouter_api_key,
+        blablador_api_key=blablador_api_key,
         embedding_base_url=embedding_base_url,
         embedding_model=embedding_model,
         github_token=github_token,
@@ -200,6 +208,11 @@ def bootstrap(
         "--openrouter-api-key",
         help="Write OPENROUTER_API_KEY to .env and inject it into the MCP client config.",
     ),
+    blablador_api_key: Optional[str] = typer.Option(
+        None,
+        "--blablador-api-key",
+        help="Write BLABLADOR_API_KEY to .env and inject it into the MCP client config.",
+    ),
     embedding_base_url: str = typer.Option(
         "https://openrouter.ai/api/v1",
         "--embedding-base-url",
@@ -238,6 +251,7 @@ def bootstrap(
     write_env_file(
         env_path=resolved_env_file,
         openrouter_api_key=openrouter_api_key,
+        blablador_api_key=blablador_api_key,
         embedding_base_url=embedding_base_url,
         embedding_model=embedding_model,
         github_token=github_token,
@@ -251,6 +265,7 @@ def bootstrap(
 
     extra_env = _build_extra_env(
         openrouter_api_key=openrouter_api_key,
+        blablador_api_key=blablador_api_key,
         embedding_base_url=embedding_base_url,
         embedding_model=embedding_model,
         github_token=github_token,
@@ -306,6 +321,11 @@ def open(
         "--openrouter-api-key",
         help="Also inject OPENROUTER_API_KEY into the MCP client config.",
     ),
+    blablador_api_key: Optional[str] = typer.Option(
+        None,
+        "--blablador-api-key",
+        help="Also inject BLABLADOR_API_KEY into the MCP client config.",
+    ),
     embedding_base_url: Optional[str] = typer.Option(
         None,
         "--embedding-base-url",
@@ -327,6 +347,7 @@ def open(
     resolved_projects_dir = (projects_dir or Path.cwd()).resolve()
     extra_env = _build_extra_env(
         openrouter_api_key=openrouter_api_key,
+        blablador_api_key=blablador_api_key,
         embedding_base_url=embedding_base_url,
         embedding_model=embedding_model,
         github_token=github_token,

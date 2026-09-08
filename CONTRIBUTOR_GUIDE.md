@@ -162,7 +162,7 @@ The CLI and the server are separate on purpose:
 - `git`
 - optionally `precice-cli` if you want to exercise the preCICE wrapper tools
 - optionally a supported MCP client such as Codex, Claude Code, Cursor, or Windsurf
-- no embedding API key needed: KB queries embed locally with `sentence-transformers` by default (`EMBED_PROVIDER=local`); an API key is only needed if you opt into `EMBED_PROVIDER=api`
+- an embedding API key (`OPENROUTER_API_KEY` or `BLABLADOR_API_KEY`): semantic KB queries embed the question through an OpenAI-compatible embeddings API. Keyword search (`kb_query_precice_lexical`) needs no key.
 
 ### Recommended setup
 
@@ -221,7 +221,7 @@ If you are onboarding onto a clean machine and want a full working dev environme
 5. Run `precice-ai list-platforms` to see which clients are available locally.
 6. Decide what directory will contain your local preCICE cases.
 7. Run `precice-ai bootstrap <client> --projects-dir /path/to/cases`.
-8. Semantic KB queries work with no flags (local embedding by default). To use an API instead, set `EMBED_PROVIDER=api` and provide `--openrouter-api-key ...` or configure Blablador variables.
+8. Provide an embedding API key for semantic KB queries: `--openrouter-api-key ...` (or `--blablador-api-key ...` with matching `--embedding-base-url` / `--embedding-model`).
 9. Restart the target client.
 10. In the client, call `list_precice_projects()`, then `kb_precice_status()`, then use `kb_query_precice("what is preCICE?", category="about")` if that category is fresh or `kb_query_precice_live("what is preCICE?", category="about")` if it is missing or stale.
 
@@ -722,13 +722,14 @@ This is optional. The source code remains the ground truth.
 - `PRECICE_PROJECTS_DIR`
 - `PRECICE_KB_STORE_DIR`
 
-### Embedding provider configuration
+### Embedding configuration
 
-- `EMBED_PROVIDER` — `local` (default; sentence-transformers, no key) or `api`
-- `EMBEDDING_MODEL` — default `BAAI/bge-m3`; must match between build and query
-- `OPENROUTER_API_KEY` — only used when `EMBED_PROVIDER=api`
-- `BLABLADOR_API_KEY` — only used when `EMBED_PROVIDER=api`
-- `EMBEDDING_BASE_URL` — only used when `EMBED_PROVIDER=api`
+Embedding always goes through an OpenAI-compatible embeddings API.
+
+- `OPENROUTER_API_KEY` — embedding API key (OpenRouter). Required unless `BLABLADOR_API_KEY` is set.
+- `BLABLADOR_API_KEY` — embedding API key (Blablador). Alternative to `OPENROUTER_API_KEY`.
+- `EMBEDDING_BASE_URL` — OpenAI-compatible endpoint. Defaults to OpenRouter, or the Blablador endpoint when only `BLABLADOR_API_KEY` is set.
+- `EMBEDDING_MODEL` — default `openai/text-embedding-3-small`; must match between build and query (a mismatch changes the vector dimension).
 
 ### GitHub integration
 
@@ -761,7 +762,7 @@ precice-ai kb status
 python -m precice_ai.cli.main server
 ```
 
-If you changed the KB code (local embedding needs no credentials):
+If you changed the KB code (needs `OPENROUTER_API_KEY` or `BLABLADOR_API_KEY` for the vector modes):
 
 ```bash
 precice-ai kb ingest
@@ -796,9 +797,9 @@ A lot of path behavior changes depending on:
 
 Be very conservative when expanding allowed commands or introducing write-capable flows.
 
-### 5. Assuming KB queries always hit the network
+### 5. Assuming the whole KB is fetched at query time
 
-The vector documents are cached locally, and by default (`EMBED_PROVIDER=local`) the question is also embedded locally with no network call. Only `EMBED_PROVIDER=api` sends the question to an external embedding API.
+The vector documents are prebuilt and cached locally; only the short question string is sent to the embeddings API at query time. Keyword search (`kb_query_precice_lexical`) makes no external call.
 
 ## Troubleshooting
 
@@ -828,10 +829,10 @@ Check:
 
 Check:
 
-- `sentence-transformers` is installed (default `EMBED_PROVIDER=local`) and the model download succeeded (~2.2 GB, first run only)
+- an embedding API key is present (`OPENROUTER_API_KEY` or `BLABLADOR_API_KEY`), and `EMBEDDING_BASE_URL` / `EMBEDDING_MODEL` are valid and reachable
 - the local KB store is writable
-- if you set `EMBED_PROVIDER=api`: an embedding API key is present, and `EMBEDDING_BASE_URL` / `EMBEDDING_MODEL` are valid and reachable
-- `EMBEDDING_MODEL` matches what the local `.npz` assets were built with — a mismatch fails with a clear dimension-mismatch error
+- `EMBEDDING_MODEL` matches what the `.npz` assets were built with — a mismatch fails with a clear dimension-mismatch error
+- for a no-key check, `kb_query_precice_lexical` still works (keyword search)
 
 ### Project tools return no projects
 

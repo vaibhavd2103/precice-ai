@@ -771,30 +771,20 @@ class VectorKnowledgeBase:
                 ),
             }
 
-        embed_provider = os.environ.get("EMBED_PROVIDER", "local")
-        build_env = dict(os.environ)
-        model_args: list[str] = []
-        if embed_provider == "local":
-            # Local embedding needs no API key; the build scripts still take
-            # --api-key as a required argument, so pass a harmless dummy.
-            # EMBED_PROVIDER/--model are made explicit for the subprocess so
-            # the local branch is used regardless of the parent env.
-            build_env["EMBED_PROVIDER"] = "local"
-            api_key = "unused-local"
-            from precice_ai.core.embedding import DEFAULT_MODEL
+        from precice_ai.core.embedding import DEFAULT_MODEL
 
-            model_args = ["--model", os.environ.get("EMBEDDING_MODEL", DEFAULT_MODEL)]
-        else:
-            api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("BLABLADOR_API_KEY")
-            if not api_key:
-                return {
-                    "status": "error",
-                    "message": (
-                        f"No GitHub Release asset found for category '{category}'. A local build "
-                        "was attempted but EMBED_PROVIDER=api and neither OPENROUTER_API_KEY nor "
-                        "BLABLADOR_API_KEY is set."
-                    ),
-                }
+        build_env = dict(os.environ)
+        model_args = ["--model", os.environ.get("EMBEDDING_MODEL", DEFAULT_MODEL)]
+        api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("BLABLADOR_API_KEY")
+        if not api_key:
+            return {
+                "status": "error",
+                "message": (
+                    f"No GitHub Release asset found for category '{category}'. A local build "
+                    "was attempted but neither OPENROUTER_API_KEY nor BLABLADOR_API_KEY is set — "
+                    "embedding requires an OpenAI-compatible API key."
+                ),
+            }
 
         config = json.loads(config_path.read_text(encoding="utf-8"))
         cat_config = config.get("categories", {}).get(category)
@@ -960,9 +950,9 @@ class VectorKnowledgeBase:
                 except Exception as exc:
                     return {"status": "error", "message": f"Failed to load embeddings for {cat}: {exc}"}
 
-        # Embed the query. Local mode (the default) needs no API key and
-        # makes no network call; API mode reads OPENROUTER_API_KEY /
-        # BLABLADOR_API_KEY / EMBEDDING_BASE_URL as before.
+        # Embed the query through the OpenAI-compatible embeddings API
+        # (OPENROUTER_API_KEY / BLABLADOR_API_KEY, optional EMBEDDING_BASE_URL
+        # / EMBEDDING_MODEL). Must use the same model the .npz was built with.
         try:
             q_vec = np.array(embed_query(question), dtype=np.float32)
         except Exception as exc:
@@ -983,10 +973,10 @@ class VectorKnowledgeBase:
                 "status": "error",
                 "message": (
                     f"Embedding dimension mismatch: stored vectors are {emb.shape[1]}-dim "
-                    f"but the query embedding is {q_vec.shape[0]}-dim. The local .npz assets "
+                    f"but the query embedding is {q_vec.shape[0]}-dim. The .npz assets "
                     "were built with a different EMBEDDING_MODEL than the one currently "
-                    "configured — re-run kb_ingest_precice_data (or the kb-ingest.yml Action) "
-                    "so build and query use the same model."
+                    "configured — set EMBEDDING_MODEL to match the published KB (default "
+                    "openai/text-embedding-3-small) or re-run kb_ingest_precice_data."
                 ),
             }
 

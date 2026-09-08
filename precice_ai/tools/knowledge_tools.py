@@ -62,12 +62,12 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
     def kb_query_precice(question: str, top_k: int = 5, category: str | None = None) -> str:
         """Semantic search over the local preCICE vector KB.
 
-        Embeds the question locally with sentence-transformers by default
-        (EMBED_PROVIDER=local, EMBEDDING_MODEL=BAAI/bge-m3 — no API key, no
-        network call) and returns the top_k most similar document chunks.
-        Set EMBED_PROVIDER=api (with OPENROUTER_API_KEY/BLABLADOR_API_KEY and
-        optionally EMBEDDING_BASE_URL / EMBEDDING_MODEL) to embed via an
-        OpenAI-compatible API instead.
+        Embeds the question through an OpenAI-compatible embeddings API
+        (requires OPENROUTER_API_KEY or BLABLADOR_API_KEY; optionally
+        EMBEDDING_BASE_URL / EMBEDDING_MODEL, default model
+        openai/text-embedding-3-small) and returns the top_k most similar
+        document chunks. For a keyword search that needs no API key, use
+        kb_query_precice_lexical instead.
 
         Pass category ("about", "community", "documentation", "tutorials",
         "forum", "issues", or "pulls") to restrict the search to that category

@@ -22,9 +22,9 @@ env:
   GITHUB_ITEMS_LIMIT: "100000" # effectively all issues / all pulls
   GITHUB_COMMENTS_LIMIT: "100" # GitHub's per-page max
   # Embed via OpenRouter (paid). The build model, the query model
-  # (precice_ai/core/embedding.py), and the published manifest must all agree
-  # on EMBEDDING_MODEL — a mismatch means silent garbage retrieval.
-  EMBED_PROVIDER: "api"
+  # (precice_ai/core/embedding.py DEFAULT_MODEL), and the published manifest
+  # must all agree on EMBEDDING_MODEL — a mismatch means silent garbage
+  # retrieval.
   EMBEDDING_MODEL: "openai/text-embedding-3-small"
   EMBEDDING_BASE_URL: "https://openrouter.ai/api/v1"
 
@@ -102,7 +102,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # API mode: no sentence-transformers/torch needed on the runner.
+          # Embedding goes through the OpenRouter API — no torch on the runner.
           pip install --quiet openai numpy httpx
           pip install --quiet -e .
 

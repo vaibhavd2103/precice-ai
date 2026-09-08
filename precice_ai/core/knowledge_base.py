@@ -14,6 +14,7 @@ import httpx
 from lxml import html
 
 from precice_ai.core.discourse_api import fetch_discourse_topic_documents
+from precice_ai.core.text_cleaning import strip_markdown
 
 
 def _get_kb_dir() -> Path:
@@ -584,7 +585,7 @@ def _extract_html_document(raw_html: str, url: str, source: str) -> KBDocument:
     headings = tree.xpath("//h1//text() | //h2//text() | //h3//text()")
 
     pieces = [x.strip() for x in headings + paragraphs if x.strip()]
-    content = "\n".join(pieces)
+    content = strip_markdown("\n".join(pieces))
 
     return KBDocument(
         source=source,

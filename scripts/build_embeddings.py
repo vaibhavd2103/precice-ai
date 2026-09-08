@@ -33,6 +33,8 @@ from pathlib import Path
 import numpy as np
 from openai import OpenAI, RateLimitError
 
+from precice_ai.core.text_cleaning import strip_markdown
+
 CHUNK_WORDS = 450
 OVERLAP_WORDS = 50
 MIN_CHUNK_WORDS = 30
@@ -74,20 +76,6 @@ def _parse_frontmatter(text: str) -> tuple[dict[str, str], str]:
             k, _, v = line.partition(":")
             meta[k.strip()] = v.strip().strip("\"'")
     return meta, body
-
-
-def _strip_markdown(text: str) -> str:
-    """Best-effort markdown → plain text."""
-    text = re.sub(r"```[\s\S]*?```", " ", text)  # code blocks
-    text = re.sub(r"`[^`]+`", " ", text)  # inline code
-    text = re.sub(r"!\[.*?\]\(.*?\)", " ", text)  # images
-    text = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", text)  # links → text
-    text = re.sub(r"#{1,6}\s+", "", text)  # headings
-    text = re.sub(r"[*_]{1,2}([^*_]+)[*_]{1,2}", r"\1", text)  # bold/italic
-    text = re.sub(r"^\s*[-*+]\s+", "", text, flags=re.MULTILINE)  # bullets
-    text = re.sub(r"^\s*\d+\.\s+", "", text, flags=re.MULTILINE)  # numbered
-    text = re.sub(r"\|[^\n]+\|", " ", text)  # tables
-    return text
 
 
 def _chunk(text: str) -> list[str]:
@@ -297,7 +285,7 @@ def main() -> None:
             meta, body = _parse_frontmatter(raw)
             title = meta.get("title") or filepath.stem.replace("-", " ").title()
             url = _file_to_url(filepath, source_dir, source)
-            plain = _strip_markdown(body)
+            plain = strip_markdown(body)
 
             for i, chunk_text in enumerate(_chunk(plain)):
                 all_chunks.append(

@@ -26,14 +26,7 @@ from openai import OpenAI
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from build_embeddings import (
-    BASE_URL_DEFAULT,
-    BATCH_SIZE_DEFAULT,
-    MODEL_DEFAULT,
-    _chunk,
-    _embed_batch,
-    write_chunk_fragment,
-)
+from build_embeddings import BASE_URL_DEFAULT, BATCH_SIZE_DEFAULT, MODEL_DEFAULT, _chunk, _embed_batch, strip_markdown,write_chunk_fragment
 from precice_ai.core.discourse_api import fetch_discourse_topic_documents
 
 USER_AGENT = "precice-ai-mcp/1.0 (+https://github.com/precice)"
@@ -82,7 +75,7 @@ def main() -> None:
 
     all_chunks: list[dict[str, str | int]] = []
     for topic in topics:
-        for i, chunk_text in enumerate(_chunk(topic["text"])):
+        for i, chunk_text in enumerate(_chunk(strip_markdown(topic["text"]))):
             all_chunks.append(
                 {
                     "title": topic["title"],

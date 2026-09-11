@@ -1000,3 +1000,28 @@ class VectorKnowledgeBase:
             )
 
         return {"status": "ok", "results": results}
+
+
+def sync_kb_from_release(
+    *,
+    category: str | None = None,
+    github_token: str | None = None,
+    skip_lexical: bool = False,
+    skip_vector: bool = False,
+) -> dict[str, object]:
+    """Sync the local KB (vector + lexical) from the kb-latest GitHub Release.
+
+    Single source of truth for KB ingestion — used by the `kb ingest` CLI
+    command, the automatic first-run download in `setup`/`bootstrap`, and
+    the MCP server's own startup bootstrap (see `precice_ai/server.py`).
+    Cheap to call repeatedly: `sync_release_asset` trusts a cached asset
+    as-is for RELEASE_ASSET_MAX_AGE_HOURS, so a fresh local KB means no
+    network call at all.
+    """
+    token = github_token or os.environ.get("GITHUB_TOKEN")
+    result: dict[str, object] = {}
+    if not skip_vector:
+        result["vector"] = VectorKnowledgeBase().download_from_release(github_token=token, category=category)
+    if not skip_lexical:
+        result["lexical"] = KnowledgeBaseService().sync_from_release(github_token=token)
+    return result

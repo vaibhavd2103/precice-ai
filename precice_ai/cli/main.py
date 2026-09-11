@@ -416,18 +416,18 @@ def _sync_kb(
 ) -> dict[str, object]:
     """Sync the local KB (vector + lexical) from the kb-latest GitHub Release.
 
-    Shared by the `kb ingest` command and the automatic first-run download
-    in `setup`/`bootstrap` so ingestion logic lives in exactly one place.
+    Thin CLI wrapper around `precice_ai.core.knowledge_base.sync_kb_from_release`,
+    the single shared implementation also used by the MCP server's startup
+    bootstrap.
     """
-    from precice_ai.core.knowledge_base import KnowledgeBaseService, VectorKnowledgeBase
+    from precice_ai.core.knowledge_base import sync_kb_from_release
 
-    token = github_token or os.environ.get("GITHUB_TOKEN")
-    result: dict[str, object] = {}
-    if not skip_vector:
-        result["vector"] = VectorKnowledgeBase().download_from_release(github_token=token, category=category)
-    if not skip_lexical:
-        result["lexical"] = KnowledgeBaseService().sync_from_release(github_token=token)
-    return result
+    return sync_kb_from_release(
+        category=category,
+        github_token=github_token,
+        skip_lexical=skip_lexical,
+        skip_vector=skip_vector,
+    )
 
 
 @kb_app.command("ingest")

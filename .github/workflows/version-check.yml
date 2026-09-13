@@ -6,7 +6,6 @@ name: Version Bump Check
 # doesn't touch pyproject.toml at all still hasn't bumped the version, and
 # should still be blocked.
 
-# comment to check restriction to release branch
 on:
   pull_request:
     branches: [release]

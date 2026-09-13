@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # manual trigger from GitHub UI (always runs, bypasses the gate)
 
 permissions:
-  contents: write # needed to create/upload releases and commit kb_state.json
+  contents: write # needed to create/upload the kb-latest release
 
 env:
   GIT_CATEGORIES: "about community documentation tutorials"
@@ -106,7 +106,30 @@ jobs:
           pip install --quiet openai numpy httpx
           pip install --quiet -e .
 
-      - name: Compute category signatures (always rebuild every run)
+      - name: Ensure kb-latest release exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view kb-latest >/dev/null 2>&1 || \
+          gh release create kb-latest --title "Knowledge Base Embeddings" \
+            --notes "Per-category preCICE vector KB embeddings + a lexical KB snapshot. Rebuilt by kb-ingest.yml." \
+            --latest
+
+      - name: Download current kb_state.json from the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # kb_state.json lives on the kb-latest release, not in git — master's
+          # branch protection has no bypass for this bot, so a git commit here
+          # would fail every time (it used to, permanently). If the release
+          # doesn't have one yet (first run under this scheme), kb_state.py
+          # treats a missing state file as "everything is stale", which just
+          # means a one-time full rebuild — no different from every run today.
+          gh release download kb-latest -p kb_state.json -D . --clobber 2>/dev/null \
+            && echo "Loaded kb_state.json from the kb-latest release." \
+            || echo "No kb_state.json on the release yet — starting from empty state (full rebuild this run)."
+
+      - name: Compute category signatures and diff against kb_state.json
         id: diff
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -118,25 +141,32 @@ jobs:
           set -euo pipefail
           changed=""
           : > kb_signatures.txt
+
+          check_and_track() {
+            category="$1"
+            sig="$2"
+            echo "$category=$sig" >> kb_signatures.txt
+            if python scripts/kb_state.py check --state-file kb_state.json --category "$category" --signature "$sig"; then
+              echo "  $category: stale -> rebuilding"
+              changed="$changed $category"
+            else
+              echo "  $category: unchanged -> skipping"
+            fi
+          }
+
           for category in $GIT_CATEGORIES; do
             args=""
             for pair in $CHECKOUT_DIRS; do args="$args --checkout-dir $pair"; done
             sig=$(python scripts/kb_state.py category-signature --config kb_sources.json --category "$category" $args)
-            echo "  $category tree hash: $sig -> rebuilding"
-            changed="$changed $category"
-            echo "$category=$sig" >> kb_signatures.txt
+            check_and_track "$category" "$sig"
           done
 
           forum_sig=$(python scripts/kb_state.py forum-sig --url https://precice.discourse.group)
-          echo "  forum signature: $forum_sig -> rebuilding"
-          changed="$changed forum"
-          echo "forum=$forum_sig" >> kb_signatures.txt
+          check_and_track "forum" "$forum_sig"
 
           for kind in issues pulls; do
             sig=$(python scripts/kb_state.py github-sig --repo precice/precice --kind "$kind" --github-token "$GH_TOKEN")
-            echo "  $kind signature: $sig -> rebuilding"
-            changed="$changed $kind"
-            echo "$kind=$sig" >> kb_signatures.txt
+            check_and_track "$kind" "$sig"
           done
 
           echo "changed=$changed" >> "$GITHUB_OUTPUT"
@@ -235,6 +265,51 @@ jobs:
           EOF
           done
 
+      - name: Download existing assets for unchanged categories
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHANGED: ${{ steps.diff.outputs.changed }}
+        run: |
+          set -euo pipefail
+          # Merge/manifest below need all 7 categories' files locally. Categories
+          # that didn't change weren't rebuilt this run, so pull their current
+          # vector fragment back from the release (always present — uploaded
+          # per-category since this workflow's first version).
+          : > categories_needing_lexical_recovery.txt
+          for category in about community documentation tutorials forum issues pulls; do
+            case " $CHANGED " in
+              *" $category "*) continue ;;
+            esac
+            echo "Fetching existing assets for unchanged category: $category"
+            gh release download kb-latest -p "kb-embeddings-$category.npz" -D . --clobber
+            # Per-category lexical fragments are a new asset as of this change —
+            # older releases only ever published the merged kb-lexical.json, so
+            # the first run to see a given category as "unchanged" won't find
+            # one yet. Recover it below by slicing the merged file instead.
+            if ! gh release download kb-latest -p "kb-lexical-$category.json" -D . --clobber 2>/dev/null; then
+              echo "  no per-category lexical fragment yet for $category — recovering from kb-lexical.json"
+              echo "$category" >> categories_needing_lexical_recovery.txt
+            fi
+          done
+
+          if [ -s categories_needing_lexical_recovery.txt ]; then
+            gh release download kb-latest -p kb-lexical.json -D . --clobber
+            python - <<'EOF'
+          import json
+
+          with open("kb-lexical.json") as f:
+              merged = json.load(f)
+          with open("categories_needing_lexical_recovery.txt") as f:
+              needed = [line.strip() for line in f if line.strip()]
+
+          for category in needed:
+              chunks = [c for c in merged["chunks"] if c.get("category") == category]
+              with open(f"kb-lexical-{category}.json", "w") as out:
+                  json.dump({"category": category, "count": len(chunks), "chunks": chunks}, out, ensure_ascii=False)
+              print(f"Recovered {len(chunks)} chunks for {category} from kb-lexical.json")
+          EOF
+          fi
+
       - name: Merge lexical fragments
         run: |
           python - <<'EOF'
@@ -281,16 +356,7 @@ jobs:
           print(f"Wrote kb-manifest.json: {manifest}")
           EOF
 
-      - name: Ensure kb-latest release exists
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release view kb-latest >/dev/null 2>&1 || \
-          gh release create kb-latest --title "Knowledge Base Embeddings" \
-            --notes "Per-category preCICE vector KB embeddings + a lexical KB snapshot. Rebuilt by kb-ingest.yml." \
-            --latest
-
-      - name: Upload changed vector category assets
+      - name: Upload changed category assets
         if: steps.diff.outputs.changed != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -298,7 +364,7 @@ jobs:
         run: |
           set -euo pipefail
           for category in $CHANGED; do
-            gh release upload kb-latest "kb-embeddings-$category.npz" --clobber
+            gh release upload kb-latest "kb-embeddings-$category.npz" "kb-lexical-$category.json" --clobber
           done
 
       - name: Upload lexical KB asset
@@ -321,9 +387,10 @@ jobs:
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           gh release edit kb-latest --notes "Updated vector categories [$CHANGED] and lexical KB on ${TIMESTAMP} (model: ${EMBEDDING_MODEL}) from precice/precice.github.io, precice/precice, precice/tutorials, precice.discourse.group, precice/precice issues & pulls"
 
-      - name: Update kb_state.json and commit
+      - name: Update kb_state.json and upload to release
         if: steps.diff.outputs.changed != ''
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CHANGED: ${{ steps.diff.outputs.changed }}
         run: |
           set -euo pipefail
@@ -331,11 +398,6 @@ jobs:
             sig=$(grep "^$category=" kb_signatures.txt | head -1 | cut -d= -f2-)
             python scripts/kb_state.py update --state-file kb_state.json --category "$category" --signature "$sig"
           done
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add kb_state.json
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: update kb_state.json for changed categories [$CHANGED]"
-            git push
-          fi
+          # Persisted on the kb-latest release, not git — see the earlier
+          # "Download current kb_state.json" step for why.
+          gh release upload kb-latest kb_state.json --clobber

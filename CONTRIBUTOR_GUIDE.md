@@ -54,7 +54,6 @@ precice-ai/
 ├── install.sh                   # helper: create venv, install editable package, bootstrap client
 ├── server.py                    # repo-root convenience launcher
 ├── kb_sources.json              # category/source config for the knowledge base
-├── kb_state.json                # last-processed signatures for KB rebuild workflows
 ├── document.md                  # design/thesis-style background material
 ├── graphify-out/                # checked-in graph artifacts for codebase navigation
 ├── scripts/                     # KB build, rendering, comparison, and maintenance helpers
@@ -280,7 +279,6 @@ Touch:
 - `precice_ai/tools/knowledge_tools.py`
 - scripts in `scripts/`
 - maybe `kb_sources.json`
-- maybe `kb_state.json`
 
 Validate both:
 
@@ -585,7 +583,7 @@ The main helper scripts are:
 - `scripts/kb_state.py`
 - `scripts/compare_kb_search.py`
 
-`kb_state.json` stores change signatures so rebuild workflows can skip categories whose sources did not change.
+`kb_state.json` stores change signatures so rebuild workflows can skip categories whose sources did not change. It isn't checked into git — master's branch protection has no bypass for the workflow's bot, so it's persisted as an asset on the `kb-latest` GitHub Release instead, downloaded at the start of each `kb-ingest.yml` run and re-uploaded (`--clobber`) at the end.
 
 ### Online download/query phase
 

@@ -369,6 +369,6 @@ scripts/    # KB build and maintenance scripts
 server.py   # convenience entry point for local dev
 ```
 
-<!-- ## License
+## License
 
-MIT -->
+MIT — see [LICENSE](LICENSE).

@@ -12,6 +12,7 @@ authors = [{ name = "Vaibhav Dange", email = "dangevaibhav21@gmail.com" }]
 maintainers = [{ name = "Vaibhav Dange", email = "dangevaibhav21@gmail.com" }]
 dependencies = [
     "fastmcp>=3.0",
+    "mcp>=1.2,<2",
     "httpx>=0.24",
     "lxml>=4.9",
     "typer>=0.9",

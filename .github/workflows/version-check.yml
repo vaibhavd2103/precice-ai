@@ -1,0 +1,45 @@
+name: Version Bump Check
+
+# Required status check on the release branch's ruleset (see repo settings) —
+# blocks merging a PR into release unless pyproject.toml's version actually
+# changed. Runs on every PR regardless of which files changed: a PR that
+# doesn't touch pyproject.toml at all still hasn't bumped the version, and
+# should still be blocked.
+on:
+  pull_request:
+    branches: [release]
+
+permissions:
+  contents: read
+
+jobs:
+  check-version-bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Ensure pyproject.toml's version is bumped vs release
+        run: |
+          set -euo pipefail
+          head_version=$(python -c "
+          import tomllib
+          print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])
+          ")
+          base_version=$(git show origin/release:pyproject.toml | python -c "
+          import sys, tomllib
+          print(tomllib.load(sys.stdin.buffer)['project']['version'])
+          ")
+          echo "release branch version: $base_version"
+          echo "this PR's version:      $head_version"
+          if [ "$head_version" = "$base_version" ]; then
+            echo "::error::pyproject.toml's version ($head_version) is unchanged from release. Bump it before merging, or no publish will happen for this merge."
+            exit 1
+          fi
+          echo "Version bumped: $base_version -> $head_version"

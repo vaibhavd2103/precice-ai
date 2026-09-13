@@ -2,7 +2,12 @@
 
 A Model Context Protocol (MCP) server for exploring and operating local preCICE simulation projects from AI coding tools such as Codex, Claude Code, Cursor, Windsurf, and Claude Desktop.
 
+<<<<<<< HEAD
+Exposes 26 tools covering project discovery, config inspection, `precice-cli` wrapping (version, config check/format/doc/init, profiling), command execution, log analysis, and a semantic knowledge base built from the preCICE documentation using vector embeddings.
+=======
 This README is the end-user guide: install it, register it with your MCP client, and start using the tools. If you want the architecture, file-by-file walkthrough, local development notes, or contribution workflow, read [CONTRIBUTOR_GUIDE.md](CONTRIBUTOR_GUIDE.md).
+
+> > > > > > > master
 
 ## What It Does
 
@@ -202,16 +207,16 @@ model must match it (keep the `EMBEDDING_MODEL` default, or rebuild the KB).
 
 Common variables:
 
-| Variable                 | Default                                       | Purpose                                                          |
-| ------------------------ | --------------------------------------------- | ---------------------------------------------------------------- |
-| `PRECICE_PROJECTS_DIR`   | `./test-projects` when running from repo root | Directory scanned by the project tools.                          |
-| `PRECICE_KB_STORE_DIR`   | `~/.precice-ai/kb_store`                      | Local storage for downloaded KB assets.                          |
+| Variable                 | Default                                       | Purpose                                                                     |
+| ------------------------ | --------------------------------------------- | --------------------------------------------------------------------------- |
+| `PRECICE_PROJECTS_DIR`   | `./test-projects` when running from repo root | Directory scanned by the project tools.                                     |
+| `PRECICE_KB_STORE_DIR`   | `~/.precice-ai/kb_store`                      | Local storage for downloaded KB assets.                                     |
 | `OPENROUTER_API_KEY`     | none                                          | Embedding API key (OpenRouter). Required unless `BLABLADOR_API_KEY` is set. |
-| `BLABLADOR_API_KEY`      | none                                          | Embedding API key (Blablador). Alternative to `OPENROUTER_API_KEY`. |
-| `EMBEDDING_BASE_URL`     | OpenRouter, or Blablador if only that key set | OpenAI-compatible embeddings base URL.                           |
-| `EMBEDDING_MODEL`        | `openai/text-embedding-3-small`               | Embedding model name. Must match the model the KB was built with. |
-| `PRECICE_AI_GITHUB_REPO` | `vaibhavd2103/precice-ai`                     | GitHub repo used for KB asset downloads.                         |
-| `GITHUB_TOKEN`           | none                                          | Optional token for private release access or higher rate limits. |
+| `BLABLADOR_API_KEY`      | none                                          | Embedding API key (Blablador). Alternative to `OPENROUTER_API_KEY`.         |
+| `EMBEDDING_BASE_URL`     | OpenRouter, or Blablador if only that key set | OpenAI-compatible embeddings base URL.                                      |
+| `EMBEDDING_MODEL`        | `openai/text-embedding-3-small`               | Embedding model name. Must match the model the KB was built with.           |
+| `PRECICE_AI_GITHUB_REPO` | `vaibhavd2103/precice-ai`                     | GitHub repo used for KB asset downloads.                                    |
+| `GITHUB_TOKEN`           | none                                          | Optional token for private release access or higher rate limits.            |
 
 To use Blablador, set `BLABLADOR_API_KEY` and a matching model/endpoint:
 

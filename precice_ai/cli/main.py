@@ -11,10 +11,11 @@ from dotenv import load_dotenv
 
 from precice_ai.cli.bootstrap import build_client_env, write_env_file
 from precice_ai.cli.platforms import REGISTRY
+from precice_ai.core.paths import get_env_file_path
 
 # Same .env lookup as precice_ai/server.py, so OPENROUTER_API_KEY / GITHUB_TOKEN
 # picked up by the MCP server are also available to these CLI debug commands.
-load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+load_dotenv(get_env_file_path())
 
 app = typer.Typer(
     name="precice-ai",
@@ -228,10 +229,11 @@ def bootstrap(
         "--github-token",
         help="Write GITHUB_TOKEN to .env and inject it into the MCP client config.",
     ),
-    env_file: Path = typer.Option(
-        Path(".env"),
+    env_file: Optional[Path] = typer.Option(
+        None,
         "--env-file",
-        help="Path to the .env file to create or update.",
+        help="Path to the .env file to create or update. Defaults to ./.env if one already "
+        "exists, otherwise ~/.precice-ai/.env.",
         resolve_path=False,
     ),
     force_env: bool = typer.Option(
@@ -246,7 +248,10 @@ def bootstrap(
     """Create .env values and register the MCP server with a supported client."""
     resolved_projects_dir = projects_dir or (Path.cwd() / "test-projects")
     resolved_platform = _resolve_platform(platform)
-    resolved_env_file = env_file if env_file.is_absolute() else (Path.cwd() / env_file)
+    if env_file is None:
+        resolved_env_file = get_env_file_path()
+    else:
+        resolved_env_file = env_file if env_file.is_absolute() else (Path.cwd() / env_file)
 
     write_env_file(
         env_path=resolved_env_file,

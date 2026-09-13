@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 
@@ -45,6 +46,7 @@ def write_env_file(
     if env_path.exists() and not force:
         return env_path
 
+    env_path.parent.mkdir(parents=True, exist_ok=True)
     env_path.write_text(
         ENV_TEMPLATE.format(
             openrouter_api_key=openrouter_api_key or "",
@@ -55,4 +57,6 @@ def write_env_file(
         ),
         encoding="utf-8",
     )
+    if os.name != "nt":
+        env_path.chmod(0o600)
     return env_path

@@ -9,12 +9,18 @@ This project implements an MCP server for assisting users with local preCICE sim
 - Always inspect `precice-config.xml` before modifying it.
 - Always call `backup_precice_config(project_name)` before applying config changes.
 - Prefer MCP tools over raw shell commands.
-- `run_command_in_project`, and the project-discovery/config/log tools, are scoped to `PRECICE_PROJECTS_DIR` (`./test-projects` by default). The `precice-cli` wrapper tools (`precice_version`, `precice_config_check/format/doc/visualize`, `precice_init`, `precice_profiling_*`) take an explicit `cwd` argument instead and are **not** restricted to that directory — pass a `cwd` under the current project on purpose, don't rely on sandboxing.
 - Explain simulation/configuration errors in simple language.
 
 ## preCICE knowledge base
 
-**Always** call `kb_query_precice_live` before answering any question about preCICE — what it is, how it works, configuration, errors, adapters, coupling schemes, or any comparison. Do not answer from training data alone. The tool auto-ingests on first use and caches results for 1 hour; subsequent calls in the same session are instant.
+Before answering any question about preCICE — what it is, how it works, configuration, errors, adapters, coupling schemes, or comparisons — first inspect the local KB state in `.precice-ai/kb_store` with `kb_precice_status()`.
+
+Use this decision rule for the relevant KB category:
+
+- If the category is present and `is_fresh` is true (less than 96 hours old), answer with `kb_query_precice`.
+- If the category is missing, freshness is unknown, or it is 96 hours old or older, answer with `kb_query_precice_live` so the category is refreshed first and then queried.
+- If a separate refresh step is needed, use `kb_ingest_precice_data` for that category before answering.
+- Do not answer preCICE KB questions from model memory alone when a KB tool should be used.
 
 ---
 
@@ -57,6 +63,7 @@ The assistant supports:
 A knowledge graph is available at `graphify-out/` if graphify is installed.
 
 Rules (only apply when `graphify-out/graph.json` exists):
+
 - For codebase questions, first run `graphify query "<question>"`. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts.
 - Read `graphify-out/GRAPH_REPORT.md` only for broad architecture review.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).

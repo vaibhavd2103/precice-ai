@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "precice-ai": {
+      "command": "${PRECICE_AI_PYTHON:-.venv/bin/python}",
+      "args": [
+        "-m",
+        "precice_ai.server"
+      ],
+      "env": {
+        "PRECICE_PROJECTS_DIR": "${PRECICE_PROJECTS_DIR:-test-projects}"
+      }
+    }
+  }
+}

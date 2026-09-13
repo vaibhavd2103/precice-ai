@@ -238,3 +238,8 @@ kb_store/
 .venv/
 
 out.json
+.mcp.json
+
+# kb-ingest.yml now persists this on the kb-latest GitHub Release, not git
+# (master's branch protection has no bypass for the workflow's push).
+kb_state.json

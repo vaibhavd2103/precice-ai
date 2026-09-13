@@ -30,3 +30,24 @@ def get_project_path(project_name: str) -> Path:
 
 def get_precice_config_path(project_name: str) -> Path:
     return get_project_path(project_name) / "precice-config.xml"
+
+
+def get_env_file_path() -> Path:
+    """Return the .env file to load API keys and other settings from.
+
+    Resolved in order:
+    - PRECICE_AI_ENV_FILE env var, if set (explicit override)
+    - ./.env in the current working directory, if it already exists (keeps
+      the git-clone + `pip install -e .` dev workflow working unchanged)
+    - ~/.precice-ai/.env otherwise (stable per-user default for a real
+      pip/pipx install, alongside PRECICE_KB_STORE_DIR's ~/.precice-ai home)
+    """
+    env = os.environ.get("PRECICE_AI_ENV_FILE")
+    if env:
+        return Path(env).resolve()
+
+    cwd_env = Path.cwd() / ".env"
+    if cwd_env.exists():
+        return cwd_env
+
+    return Path.home() / ".precice-ai" / ".env"

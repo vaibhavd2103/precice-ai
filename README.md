@@ -1,484 +1,379 @@
 # preCICE AI MCP Server
 
-A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for exploring and operating local preCICE simulation projects from any AI coding agent.
+A Model Context Protocol (MCP) server for exploring and operating local preCICE simulation projects from AI coding tools such as Codex, Claude Code, Cursor, Windsurf, and Claude Desktop.
 
+<<<<<<< HEAD
 Exposes 26 tools covering project discovery, config inspection, `precice-cli` wrapping (version, config check/format/doc/init, profiling), command execution, log analysis, and a semantic knowledge base built from the preCICE documentation using vector embeddings.
+=======
+This README is the end-user guide: install it, register it with your MCP client, and start using the tools. If you want the architecture, file-by-file walkthrough, local development notes, or contribution workflow, read [CONTRIBUTOR_GUIDE.md](CONTRIBUTOR_GUIDE.md).
 
-## Why this exists
+> > > > > > > master
 
-Working with multi-physics coupling means jumping between project folders, XML configs, and log files constantly. This server gives AI assistants — Claude Code, Cursor, Codex, Windsurf, and others — a safe, stable tool layer so they can read, inspect, and operate preCICE projects without needing raw shell access.
+## What It Does
 
----
+- Exposes MCP tools for project discovery, config inspection, log reading, and safe command execution.
+- Wraps selected `precice-cli` functionality for validation, initialization, and profiling tasks.
+- Provides a semantic preCICE knowledge base backed by pre-built embeddings downloaded from GitHub Releases.
+- Ships a `precice-ai` CLI that sets up supported MCP clients for you.
 
 ## Installation
+
+### macOS / Linux
 
 ```bash
 git clone https://github.com/vaibhavd2103/precice-ai
 cd precice-ai
-python -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -e .
 ```
 
-After installation, the `precice-ai` CLI is available in the venv.
+### Windows PowerShell
 
----
-
-## Platform setup
-
-Register the MCP server with your AI coding platform:
-
-```bash
-precice-ai setup claude-code
-precice-ai setup claude-desktop
-precice-ai setup cursor
-precice-ai setup codex
-precice-ai setup windsurf
-precice-ai setup generic   # prints the JSON snippet for manual use
+```powershell
+git clone https://github.com/vaibhavd2103/precice-ai
+cd precice-ai
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -e .
 ```
 
-Pass `--projects-dir` to point at a custom location (defaults to `./test-projects`):
+### One-command bootstrap helper
+
+If you want the repo to create a virtual environment and immediately run the bootstrap flow:
 
 ```bash
-precice-ai setup claude-code --projects-dir /path/to/my/precice-cases
+./install.sh auto --projects-dir /path/to/preCICE/cases
 ```
 
-### Check which platforms are detected
+After installation, the `precice-ai` command is available inside the virtual environment.
+
+## Quick Start
+
+Register the server with a supported MCP client:
+
+```bash
+precice-ai bootstrap auto --projects-dir /path/to/preCICE/cases
+```
+
+Semantic KB queries embed the question through an OpenAI-compatible
+embeddings API, so you need an API key — pass one at bootstrap:
+
+```bash
+precice-ai bootstrap codex \
+  --projects-dir /path/to/preCICE/cases \
+  --openrouter-api-key sk-or-...
+```
+
+Use `--blablador-api-key ...` instead for Blablador. Keyword search
+(`kb_query_precice_lexical`) needs no key.
+
+This command:
+
+- creates or updates `.env`
+- injects runtime variables into the MCP client config
+- registers `python -m precice_ai.server` as the MCP server command
+
+List which supported clients are detected locally:
 
 ```bash
 precice-ai list-platforms
 ```
 
-### Claude Code
+## Supported Clients
 
-Writes the server entry to `.mcp.json` in the current directory (project scope, the default):
+- `auto`
+- `claude-code`
+- `claude-desktop`
+- `codex`
+- `cursor`
+- `windsurf`
+- `generic`
 
-```bash
-precice-ai setup claude-code
+`generic` prints config snippets for manual installation instead of editing a specific client config automatically.
+
+## Manual MCP Setup
+
+If you do not want to use `precice-ai bootstrap`, configure your client manually.
+
+Use the Python interpreter inside the virtual environment:
+
+- macOS / Linux: `.venv/bin/python`
+- Windows: `.venv\Scripts\python.exe`
+
+Use this server command:
+
+```text
+-m precice_ai.server
 ```
 
-Or to `~/.claude/settings.json` (user scope, available in every project):
+### JSON-based clients
 
-```bash
-precice-ai setup claude-code --scope user
-```
-
-After setup, open the directory in Claude Code — the server is picked up automatically.
-
-### Claude Desktop
-
-```bash
-precice-ai setup claude-desktop
-```
-
-Config file locations:
-- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-- Linux: `~/.config/Claude/claude_desktop_config.json`
-
-Restart Claude Desktop after running setup.
-
-### Cursor
-
-```bash
-precice-ai setup cursor
-```
-
-Writes to `~/.cursor/mcp.json`. Reload the window after setup.
-
-### Windsurf
-
-```bash
-precice-ai setup windsurf
-```
-
-Writes to `~/.codeium/windsurf/mcp_config.json`. Restart Windsurf after setup.
-
-### OpenAI Codex
-
-```bash
-precice-ai setup codex
-```
-
-Writes to `~/.codex/mcp.json`.
-
-### Manual / generic
-
-```bash
-precice-ai setup generic
-```
-
-Prints the JSON block to paste into any MCP-compatible config file:
+Use this structure for Claude Code project config, Claude Desktop, Cursor JSON config, Windsurf, or any other JSON-based MCP client:
 
 ```json
 {
   "mcpServers": {
     "precice-ai": {
-      "command": "python",
+      "command": "/absolute/path/to/precice-ai/.venv/bin/python",
       "args": ["-m", "precice_ai.server"],
       "env": {
-        "PRECICE_PROJECTS_DIR": "/absolute/path/to/your/projects"
+        "PRECICE_PROJECTS_DIR": "/absolute/path/to/preCICE/cases"
       }
     }
   }
 }
 ```
 
----
+Add `"OPENROUTER_API_KEY": "sk-or-..."` (or `"BLABLADOR_API_KEY": "..."`) to
+`env` — semantic KB queries embed the question through an embeddings API and
+need a key.
 
-## Environment variables
+#### Claude Code project scope (`.mcp.json`)
 
-| Variable | Default | Description |
-|---|---|---|
-| `PRECICE_PROJECTS_DIR` | `./test-projects` | Directory scanned by `list_precice_projects` and all project tools. |
-| `PRECICE_KB_STORE_DIR` | `~/.precice-ai/kb_store` | Where the vector KB archive is stored locally. |
-| `OPENROUTER_API_KEY` | — | **Required for KB queries.** API key used to embed questions at query time. |
-| `EMBEDDING_BASE_URL` | `https://openrouter.ai/api/v1` | OpenAI-compatible base URL for the embedding API. Override to switch providers (e.g. Blablador). |
-| `EMBEDDING_MODEL` | `openai/text-embedding-3-small` | Embedding model name passed to the API. |
-| `PRECICE_AI_GITHUB_REPO` | `vaibhavd2103/precice-ai` | GitHub repo from which `kb_ingest_precice_data` downloads the release asset. |
-| `GITHUB_TOKEN` | — | Optional. Set if the release asset is in a private repo. |
-
-The `setup` command automatically injects `PRECICE_PROJECTS_DIR` into the platform config. Add the embedding variables manually for KB query support:
+For Claude Code specifically, a portable, checked-in template lives at
+[`.mcp.json.example`](.mcp.json.example) — copy it to `.mcp.json` (or run
+`precice-ai bootstrap claude-code`, which writes the same thing):
 
 ```json
 {
   "mcpServers": {
     "precice-ai": {
-      "command": "python",
+      "command": "${PRECICE_AI_PYTHON:-.venv/bin/python}",
       "args": ["-m", "precice_ai.server"],
       "env": {
-        "PRECICE_PROJECTS_DIR": "/path/to/your/projects",
-        "OPENROUTER_API_KEY": "sk-or-..."
+        "PRECICE_PROJECTS_DIR": "${PRECICE_PROJECTS_DIR:-test-projects}"
       }
     }
   }
 }
 ```
 
-### Knowledge base storage
+Claude Code launches the server with the repo root as the working directory
+and expands `${VAR:-default}`, so this works as-is after `install.sh` /
+`install.ps1` on any OS. Overrides, only if the defaults don't fit your setup:
 
-The vector KB is stored as a compressed NumPy archive **outside the repo** so it is never committed to git:
+- `PRECICE_AI_PYTHON` — path to the interpreter (e.g.
+  `.venv\Scripts\python.exe` if a client doesn't pick the POSIX path on
+  Windows, or an absolute path to a global install).
+- `PRECICE_PROJECTS_DIR` — directory holding your preCICE cases.
 
-```
-~/.precice-ai/kb_store/kb-embeddings.npz
-```
+`.mcp.json` itself is git-ignored so a regenerated copy (or an injected API
+key) is never committed.
 
-Check its status at any time:
+### Codex
+
+Native CLI:
 
 ```bash
-# Via terminal
-ls -lh ~/.precice-ai/kb_store/
-
-# Via MCP tool
-kb_precice_status()
+codex mcp add precice-ai \
+  --env PRECICE_PROJECTS_DIR=/absolute/path/to/preCICE/cases \
+  -- /absolute/path/to/precice-ai/.venv/bin/python -m precice_ai.server
 ```
 
----
+Direct `~/.codex/config.toml` form:
 
-## MCP tools reference
+```toml
+[mcp_servers."precice-ai"]
+command = "/absolute/path/to/precice-ai/.venv/bin/python"
+args = ["-m", "precice_ai.server"]
 
-### Knowledge base
-
-| Tool | Description |
-|---|---|
-| `kb_ingest_precice_data(github_token?)` | Downloads the latest pre-built embeddings archive from the GitHub Release (`kb-latest`). Run once to populate the local index. |
-| `kb_query_precice(question, top_k)` | Semantic search over the local vector KB. Embeds the question and returns the top-k most similar doc chunks with source URLs and scores. |
-| `kb_query_precice_live(question, top_k)` | Same as above but auto-downloads the archive if it is not yet present locally. Use this for all preCICE questions. |
-| `kb_precice_status()` | Returns the local archive size, download timestamp, and chunk count. |
-
-**Typical first use:** `kb_query_precice_live` handles everything — it downloads the archive on first use and runs semantic search. Requires `OPENROUTER_API_KEY` (or `BLABLADOR_API_KEY`) to embed the question at query time.
-
-### Project discovery
-
-| Tool | Description |
-|---|---|
-| `list_precice_projects()` | Lists all directories under `PRECICE_PROJECTS_DIR`. |
-| `inspect_project_structure(project_name, max_depth)` | Prints the folder tree for a project up to `max_depth` levels. |
-| `find_precice_config(project_name)` | Finds all `precice-config.xml` files within a project. |
-| `run_command_in_project(project_name, command)` | Runs a command inside the project directory. Only allowlisted prefixes are permitted. |
-
-Allowed command prefixes: `ls`, `pwd`, `cat`, `find`, `grep`, `tail`, `head`, `precice-tools`, `precice-cli`, `python3`, `./run.sh`
-
-### Configuration
-
-| Tool | Description |
-|---|---|
-| `inspect_precice_config(project_name)` | Returns the raw contents of `precice-config.xml`. |
-| `summarize_precice_config(project_name)` | Extracts participants, meshes, data items, and coupling scheme tags from the XML. |
-| `backup_precice_config(project_name)` | Creates a timestamped backup of `precice-config.xml` in the same directory. |
-
-### precice-cli wrappers
-
-These require `precice-cli` on `PATH` (`pip install precice`) and take an explicit `cwd`, not a `project_name`.
-
-| Tool | Description |
-|---|---|
-| `precice_version()` | Shows the installed preCICE version via `precice-cli version`. |
-| `precice_config_check(cwd, config_file)` | Validates a config file via `precice-cli config check`. |
-| `precice_config_format(cwd, config_file)` | Formats a config file via `precice-cli config format`. |
-| `precice_config_visualize(cwd, config_file, output_file)` | Generates a diagram via `precice-cli config visualize`. |
-| `precice_config_doc(cwd, tag)` | Shows XML tag documentation via `precice-cli config doc`. |
-| `precice_init(cwd, extra_args)` | Scaffolds a new preCICE config via `precice-cli init`. |
-| `precice_profiling_analyze(cwd, data_dir, extra_args)` | Analyzes profiling output via `precice-cli profiling analyze`. |
-| `precice_profiling_trace(cwd, data_dir, extra_args)` | Generates a trace visualization via `precice-cli profiling trace`. |
-| `precice_profiling_export(cwd, data_dir, output_file, extra_args)` | Exports profiling data via `precice-cli profiling export`. |
-| `precice_profiling_histogram(cwd, data_dir, extra_args)` | Generates a profiling histogram via `precice-cli profiling histogram`. |
-| `precice_profiling_merge(cwd, data_dirs, output_dir, extra_args)` | Merges multiple profiling datasets via `precice-cli profiling merge`. |
-
-### Logs
-
-| Tool | Description |
-|---|---|
-| `list_project_logs(project_name)` | Lists all `*.log` and `*.txt` files in the project. |
-| `read_project_logs(project_name, max_chars_per_file)` | Returns contents of all log files (truncated per file). |
-| `read_latest_log(project_name, lines)` | Returns the last N lines of the most recently modified log file. |
-| `analyze_precice_logs(project_name)` | Scans each log for error/warning/convergence/failure keywords and appends the last 30 lines. |
-
----
-
-## Usage walkthrough
-
-### 1. Download the knowledge base
-
-```
-kb_ingest_precice_data()
+[mcp_servers."precice-ai".env]
+PRECICE_PROJECTS_DIR = "/absolute/path/to/preCICE/cases"
 ```
 
-Downloads the pre-built vector embeddings archive from the GitHub Release. Run once; queries use the local cache until you explicitly refresh.
+Add `OPENROUTER_API_KEY` (or `BLABLADOR_API_KEY`) here — semantic KB queries
+embed the question through an embeddings API and need a key.
 
-### 2. Discover your projects
+### Common config locations
 
+- Claude Code project scope: `.mcp.json`
+- Claude Code user scope: `~/.claude/settings.json`
+- Claude Desktop macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Claude Desktop Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+- Claude Desktop Linux: `~/.config/Claude/claude_desktop_config.json`
+- Cursor global scope: `~/.cursor/mcp.json`
+- Windsurf: `~/.codeium/windsurf/mcp_config.json`
+- Codex: `~/.codex/config.toml`
+
+Restart or reload the client after editing its config.
+
+## Environment Variables
+
+Semantic KB queries embed the question through an OpenAI-compatible
+embeddings API, so `OPENROUTER_API_KEY` or `BLABLADOR_API_KEY` must be set.
+The published KB is built with `openai/text-embedding-3-small`; the query
+model must match it (keep the `EMBEDDING_MODEL` default, or rebuild the KB).
+
+Common variables:
+
+| Variable                 | Default                                       | Purpose                                                                     |
+| ------------------------ | --------------------------------------------- | --------------------------------------------------------------------------- |
+| `PRECICE_PROJECTS_DIR`   | `./test-projects` when running from repo root | Directory scanned by the project tools.                                     |
+| `PRECICE_KB_STORE_DIR`   | `~/.precice-ai/kb_store`                      | Local storage for downloaded KB assets.                                     |
+| `OPENROUTER_API_KEY`     | none                                          | Embedding API key (OpenRouter). Required unless `BLABLADOR_API_KEY` is set. |
+| `BLABLADOR_API_KEY`      | none                                          | Embedding API key (Blablador). Alternative to `OPENROUTER_API_KEY`.         |
+| `EMBEDDING_BASE_URL`     | OpenRouter, or Blablador if only that key set | OpenAI-compatible embeddings base URL.                                      |
+| `EMBEDDING_MODEL`        | `openai/text-embedding-3-small`               | Embedding model name. Must match the model the KB was built with.           |
+| `PRECICE_AI_GITHUB_REPO` | `vaibhavd2103/precice-ai`                     | GitHub repo used for KB asset downloads.                                    |
+| `GITHUB_TOKEN`           | none                                          | Optional token for private release access or higher rate limits.            |
+
+To use Blablador, set `BLABLADOR_API_KEY` and a matching model/endpoint:
+
+```bash
+precice-ai bootstrap codex \
+  --projects-dir /path/to/preCICE/cases \
+  --blablador-api-key ... \
+  --embedding-base-url https://helmholtz-blablador.fz-juelich.de:8000/v1 \
+  --embedding-model alias-embeddings
 ```
+
+Note: a model other than the KB's build model produces vectors of a
+different dimension, so you must also rebuild the KB (`precice-ai kb ingest`
+from a full clone, or the `kb-ingest.yml` Action) with the same model.
+
+## How To Use It
+
+Once your MCP client sees the server, the main workflow is:
+
+1. Ask the agent to list available preCICE projects.
+2. Inspect the project structure and locate `precice-config.xml`.
+3. Read or summarize the config.
+4. Read logs or run safe read-only commands in the project.
+5. Check KB freshness with `kb_precice_status()`, then use `kb_query_precice(...)` for fresh categories or `kb_query_precice_live(...)` to refresh stale/missing ones.
+
+Typical tool calls:
+
+```text
 list_precice_projects()
-```
-
-Returns the names of all case directories under `PRECICE_PROJECTS_DIR`.
-
-### 3. Inspect a project
-
-```
 inspect_project_structure("partitioned-heat-conduction")
+find_precice_config("partitioned-heat-conduction")
+inspect_precice_config("partitioned-heat-conduction")
 summarize_precice_config("partitioned-heat-conduction")
+read_latest_log("partitioned-heat-conduction")
+analyze_precice_logs("partitioned-heat-conduction")
+kb_precice_status()
+# If the documentation category is fresh:
+kb_query_precice("how does implicit coupling work in preCICE?", category="documentation")
+# If the documentation category is missing or stale:
+kb_query_precice_live("how does implicit coupling work in preCICE?", category="documentation")
 ```
 
-### 4. Validate the config
+Safe command execution is available through:
 
-```
-precice_config_check("/path/to/PRECICE_PROJECTS_DIR/partitioned-heat-conduction")
-```
-
-Requires `precice-cli` on `PATH` (`pip install precice`).
-
-### 5. Run safe commands
-
-```
+```text
 run_command_in_project("partitioned-heat-conduction", "ls -la")
 run_command_in_project("partitioned-heat-conduction", "cat run.sh")
 ```
 
-### 6. Read and analyze logs
+Only allowlisted command prefixes are permitted.
 
-```
-read_latest_log("partitioned-heat-conduction")
-analyze_precice_logs("partitioned-heat-conduction")
-```
+## `precice-cli`-Backed Tools
 
-### 7. Ask the knowledge base
+Some MCP tools wrap `precice-cli`. Those tools require `precice-cli` to be installed separately and available on `PATH`.
 
-```
-kb_query_precice_live("how does implicit coupling work in preCICE?")
-kb_query_precice_live("what adapters does preCICE support?")
-```
+Examples:
 
-Both calls embed the question via the configured embedding API and return the most semantically similar chunks from the preCICE documentation.
-
----
-
-## Vector knowledge base
-
-### How it works
-
-```
-GitHub Action (weekly / manual)
-  └── checkout precice/precice.github.io
-        └── walk content/ (docs, tutorials, community, about)
-              └── chunk each .md file (~450 words, 50-word overlap)
-                    └── embed chunks via OpenRouter API
-                          └── save kb-embeddings.npz → publish as GitHub Release (kb-latest)
-
-MCP tool: kb_query_precice_live(question)
-  └── download kb-embeddings.npz from kb-latest release  (first use only)
-        └── embed question via OpenRouter API
-              └── cosine similarity search (NumPy, no server)
-                    └── return top-k chunks with title, url, score, snippet
+```text
+precice_version()
+precice_config_check("/absolute/path/to/project")
+precice_config_visualize("/absolute/path/to/project")
+precice_config_doc("/absolute/path/to/project", "participant")
+precice_init(...)
+precice_profiling_analyze("/absolute/path/to/project")
 ```
 
-The embeddings archive (`kb-embeddings.npz`) is stored locally at `~/.precice-ai/kb_store/` and loaded into memory on first query. No vector database server is required.
+If `precice-cli` is missing, those tools return an install hint instead of crashing the server.
 
-### Controlling what gets indexed
+## CLI Commands
 
-Edit [`kb_sources.json`](kb_sources.json) at the repo root to control which folders are indexed and which files are skipped:
+The Typer-based CLI exposes:
 
-```json
-{
-  "include_subfolders": ["docs", "tutorials", "community", "about"],
-  "exclude_patterns": ["docs/_index.md", "docs/docs-meta", "tutorials/_index.md"]
-}
-```
+- `precice-ai setup <platform>`
+- `precice-ai bootstrap [platform]`
+- `precice-ai open [platform]`
+- `precice-ai list-platforms`
+- `precice-ai server`
+- `precice-ai kb status`
+- `precice-ai kb ingest`
+- `precice-ai kb query`
 
-The GitHub Action reads this file on every run — no changes to the workflow or build script are needed.
-
-### Refreshing the knowledge base
-
-**Automatic:** The Action runs every Sunday at 02:00 UTC. Any merged doc changes are picked up automatically.
-
-**Manual trigger (GitHub UI):**
-Actions → "Build & Publish Knowledge Base Embeddings" → "Run workflow"
-
-**Manual trigger (CLI):**
-```bash
-gh workflow run kb-ingest.yml --repo vaibhavd2103/precice-ai
-```
-
-After the Action completes, the next call to any `kb_query_*` tool will download the new archive automatically (on first query after deletion of the old local file), or force a re-download explicitly:
+Examples:
 
 ```bash
-# Delete local cache to force re-download on next query
-rm ~/.precice-ai/kb_store/kb-embeddings.npz
-```
-
-Or call `kb_ingest_precice_data()` from the MCP tool to re-download immediately.
-
-### Switching embedding providers
-
-To switch from OpenRouter to Blablador (or any OpenAI-compatible provider), set these env vars in your MCP config — no code changes required:
-
-| Variable | OpenRouter | Blablador |
-|---|---|---|
-| `OPENROUTER_API_KEY` / `BLABLADOR_API_KEY` | `sk-or-...` | your Blablador key |
-| `EMBEDDING_BASE_URL` | `https://openrouter.ai/api/v1` | `https://helmholtz-blablador.fz-juelich.de:8000/v1` |
-| `EMBEDDING_MODEL` | `openai/text-embedding-3-small` | `alias-embeddings` |
-
-Also update `OPENROUTER_API_KEY` → `BLABLADOR_API_KEY` in the `OPENROUTER_API_KEY` GitHub Secret when rebuilding the index with Blablador.
-
-### Required GitHub secret
-
-Add this secret in **Settings → Secrets and variables → Actions → New repository secret** before running the Action:
-
-| Secret | Value |
-|---|---|
-| `OPENROUTER_API_KEY` | Your OpenRouter API key from openrouter.ai/keys |
-
----
-
-## Project structure
-
-```
-precice_ai/
-├── server.py               # FastMCP server entry point
-├── core/
-│   ├── paths.py            # Project path resolution (env-var aware)
-│   ├── safety.py           # Command allowlist and block patterns
-│   ├── command_runner.py   # Safe subprocess execution
-│   └── knowledge_base.py   # VectorKnowledgeBase (download, cosine search)
-├── tools/
-│   ├── project_tools.py    # list, inspect, find, run_command
-│   ├── config_tools.py     # inspect, summarize, check, backup, visualize
-│   ├── log_tools.py        # list, read, read_latest, analyze
-│   └── knowledge_tools.py  # kb_ingest, kb_query, kb_query_live, kb_status
-└── cli/
-    ├── main.py             # precice-ai CLI (setup / list-platforms / server)
-    └── platforms/          # Per-platform config writers
-        ├── claude_code.py
-        ├── claude_desktop.py
-        ├── codex.py
-        ├── cursor.py
-        ├── windsurf.py
-        └── generic.py
-scripts/
-└── build_embeddings.py     # Chunks docs, calls embedding API, saves .npz
-.github/workflows/
-└── kb-ingest.yml           # Scheduled Action: build embeddings → GitHub Release
-kb_sources.json             # Controls which doc folders/files get indexed
-server.py                   # Convenience shim for python server.py (local dev)
-pyproject.toml              # Package definition and CLI entry points
-```
-
----
-
-## Codebase knowledge graph via the graphify skill (optional)
-
-This repo ships a pre-built knowledge graph in `graphify-out/` (`graph.json`, `GRAPH_REPORT.md`, `graph.html`), generated by the [graphify](https://github.com/Graphify-app/Graphify) Claude Code skill (`.claude/skills/graphify/SKILL.md`, triggered by `/graphify`). It gives an AI assistant a fast, structured map of this codebase instead of grepping raw files every time.
-
-### How it's built
-
-`/graphify` turns the repo into a graph in two extraction passes that run in parallel, then clusters and reports on the result:
-
-```
-detect files (code / docs / papers / images / video)
-  ├── structural extraction: deterministic AST pass over .py files (free, no LLM)
-  └── semantic extraction: files chunked (~20-25 each) and handed to parallel
-        general-purpose subagents, which pull entities/relationships an AST
-        can't see (call intent, shared data, design rationale)
-        → merge AST + semantic nodes/edges, dedup by id
-              → community detection (clustering) + god-node / surprising-connection analysis
-                    → graph.json (GraphRAG-ready) + GRAPH_REPORT.md (plain-language audit) + graph.html (interactive)
-```
-
-Every edge is tagged `EXTRACTED` (explicit in source, e.g. an import or call), `INFERRED` (reasonable inference, with a confidence score), or `AMBIGUOUS` (uncertain, flagged rather than dropped) — the audit trail is never hidden.
-
-### Querying it
-
-```bash
-# Ask a question about the codebase — BFS traversal for broad context
-graphify query "how does the knowledge base ingestion work?"
-
-# Find the relationship between two modules — shortest path
-graphify path "KnowledgeBaseService" "kb_query_precice"
-
-# Plain-language explanation of one node and its connections
-graphify explain "VectorKnowledgeBase"
-```
-
-### Keeping it current
-
-```bash
-graphify update .        # incremental — re-extracts only changed files
-```
-
-Code-only changes skip the LLM subagent pass entirely (AST-only, no API cost); doc/image changes trigger the full semantic re-extraction.
-
-### How Claude Code picks it up automatically
-
-Both `/home/vaibhav/.claude/CLAUDE.md` (user-level) and this repo's `CLAUDE.md`/`.claude/CLAUDE.md` register the trigger: typing `/graphify` invokes the skill directly, and — per the rules in this repo's `CLAUDE.md` — whenever `graphify-out/graph.json` already exists, codebase questions are answered with `graphify query "<question>"` before falling back to reading files, and `graphify update .` runs after code edits to keep the graph in sync.
-
-Graphify is entirely optional — the MCP server and CLI work without it.
-
----
-
-## Starting the server manually
-
-```bash
-# Via the CLI
+precice-ai --help
+precice-ai list-platforms
+precice-ai kb status
+precice-ai kb ingest
+precice-ai kb query "implicit coupling" --mode vector-live
 precice-ai server
+```
 
-# Via Python module
+## Running The Server Manually
+
+All of the following start the same MCP server:
+
+```bash
+precice-ai server
 python -m precice_ai.server
-
-# From the repo root (local dev)
 python server.py
 ```
 
----
+This is mostly useful for local debugging or manual client integration.
 
-## Safety notes
+## Knowledge Base Storage
 
-- `run_command_in_project` executes via shell with a prefix allowlist. Commands not matching an allowed prefix are rejected before execution.
-- The command allowlist blocks patterns like `rm`, `sudo`, `curl`, `wget`, and fork bombs. Tighten it further in [precice_ai/core/safety.py](precice_ai/core/safety.py).
-- Log parsing is heuristic (keyword search). It does not replace solver-level validation.
-- The vector KB archive is stored locally at `~/.precice-ai/kb_store/kb-embeddings.npz`. At query time, the question text is sent to the configured embedding API (OpenRouter or Blablador) to produce a vector — no document content leaves your machine.
+`precice-ai setup`/`bootstrap` automatically download the full knowledge base
+(all 7 vector categories + the lexical index) the first time you run them, so
+it's ready to query immediately. This is a best-effort step — it never fails
+setup, even if GitHub is unreachable. Pass `--skip-kb-ingest` to skip it (e.g.
+in CI or offline environments), and run `precice-ai kb ingest` manually later.
 
----
+Vector KB assets are stored outside the repo by default:
+
+```text
+~/.precice-ai/kb_store/kb-embeddings-about.npz
+~/.precice-ai/kb_store/kb-embeddings-community.npz
+~/.precice-ai/kb_store/kb-embeddings-documentation.npz
+~/.precice-ai/kb_store/kb-embeddings-tutorials.npz
+~/.precice-ai/kb_store/kb-embeddings-forum.npz
+~/.precice-ai/kb_store/kb-embeddings-issues.npz
+~/.precice-ai/kb_store/kb-embeddings-pulls.npz
+```
+
+Check status:
+
+```bash
+precice-ai kb status
+```
+
+Or from MCP:
+
+```text
+kb_precice_status()
+```
+
+## Safety Notes
+
+- `run_command_in_project` is intentionally restrictive and only allows approved command prefixes.
+- The server blocks obviously destructive patterns such as `rm`, `sudo`, `curl`, `wget`, and shutdown commands.
+- Log analysis is heuristic and meant to assist debugging, not replace solver-level validation.
+- Document embeddings are prebuilt offline and shipped as a GitHub Release asset; at query time only the short question string is sent to the embeddings API. Keyword search (`kb_query_precice_lexical`) makes no external call at all.
+
+## Project Layout
+
+For contributors, the deep walkthrough lives in [CONTRIBUTOR_GUIDE.md](CONTRIBUTOR_GUIDE.md). At a high level:
+
+```text
+precice_ai/
+  cli/      # user-facing Typer CLI and platform installers
+  core/     # path resolution, safety checks, command runner, KB logic
+  tools/    # MCP tool registration modules
+  utils/    # JSON schema and supporting assets
+scripts/    # KB build and maintenance scripts
+server.py   # convenience entry point for local dev
+```
 
 ## License
 
-MIT — see `LICENSE`.
+MIT — see [LICENSE](LICENSE).

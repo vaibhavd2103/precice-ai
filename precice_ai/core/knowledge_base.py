@@ -4,11 +4,17 @@ import json
 import math
 import os
 import re
+import subprocess
+import sys
+import tempfile
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import httpx
 from lxml import html
+
+from precice_ai.core.discourse_api import fetch_discourse_topic_documents
+from precice_ai.core.text_cleaning import strip_markdown
 
 
 def _get_kb_dir() -> Path:
@@ -25,8 +31,221 @@ def _get_kb_dir() -> Path:
 
 
 DOCS_START_URL = "https://precice.org/"
-FORUM_RECENT_URL = "https://precice.discourse.group/latest.json"
 USER_AGENT = "precice-ai-mcp/1.0 (+https://github.com/precice)"
+
+# How often (in hours) a locally cached release asset is re-checked against
+# GitHub before being trusted as-is. 96h (4 days) matches kb-ingest.yml's
+# publish cadence, so this never checks more often than the source can change.
+RELEASE_ASSET_MAX_AGE_HOURS = 96
+
+
+# ---------------------------------------------------------------------------
+# Release asset sync — shared "source of truth" logic for both the vector KB
+# (per-category .npz files) and the lexical KB (kb-lexical.json), all
+# published to the same kb-latest GitHub Release by kb-ingest.yml.
+#
+# For RELEASE_ASSET_MAX_AGE_HOURS after the last check, the local copy is
+# trusted as-is — no network call at all. Once that window elapses, the
+# asset is always re-downloaded (old file deleted first), since kb-ingest.yml
+# rebuilds and republishes every category unconditionally on every one of
+# its ~96h (4-day) runs — the KB is never allowed to go stale for longer than
+# that, regardless of whether the underlying content actually changed. The
+# remote digest is still fetched and compared, purely to distinguish
+# "genuinely new content" from "same content, refreshed on schedule" in the
+# returned action.
+# ---------------------------------------------------------------------------
+
+
+def _meta_path(local_path: Path) -> Path:
+    return local_path.parent / f"{local_path.name}.meta.json"
+
+
+def _load_asset_meta(local_path: Path) -> dict[str, str] | None:
+    meta_file = _meta_path(local_path)
+    if not meta_file.exists():
+        return None
+    try:
+        data = json.loads(meta_file.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _save_asset_meta(local_path: Path, remote_signature: str) -> None:
+    _meta_path(local_path).write_text(
+        json.dumps({"remote_signature": remote_signature, "checked_at": _now_iso()}),
+        encoding="utf-8",
+    )
+
+
+def _meta_expired(meta: dict[str, str], max_age_hours: int) -> bool:
+    checked_at = meta.get("checked_at")
+    if not isinstance(checked_at, str):
+        return True
+    try:
+        dt = datetime.fromisoformat(checked_at.replace("Z", "+00:00"))
+    except ValueError:
+        return True
+    age_hours = (datetime.now(timezone.utc) - dt).total_seconds() / 3600.0
+    return age_hours > max_age_hours
+
+
+def _parse_iso_datetime(value: str | None) -> datetime | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def _freshness_details(
+    local_path: Path,
+    *,
+    max_age_hours: int = RELEASE_ASSET_MAX_AGE_HOURS,
+    fallback_checked_at: str | None = None,
+) -> dict[str, object]:
+    """Return cache-freshness metadata for a local KB asset.
+
+    Prefer the release-asset metadata timestamp when available because the
+    96h trust window is defined in terms of the last successful freshness
+    check. Fall back to a logical payload timestamp (for live-ingested
+    lexical KBs) or the file mtime so agents still get a useful answer for
+    locally built or legacy files that have no sidecar metadata yet.
+    """
+    if not local_path.exists():
+        return {
+            "present": False,
+            "checked_at": None,
+            "age_hours": None,
+            "expires_at": None,
+            "is_fresh": False,
+            "freshness_source": "missing",
+            "max_age_hours": max_age_hours,
+        }
+
+    meta = _load_asset_meta(local_path)
+    checked_dt: datetime | None = None
+    freshness_source = "unknown"
+
+    if meta:
+        checked_dt = _parse_iso_datetime(meta.get("checked_at"))
+        if checked_dt is not None:
+            freshness_source = "release_meta"
+
+    if checked_dt is None:
+        checked_dt = _parse_iso_datetime(fallback_checked_at)
+        if checked_dt is not None:
+            freshness_source = "payload_timestamp"
+
+    if checked_dt is None:
+        checked_dt = datetime.fromtimestamp(local_path.stat().st_mtime, tz=timezone.utc)
+        freshness_source = "file_mtime"
+
+    age_hours = (datetime.now(timezone.utc) - checked_dt).total_seconds() / 3600.0
+    expires_at = checked_dt + timedelta(hours=max_age_hours)
+    return {
+        "present": True,
+        "checked_at": checked_dt.isoformat().replace("+00:00", "Z"),
+        "age_hours": round(age_hours, 2),
+        "expires_at": expires_at.isoformat().replace("+00:00", "Z"),
+        "is_fresh": age_hours < max_age_hours,
+        "freshness_source": freshness_source,
+        "max_age_hours": max_age_hours,
+    }
+
+
+def _fetch_release_assets(
+    repo: str, tag: str, github_token: str | None, timeout_seconds: int = 20
+) -> dict[str, dict[str, str]]:
+    """Map of asset name -> {digest, url} for a GitHub Release, via the API
+    (metadata only — doesn't download asset bytes)."""
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": USER_AGENT}
+    if github_token:
+        headers["Authorization"] = f"Bearer {github_token}"
+    url = f"https://api.github.com/repos/{repo}/releases/tags/{tag}"
+    with httpx.Client(timeout=timeout_seconds, headers=headers) as client:
+        response = client.get(url)
+        response.raise_for_status()
+        data = response.json()
+
+    assets: dict[str, dict[str, str]] = {}
+    for asset in data.get("assets", []):
+        name = asset.get("name")
+        if not name:
+            continue
+        # digest is a real content hash (sha256:...) when GitHub reports one;
+        # updated_at is a reasonable fallback signal (assets are replaced via
+        # --clobber, which bumps this even when digest isn't exposed).
+        assets[name] = {
+            "digest": asset.get("digest") or asset.get("updated_at") or "",
+            "url": asset.get("browser_download_url", ""),
+        }
+    return assets
+
+
+def sync_release_asset(
+    *,
+    local_path: Path,
+    asset_name: str,
+    repo: str,
+    tag: str,
+    github_token: str | None = None,
+    max_age_hours: int = RELEASE_ASSET_MAX_AGE_HOURS,
+    timeout_seconds: int = 180,
+) -> dict[str, object]:
+    """Ensure local_path mirrors the named release asset, treating the
+    release as the source of truth on a fixed refresh cadence.
+
+    Within max_age_hours of the last check, the local copy is trusted as-is
+    (no network call at all). Once that window elapses, the asset is always
+    re-downloaded — the publish side (kb-ingest.yml) rebuilds and republishes
+    unconditionally every cycle, so a fresh copy is pulled every time the
+    window elapses regardless of whether the digest happens to match; the
+    digest is only used to decide *whether the old file needs deleting first*,
+    not whether to skip the download.
+    """
+    local_path.parent.mkdir(parents=True, exist_ok=True)
+    meta = _load_asset_meta(local_path)
+
+    if local_path.exists() and meta and not _meta_expired(meta, max_age_hours):
+        return {"status": "ok", "action": "cached", "path": str(local_path)}
+
+    try:
+        assets = _fetch_release_assets(repo, tag, github_token)
+    except Exception as exc:
+        if local_path.exists():
+            # Can't reach GitHub right now — keep serving what we already have.
+            return {"status": "ok", "action": "cached_offline", "path": str(local_path), "message": str(exc)}
+        return {"status": "error", "message": f"Failed to fetch release metadata: {exc}"}
+
+    asset = assets.get(asset_name)
+    if asset is None:
+        if local_path.exists():
+            return {"status": "ok", "action": "cached_missing_remote", "path": str(local_path)}
+        return {"status": "error", "message": f"No asset named {asset_name!r} found in {repo}@{tag}"}
+
+    remote_signature = asset["digest"]
+    content_unchanged = bool(local_path.exists() and meta and meta.get("remote_signature") == remote_signature)
+
+    headers: dict[str, str] = {}
+    if github_token:
+        headers["Authorization"] = f"token {github_token}"
+    with httpx.Client(follow_redirects=True, timeout=timeout_seconds, headers=headers) as client:
+        response = client.get(asset["url"])
+        response.raise_for_status()
+        content = response.content
+
+    if local_path.exists():
+        local_path.unlink()
+    local_path.write_bytes(content)
+    _save_asset_meta(local_path, remote_signature)
+    return {
+        "status": "ok",
+        "action": "downloaded_unchanged_content" if content_unchanged else "downloaded",
+        "path": str(local_path),
+        "size_mb": round(len(content) / 1_048_576, 2),
+    }
 
 
 @dataclass
@@ -37,15 +256,6 @@ class KBDocument:
     content: str
     updated_at: str
 
-    def to_dict(self) -> dict[str, str]:
-        return {
-            "source": self.source,
-            "url": self.url,
-            "title": self.title,
-            "content": self.content,
-            "updated_at": self.updated_at,
-        }
-
 
 class KnowledgeBaseService:
     def __init__(self, kb_file: Path | None = None) -> None:
@@ -55,7 +265,7 @@ class KnowledgeBaseService:
     def ingest_precice_sources(
         self,
         docs_pages_limit: int = 20,
-        forum_topics_limit: int = 20,
+        forum_topics_limit: int | None = None,
         timeout_seconds: int = 20,
     ) -> dict[str, str | int]:
         docs_documents: list[KBDocument] = []
@@ -105,10 +315,29 @@ class KnowledgeBaseService:
                 "forum_error": forum_error,
             }
 
+        # Wrap each fetched document as a single chunk (chunk_index=0) so this
+        # fallback file matches the chunk-based schema the primary,
+        # release-published kb-lexical.json uses — both are read by the same
+        # query() below. This fallback's coverage (docs + forum only) stays
+        # narrower than the primary pipeline; that's expected for an
+        # emergency-only path.
+        def _to_chunk(doc: KBDocument, category: str) -> dict[str, str | int]:
+            return {
+                "title": doc.title,
+                "url": doc.url,
+                "source": doc.source,
+                "category": category,
+                "chunk_index": 0,
+                "text": doc.content,
+            }
+
+        chunks = [_to_chunk(doc, "documentation") for doc in docs_documents] + [
+            _to_chunk(doc, "forum") for doc in forum_documents
+        ]
         payload = {
             "updated_at": _now_iso(),
-            "count": len(all_documents),
-            "documents": [doc.to_dict() for doc in all_documents],
+            "count": len(chunks),
+            "chunks": chunks,
         }
         self.kb_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
@@ -122,7 +351,7 @@ class KnowledgeBaseService:
             "forum_error": forum_error,
         }
 
-    def query(self, question: str, top_k: int = 5) -> dict[str, object]:
+    def query(self, question: str, top_k: int = 5, category: str | None = None) -> dict[str, object]:
         payload = self._read_kb()
         if not payload:
             return {
@@ -130,12 +359,20 @@ class KnowledgeBaseService:
                 "message": "Knowledge base is empty. Run ingestion first.",
             }
 
-        documents = payload.get("documents", [])
-        if not isinstance(documents, list) or not documents:
+        chunks = payload.get("chunks", [])
+        if not isinstance(chunks, list) or not chunks:
             return {
                 "status": "error",
-                "message": "Knowledge base has no documents. Run ingestion first.",
+                "message": "Knowledge base has no chunks. Run ingestion first.",
             }
+
+        if category:
+            chunks = [c for c in chunks if isinstance(c, dict) and c.get("category") == category]
+            if not chunks:
+                return {
+                    "status": "error",
+                    "message": f"No lexical chunks found for category '{category}'.",
+                }
 
         query_terms = _tokenize(question)
         if not query_terms:
@@ -145,16 +382,16 @@ class KnowledgeBaseService:
             }
 
         scored = []
-        for doc in documents:
-            if not isinstance(doc, dict):
+        for chunk in chunks:
+            if not isinstance(chunk, dict):
                 continue
-            text = f"{doc.get('title', '')}\n{doc.get('content', '')}"
+            text = f"{chunk.get('title', '')}\n{chunk.get('text', '')}"
             score = _bm25_like_score(query_terms, _tokenize(text))
             if score > 0:
-                scored.append((score, doc))
+                scored.append((score, chunk))
 
         scored.sort(key=lambda item: item[0], reverse=True)
-        top_docs = scored[:top_k]
+        top_chunks = scored[:top_k]
 
         return {
             "status": "ok",
@@ -162,57 +399,91 @@ class KnowledgeBaseService:
             "results": [
                 {
                     "score": round(score, 4),
-                    "source": doc.get("source", "unknown"),
-                    "title": doc.get("title", ""),
-                    "url": doc.get("url", ""),
-                    "snippet": _snippet_for_terms(doc.get("content", ""), query_terms),
+                    "source": chunk.get("source", "unknown"),
+                    "title": chunk.get("title", ""),
+                    "url": chunk.get("url", ""),
+                    "category": chunk.get("category", ""),
+                    "snippet": _snippet_for_terms(chunk.get("text", ""), query_terms),
                 }
-                for score, doc in top_docs
+                for score, chunk in top_chunks
             ],
         }
+
+    def sync_from_release(self, github_token: str | None = None) -> dict[str, object]:
+        """Sync kb_file from the kb-latest Release's kb-lexical.json asset.
+
+        The release is the source of truth: the local copy is trusted as-is
+        for RELEASE_ASSET_MAX_AGE_HOURS (every 4 days, matching
+        kb-ingest.yml's publish cadence — kb-ingest.yml republishes every
+        category unconditionally on every run, so once that window elapses
+        the asset is always re-downloaded, old file deleted first). Falls
+        back to a hard error if there's no asset and no cached file,
+        letting the caller decide whether to fall back to a live crawl.
+        """
+        repo = os.environ.get("PRECICE_AI_GITHUB_REPO", _DEFAULT_GITHUB_REPO)
+        return sync_release_asset(
+            local_path=self.kb_file,
+            asset_name="kb-lexical.json",
+            repo=repo,
+            tag=_RELEASE_TAG,
+            github_token=github_token,
+        )
 
     def query_with_optional_live_refresh(
         self,
         question: str,
         top_k: int = 5,
+        category: str | None = None,
+        github_token: str | None = None,
         refresh_if_older_than_hours: int = 24,
     ) -> dict[str, object]:
-        payload = self._read_kb()
+        sync_result = self.sync_from_release(github_token=github_token)
 
-        if self._is_stale(payload, refresh_if_older_than_hours):
-            ingest_result = self.ingest_precice_sources(
-                docs_pages_limit=10,
-                forum_topics_limit=10,
-            )
-            ingest_status = ingest_result.get("status")
-            # "ok" = fresh data written; "warning" = kept old data — both allow querying.
-            # On hard failure with no existing KB, surface the error.
-            if ingest_status == "error" and not self._read_kb():
-                return {
-                    "status": "error",
-                    "message": (
-                        "Could not fetch preCICE docs/forum and no cached KB exists. "
-                        f"Details: {ingest_result.get('message', '')}"
-                    ),
-                }
+        if sync_result.get("status") == "error":
+            # No release asset reachable and nothing cached locally — fall
+            # back to the live docs/forum crawl as a last resort.
+            payload = self._read_kb()
+            if self._is_stale(payload, refresh_if_older_than_hours):
+                ingest_result = self.ingest_precice_sources(
+                    docs_pages_limit=10,
+                    forum_topics_limit=None,
+                )
+                ingest_status = ingest_result.get("status")
+                # "ok" = fresh data written; "warning" = kept old data — both allow querying.
+                # On hard failure with no existing KB, surface the error.
+                if ingest_status == "error" and not self._read_kb():
+                    return {
+                        "status": "error",
+                        "message": (
+                            "Could not sync the lexical KB release, fetch docs/forum live, "
+                            f"or find a cached KB. Sync error: {sync_result.get('message', '')}; "
+                            f"live fetch error: {ingest_result.get('message', '')}"
+                        ),
+                    }
 
-        return self.query(question=question, top_k=top_k)
+        return self.query(question=question, top_k=top_k, category=category)
 
     def kb_status(self) -> dict[str, object]:
         payload = self._read_kb()
+        freshness = _freshness_details(
+            self.kb_file,
+            fallback_checked_at=payload.get("updated_at") if isinstance(payload, dict) else None,
+        )
         if not payload:
             return {
                 "status": "empty",
                 "kb_file": str(self.kb_file),
                 "message": "No ingested data yet.",
+                **freshness,
             }
 
-        documents = payload.get("documents", [])
+        chunks = payload.get("chunks", [])
         return {
             "status": "ok",
             "kb_file": str(self.kb_file),
             "updated_at": payload.get("updated_at", "unknown"),
-            "documents": len(documents) if isinstance(documents, list) else 0,
+            "chunks": len(chunks) if isinstance(chunks, list) else 0,
+            **freshness,
         }
 
     def _fetch_docs_documents(self, client: httpx.Client, pages_limit: int) -> list[KBDocument]:
@@ -249,48 +520,24 @@ class KnowledgeBaseService:
 
         return docs
 
-    def _fetch_forum_documents(self, client: httpx.Client, topics_limit: int) -> list[KBDocument]:
-        response = client.get(FORUM_RECENT_URL)
-        response.raise_for_status()
-
-        data = response.json()
-        topic_list = data.get("topic_list", {})
-        topics = topic_list.get("topics", [])
-
+    def _fetch_forum_documents(
+        self, client: httpx.Client, topics_limit: int | None
+    ) -> list[KBDocument]:
         docs: list[KBDocument] = []
-        for topic in topics[:topics_limit]:
-            slug = topic.get("slug")
-            topic_id = topic.get("id")
-            title = topic.get("title", "")
-            last_posted_at = topic.get("last_posted_at") or _now_iso()
-
-            if not slug or not topic_id:
-                continue
-
-            topic_url = f"https://precice.discourse.group/t/{slug}/{topic_id}.json"
-            try:
-                topic_response = client.get(topic_url)
-                topic_response.raise_for_status()
-                topic_data = topic_response.json()
-                post_stream = topic_data.get("post_stream", {})
-                posts = post_stream.get("posts", [])
-                merged = "\n\n".join(
-                    _strip_html(post.get("cooked", ""))
-                    for post in posts
-                    if isinstance(post, dict)
+        for topic in fetch_discourse_topic_documents(
+            client,
+            "https://precice.discourse.group",
+            topics_limit=topics_limit,
+        ):
+            docs.append(
+                KBDocument(
+                    source="precice-forum",
+                    url=topic.url,
+                    title=topic.title,
+                    content=topic.text,
+                    updated_at=topic.updated_at,
                 )
-                if merged.strip():
-                    docs.append(
-                        KBDocument(
-                            source="precice-forum",
-                            url=f"https://precice.discourse.group/t/{slug}/{topic_id}",
-                            title=title,
-                            content=merged,
-                            updated_at=last_posted_at,
-                        )
-                    )
-            except Exception:
-                continue
+            )
 
         return docs
 
@@ -338,7 +585,7 @@ def _extract_html_document(raw_html: str, url: str, source: str) -> KBDocument:
     headings = tree.xpath("//h1//text() | //h2//text() | //h3//text()")
 
     pieces = [x.strip() for x in headings + paragraphs if x.strip()]
-    content = "\n".join(pieces)
+    content = strip_markdown("\n".join(pieces))
 
     return KBDocument(
         source=source,
@@ -347,10 +594,6 @@ def _extract_html_document(raw_html: str, url: str, source: str) -> KBDocument:
         content=content,
         updated_at=_now_iso(),
     )
-
-
-def _strip_html(value: str) -> str:
-    return re.sub(r"<[^>]+>", " ", value).replace("\n", " ").strip()
 
 
 def _tokenize(text: str) -> list[str]:
@@ -406,140 +649,342 @@ def _now_iso() -> str:
 # ---------------------------------------------------------------------------
 
 _RELEASE_TAG = "kb-latest"
-_ASSET_NAME = "kb-embeddings.npz"
 _DEFAULT_GITHUB_REPO = "vaibhavd2103/precice-ai"
-_DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
-_DEFAULT_MODEL = "openai/text-embedding-3-small"
+
+# Must match the category keys in kb_sources.json and the asset names the
+# kb-ingest.yml workflow uploads (kb-embeddings-<category>.npz), one per
+# category, so a changed category can be re-fetched without touching the rest.
+CATEGORIES = ["about", "community", "documentation", "tutorials", "forum", "issues", "pulls"]
+
+
+def _asset_name(category: str) -> str:
+    return f"kb-embeddings-{category}.npz"
+
+
+def _find_repo_scripts_dir() -> Path | None:
+    """Locate the precice-ai source checkout's scripts/ dir, if any.
+
+    Only available when running from an editable/source install (the repo
+    tree sits next to the installed package); a plain package install has
+    no scripts/ to build with, so the local-build fallback degrades to an
+    explicit error in that case.
+    """
+    env = os.environ.get("PRECICE_AI_SCRIPTS_DIR")
+    if env:
+        candidate = Path(env)
+        return candidate if candidate.exists() else None
+    candidate = Path(__file__).resolve().parents[2] / "scripts"
+    return candidate if candidate.exists() else None
+
+
+def _find_kb_sources_config() -> Path | None:
+    env = os.environ.get("PRECICE_AI_KB_SOURCES")
+    if env:
+        candidate = Path(env)
+        return candidate if candidate.exists() else None
+    candidate = Path(__file__).resolve().parents[2] / "kb_sources.json"
+    return candidate if candidate.exists() else None
 
 
 class VectorKnowledgeBase:
-    """Downloads a pre-built .npz embeddings archive from a GitHub Release and
-    answers semantic queries by cosine-similarity search (pure NumPy, no server)."""
+    """Downloads pre-built per-category .npz embedding archives from a GitHub
+    Release and answers semantic queries by cosine-similarity search (pure
+    NumPy, no server). Each category can be refreshed independently."""
 
     def __init__(self, store_dir: Path | None = None) -> None:
         self._dir = store_dir or _get_kb_dir()
         self._dir.mkdir(parents=True, exist_ok=True)
-        self._npz_file = self._dir / _ASSET_NAME
-        # In-memory cache — populated lazily on first query
-        self._embeddings: object = None   # np.ndarray (N, D) once loaded
-        self._chunks: list[dict[str, str | int]] | None = None
+        self._npz_files = {cat: self._dir / _asset_name(cat) for cat in CATEGORIES}
+        # In-memory cache — populated lazily per category on first query
+        self._embeddings: dict[str, object] = {}   # category -> np.ndarray (N, D)
+        self._chunks: dict[str, list[dict[str, str | int]]] = {}
 
     # ------------------------------------------------------------------
-    # Ingest: download the release asset
+    # Ingest: download release assets, one per category
     # ------------------------------------------------------------------
 
-    def download_from_release(self, github_token: str | None = None) -> dict[str, object]:
+    def download_from_release(
+        self, github_token: str | None = None, category: str | None = None
+    ) -> dict[str, object]:
+        """Sync each category's .npz from the kb-latest Release.
+
+        The release is the source of truth: each category's local file is
+        trusted for RELEASE_ASSET_MAX_AGE_HOURS (every 4 days) after the
+        last check, then always re-downloaded (old file deleted first) once
+        that window elapses, since kb-ingest.yml republishes every category
+        unconditionally on every run. If no asset exists yet for a category
+        and there's no local copy either, falls back to building it locally.
+        """
+        categories = [category] if category else CATEGORIES
         repo = os.environ.get("PRECICE_AI_GITHUB_REPO", _DEFAULT_GITHUB_REPO)
-        asset_url = (
-            f"https://github.com/{repo}/releases/download/{_RELEASE_TAG}/{_ASSET_NAME}"
-        )
-        headers: dict[str, str] = {}
-        if github_token:
-            headers["Authorization"] = f"token {github_token}"
 
-        try:
-            with httpx.Client(follow_redirects=True, timeout=180, headers=headers) as client:
-                response = client.get(asset_url)
-                response.raise_for_status()
-                self._npz_file.write_bytes(response.content)
-        except httpx.HTTPStatusError as exc:
+        per_category: dict[str, object] = {}
+        any_ok = False
+        for cat in categories:
+            result = sync_release_asset(
+                local_path=self._npz_files[cat],
+                asset_name=_asset_name(cat),
+                repo=repo,
+                tag=_RELEASE_TAG,
+                github_token=github_token,
+            )
+            if result.get("status") == "error":
+                # No release asset published yet and nothing cached locally —
+                # build this category locally instead of failing outright.
+                result = self._build_category_locally(cat)
+            elif str(result.get("action", "")).startswith("downloaded"):
+                # File on disk was replaced (fresh 96h cycle, or genuinely
+                # changed content) — drop the in-memory cache so the next
+                # query reloads from the fresh file.
+                self._embeddings.pop(cat, None)
+                self._chunks.pop(cat, None)
+
+            per_category[cat] = result
+            if result.get("status") == "ok":
+                any_ok = True
+
+        return {
+            "status": "ok" if any_ok else "error",
+            "categories": per_category,
+        }
+
+    def _build_category_locally(self, category: str, timeout_seconds: int = 900) -> dict[str, object]:
+        """Fallback for when no GitHub Release asset exists yet for a category.
+
+        Clones just that category's source(s) into a temp dir and runs the
+        exact same build scripts the kb-ingest.yml workflow uses, saving the
+        result straight into the local kb_store. Requires a source checkout
+        (scripts/ + kb_sources.json) next to the installed package — a plain
+        package install has nothing to build with, so this degrades to a
+        clear error pointing at the scheduled Action instead.
+        """
+        scripts_dir = _find_repo_scripts_dir()
+        config_path = _find_kb_sources_config()
+        if not scripts_dir or not config_path:
             return {
                 "status": "error",
-                "message": f"Failed to download release asset ({exc.response.status_code}): {asset_url}",
+                "message": (
+                    f"No GitHub Release asset found for category '{category}' and no local "
+                    "source checkout (scripts/ + kb_sources.json) is available to build it "
+                    "on the fly. Either wait for the scheduled kb-ingest.yml Action to publish "
+                    "a release, trigger it manually (`gh workflow run kb-ingest.yml`), or run "
+                    "this MCP server from a full clone of the precice-ai repo."
+                ),
             }
-        except Exception as exc:
-            return {"status": "error", "message": str(exc)}
 
-        # Invalidate in-memory cache so next query reloads from fresh file
-        self._embeddings = None
-        self._chunks = None
+        from precice_ai.core.embedding import DEFAULT_MODEL
 
-        size_mb = self._npz_file.stat().st_size / 1_048_576
+        build_env = dict(os.environ)
+        model_args = ["--model", os.environ.get("EMBEDDING_MODEL", DEFAULT_MODEL)]
+        api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("BLABLADOR_API_KEY")
+        if not api_key:
+            return {
+                "status": "error",
+                "message": (
+                    f"No GitHub Release asset found for category '{category}'. A local build "
+                    "was attempted but neither OPENROUTER_API_KEY nor BLABLADOR_API_KEY is set — "
+                    "embedding requires an OpenAI-compatible API key."
+                ),
+            }
+
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+        cat_config = config.get("categories", {}).get(category)
+        if cat_config is None:
+            return {"status": "error", "message": f"Unknown category: {category}"}
+
+        output_path = self._npz_files[category]
+
+        try:
+            with tempfile.TemporaryDirectory(prefix="precice-kb-fallback-") as tmp:
+                tmp_path = Path(tmp)
+
+                if cat_config.get("type") == "discourse":
+                    cmd = [
+                        sys.executable, str(scripts_dir / "build_forum_embeddings.py"),
+                        "--forum-url", cat_config["forum_url"],
+                        "--api-key", api_key,
+                        "--output", str(output_path),
+                        *model_args,
+                    ]
+                elif cat_config.get("type") in ("github_issues", "github_prs"):
+                    kind = "issues" if cat_config["type"] == "github_issues" else "pulls"
+                    cmd = [
+                        sys.executable, str(scripts_dir / "build_github_activity_embeddings.py"),
+                        "--repo", cat_config["repo"],
+                        "--kind", kind,
+                        "--api-key", api_key,
+                        "--output", str(output_path),
+                        *model_args,
+                    ]
+                    github_token = os.environ.get("GITHUB_TOKEN")
+                    if github_token:
+                        cmd += ["--github-token", github_token]
+                else:
+                    checkout_dirs: list[str] = []
+                    for source in cat_config.get("sources", []):
+                        repo = source["repo"]
+                        checkout_path = source.get("checkout_path", "")
+                        branch = source.get("branch")
+                        local_dir = tmp_path / repo.replace("/", "_")
+
+                        clone_cmd = ["git", "clone", "--filter=blob:none", "--no-checkout"]
+                        if checkout_path:
+                            clone_cmd.append("--sparse")
+                        if branch:
+                            clone_cmd += ["-b", branch]
+                        clone_cmd += [f"https://github.com/{repo}.git", str(local_dir)]
+                        subprocess.run(clone_cmd, check=True, capture_output=True, timeout=timeout_seconds)
+
+                        if checkout_path:
+                            subprocess.run(
+                                ["git", "-C", str(local_dir), "sparse-checkout", "set", checkout_path],
+                                check=True, capture_output=True, timeout=timeout_seconds,
+                            )
+                        subprocess.run(
+                            ["git", "-C", str(local_dir), "checkout"],
+                            check=True, capture_output=True, timeout=timeout_seconds,
+                        )
+                        checkout_dirs.append(f"{repo}={local_dir}")
+
+                    render_cmd = [
+                        sys.executable, str(scripts_dir / "render_sources_json.py"),
+                        "--config", str(config_path), "--category", category,
+                    ]
+                    for pair in checkout_dirs:
+                        render_cmd += ["--checkout-dir", pair]
+                    rendered = subprocess.run(
+                        render_cmd, check=True, capture_output=True, text=True, timeout=60,
+                    )
+                    sources_json = rendered.stdout.strip()
+
+                    cmd = [
+                        sys.executable, str(scripts_dir / "build_embeddings.py"),
+                        "--category", category,
+                        "--sources-json", sources_json,
+                        "--api-key", api_key,
+                        "--output", str(output_path),
+                        *model_args,
+                    ]
+
+                result = subprocess.run(
+                    cmd, capture_output=True, text=True, timeout=timeout_seconds, env=build_env
+                )
+                if result.returncode != 0:
+                    return {
+                        "status": "error",
+                        "message": f"Local build for '{category}' failed: {result.stderr[-2000:]}",
+                    }
+        except subprocess.CalledProcessError as exc:
+            return {"status": "error", "message": f"Local build for '{category}' failed: {exc.stderr}"}
+        except subprocess.TimeoutExpired:
+            return {"status": "error", "message": f"Local build for '{category}' timed out."}
+
+        self._embeddings.pop(category, None)
+        self._chunks.pop(category, None)
+        size_mb = output_path.stat().st_size / 1_048_576
         return {
             "status": "ok",
-            "npz_file": str(self._npz_file),
+            "npz_file": str(output_path),
             "size_mb": round(size_mb, 2),
+            "built_locally": True,
         }
 
-    def is_available(self) -> bool:
-        return self._npz_file.exists()
+    def is_available(self, category: str | None = None) -> bool:
+        if category:
+            return self._npz_files[category].exists()
+        return any(f.exists() for f in self._npz_files.values())
 
     def status(self) -> dict[str, object]:
-        if not self._npz_file.exists():
-            return {"status": "empty", "message": "No embeddings downloaded yet."}
-        mtime = datetime.fromtimestamp(self._npz_file.stat().st_mtime, tz=timezone.utc)
-        size_mb = self._npz_file.stat().st_size / 1_048_576
-        loaded = self._chunks is not None
-        return {
-            "status": "ok",
-            "npz_file": str(self._npz_file),
-            "size_mb": round(size_mb, 2),
-            "downloaded_at": mtime.isoformat().replace("+00:00", "Z"),
-            "chunks_in_memory": len(self._chunks) if loaded else None,
-        }
+        categories: dict[str, object] = {}
+        for cat, npz_file in self._npz_files.items():
+            freshness = _freshness_details(npz_file)
+            if not npz_file.exists():
+                categories[cat] = {
+                    "status": "empty",
+                    "message": "No embeddings downloaded yet.",
+                    **freshness,
+                }
+                continue
+            mtime = datetime.fromtimestamp(npz_file.stat().st_mtime, tz=timezone.utc)
+            size_mb = npz_file.stat().st_size / 1_048_576
+            loaded = cat in self._chunks
+            categories[cat] = {
+                "status": "ok",
+                "npz_file": str(npz_file),
+                "size_mb": round(size_mb, 2),
+                "downloaded_at": mtime.isoformat().replace("+00:00", "Z"),
+                "chunks_in_memory": len(self._chunks[cat]) if loaded else None,
+                **freshness,
+            }
+
+        if not any(npz_file.exists() for npz_file in self._npz_files.values()):
+            return {"status": "empty", "message": "No embeddings downloaded yet.", "categories": categories}
+        return {"status": "ok", "categories": categories}
 
     # ------------------------------------------------------------------
-    # Query: embed question → cosine similarity
+    # Query: embed question → cosine similarity, merged across categories
     # ------------------------------------------------------------------
 
-    def query(self, question: str, top_k: int = 5) -> dict[str, object]:
+    def query(self, question: str, top_k: int = 5, category: str | None = None) -> dict[str, object]:
         try:
             import numpy as np
         except ImportError:
             return {"status": "error", "message": "numpy is required: pip install numpy"}
 
-        try:
-            from openai import OpenAI
-        except ImportError:
-            return {"status": "error", "message": "openai is required: pip install openai"}
+        from precice_ai.core.embedding import embed_query
 
-        if not self._npz_file.exists():
+        categories = [category] if category else CATEGORIES
+        available = [cat for cat in categories if self._npz_files[cat].exists()]
+        if not available:
             return {
                 "status": "error",
                 "message": "Vector KB not available. Run kb_ingest_precice_data first.",
             }
 
-        # Lazy-load embeddings
-        if self._embeddings is None or self._chunks is None:
-            try:
-                data = np.load(self._npz_file, allow_pickle=True)
-                self._embeddings = data["embeddings"].astype(np.float32)
-                self._chunks = json.loads(data["chunks"].item())
-            except Exception as exc:
-                return {"status": "error", "message": f"Failed to load embeddings: {exc}"}
+        # Lazy-load embeddings for any category not yet cached in memory
+        for cat in available:
+            if cat not in self._embeddings or cat not in self._chunks:
+                try:
+                    data = np.load(self._npz_files[cat], allow_pickle=True)
+                    self._embeddings[cat] = data["embeddings"].astype(np.float32)
+                    self._chunks[cat] = json.loads(data["chunks"].item())
+                except Exception as exc:
+                    return {"status": "error", "message": f"Failed to load embeddings for {cat}: {exc}"}
 
-        # Embed the query
-        api_key = (
-            os.environ.get("OPENROUTER_API_KEY")
-            or os.environ.get("BLABLADOR_API_KEY")
-        )
-        if not api_key:
-            return {
-                "status": "error",
-                "message": "Set OPENROUTER_API_KEY (or BLABLADOR_API_KEY) env var for query embedding.",
-            }
-
-        base_url = os.environ.get("EMBEDDING_BASE_URL", _DEFAULT_BASE_URL)
-        model = os.environ.get("EMBEDDING_MODEL", _DEFAULT_MODEL)
-
+        # Embed the query through the OpenAI-compatible embeddings API
+        # (OPENROUTER_API_KEY / BLABLADOR_API_KEY, optional EMBEDDING_BASE_URL
+        # / EMBEDDING_MODEL). Must use the same model the .npz was built with.
         try:
-            client = OpenAI(api_key=api_key, base_url=base_url)
-            resp = client.embeddings.create(input=question, model=model)
-            q_vec = np.array(resp.data[0].embedding, dtype=np.float32)
+            q_vec = np.array(embed_query(question), dtype=np.float32)
         except Exception as exc:
-            return {"status": "error", "message": f"Embedding API error: {exc}"}
+            return {"status": "error", "message": f"Embedding error: {exc}"}
 
-        # Cosine similarity
-        emb = self._embeddings  # np.ndarray (N, D)
-        norms = np.linalg.norm(emb, axis=1)
         q_norm = float(np.linalg.norm(q_vec))
         if q_norm == 0:
             return {"status": "error", "message": "Query embedding is a zero vector."}
 
+        # Merge embeddings/chunks across all requested categories, then rank globally
+        emb = np.concatenate([self._embeddings[cat] for cat in available], axis=0)
+        chunks: list[dict[str, str | int]] = []
+        for cat in available:
+            chunks.extend(self._chunks[cat])
+
+        if emb.shape[1] != q_vec.shape[0]:
+            return {
+                "status": "error",
+                "message": (
+                    f"Embedding dimension mismatch: stored vectors are {emb.shape[1]}-dim "
+                    f"but the query embedding is {q_vec.shape[0]}-dim. The .npz assets "
+                    "were built with a different EMBEDDING_MODEL than the one currently "
+                    "configured — set EMBEDDING_MODEL to match the published KB (default "
+                    "openai/text-embedding-3-small) or re-run kb_ingest_precice_data."
+                ),
+            }
+
+        norms = np.linalg.norm(emb, axis=1)
         scores = (emb @ q_vec) / (norms * q_norm + 1e-9)
         top_idx = list(map(int, np.argsort(scores)[::-1][:top_k]))
 
-        chunks = self._chunks
         results = []
         for i in top_idx:
             chunk = chunks[i]
@@ -549,8 +994,34 @@ class VectorKnowledgeBase:
                     "title": chunk.get("title", ""),
                     "url": chunk.get("url", ""),
                     "source": chunk.get("source", "precice-docs"),
+                    "category": chunk.get("category", ""),
                     "snippet": str(chunk.get("text", ""))[:400],
                 }
             )
 
         return {"status": "ok", "results": results}
+
+
+def sync_kb_from_release(
+    *,
+    category: str | None = None,
+    github_token: str | None = None,
+    skip_lexical: bool = False,
+    skip_vector: bool = False,
+) -> dict[str, object]:
+    """Sync the local KB (vector + lexical) from the kb-latest GitHub Release.
+
+    Single source of truth for KB ingestion — used by the `kb ingest` CLI
+    command, the automatic first-run download in `setup`/`bootstrap`, and
+    the MCP server's own startup bootstrap (see `precice_ai/server.py`).
+    Cheap to call repeatedly: `sync_release_asset` trusts a cached asset
+    as-is for RELEASE_ASSET_MAX_AGE_HOURS, so a fresh local KB means no
+    network call at all.
+    """
+    token = github_token or os.environ.get("GITHUB_TOKEN")
+    result: dict[str, object] = {}
+    if not skip_vector:
+        result["vector"] = VectorKnowledgeBase().download_from_release(github_token=token, category=category)
+    if not skip_lexical:
+        result["lexical"] = KnowledgeBaseService().sync_from_release(github_token=token)
+    return result

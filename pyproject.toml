@@ -4,18 +4,50 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "precice-ai"
-version = "0.1.0"
+version = "0.1.1"
 description = "MCP server for preCICE simulation project management"
 readme = "README.md"
 requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Vaibhav Dange", email = "dangevaibhav21@gmail.com" }]
+maintainers = [{ name = "Vaibhav Dange", email = "dangevaibhav21@gmail.com" }]
+keywords = [
+    "precice",
+    "mcp",
+    "model-context-protocol",
+    "simulation",
+    "claude",
+    "llm-tools",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
 dependencies = [
     "fastmcp>=3.0",
+    "mcp>=1.2,<2",
     "httpx>=0.24",
     "lxml>=4.9",
     "typer>=0.9",
     "openai>=1.0",
     "numpy>=1.24",
+    "python-dotenv>=1.0",
+    "PyYAML>=6.0",
+    "jsonschema>=4.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/vaibhavd2103/precice-ai"
+Repository = "https://github.com/vaibhavd2103/precice-ai"
+Issues = "https://github.com/vaibhavd2103/precice-ai/issues"
 
 [project.scripts]
 precice-ai = "precice_ai.cli.main:app"
@@ -23,3 +55,6 @@ precice-ai-server = "precice_ai.server:main"
 
 [tool.setuptools.packages.find]
 include = ["precice_ai*"]
+
+[tool.setuptools.package-data]
+precice_ai = ["utils/*.json"]

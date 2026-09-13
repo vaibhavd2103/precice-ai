@@ -2,26 +2,73 @@ name: Build & Publish Knowledge Base Embeddings
 
 on:
   schedule:
-    - cron: '0 2 * * 0'   # every Sunday at 02:00 UTC
-  workflow_dispatch:        # manual trigger from GitHub UI
+    - cron: "0 2 * * *" # every day at 02:00 UTC; gate job restricts to once every 4 days
+  workflow_dispatch: # manual trigger from GitHub UI (always runs, bypasses the gate)
 
 permissions:
-  contents: write           # needed to create/delete releases
+  contents: write # needed to create/upload the kb-latest release
+
+env:
+  GIT_CATEGORIES: "about community documentation tutorials"
+  # Pinned explicitly (rather than left to script argparse defaults) so the
+  # lexical KB and the vector KB always fetch the same amount of content and
+  # can't silently drift apart again.
+  #
+  # "No limitations": forum fetches every visible topic (0 = unlimited), and
+  # issues/pulls fetch every item (100000 is an effective "all" — the fetch
+  # loop stops when GitHub returns no more pages). 100 is GitHub's max
+  # comments-per-page.  See the rate-limit note in the build step below.
+  FORUM_TOPICS_LIMIT: "0" # 0 = unlimited (all topics)
+  GITHUB_ITEMS_LIMIT: "100000" # effectively all issues / all pulls
+  GITHUB_COMMENTS_LIMIT: "100" # GitHub's per-page max
+  # Embed via OpenRouter (paid). The build model, the query model
+  # (precice_ai/core/embedding.py DEFAULT_MODEL), and the published manifest
+  # must all agree on EMBEDDING_MODEL — a mismatch means silent garbage
+  # retrieval.
+  EMBEDDING_MODEL: "openai/text-embedding-3-small"
+  EMBEDDING_BASE_URL: "https://openrouter.ai/api/v1"
 
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      run_today: ${{ steps.check.outputs.run_today }}
+    steps:
+      - name: Check every-4-days schedule
+        id: check
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run_today=true" >> "$GITHUB_OUTPUT"
+            echo "Manual trigger — running regardless of day-of-year."
+            exit 0
+          fi
+          day_of_year=$(date -u +%j)
+          if (( 10#$day_of_year % 4 == 0 )); then
+            echo "run_today=true" >> "$GITHUB_OUTPUT"
+            echo "Day of year $day_of_year is a multiple of 4 — running today."
+          else
+            echo "run_today=false" >> "$GITHUB_OUTPUT"
+            echo "Day of year $day_of_year is not a multiple of 4 — skipping (runs every 4 days)."
+          fi
+
   build-kb:
+    needs: gate
+    if: needs.gate.outputs.run_today == 'true'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout precice-ai (this repo)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # Sparse-checkout only the indexed content folders (see kb_sources.json)
-      - name: Checkout precice docs (content/ only)
+      - name: Checkout precice.github.io (content/ only)
         uses: actions/checkout@v4
         with:
           repository: precice/precice.github.io
           path: precice-docs
+          fetch-depth: 0
           sparse-checkout: |
             content/docs
             content/tutorials
@@ -29,50 +76,328 @@ jobs:
             content/about
           sparse-checkout-cone-mode: false
 
+      - name: Checkout precice/precice (docs/ only)
+        uses: actions/checkout@v4
+        with:
+          repository: precice/precice
+          ref: develop
+          path: precice-core
+          fetch-depth: 0
+          sparse-checkout: |
+            docs
+          sparse-checkout-cone-mode: false
+
+      - name: Checkout precice/tutorials
+        uses: actions/checkout@v4
+        with:
+          repository: precice/tutorials
+          ref: develop
+          path: precice-tutorials-repo
+          fetch-depth: 0
+
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
-      - name: Install embedding dependencies
-        run: pip install --quiet openai numpy
+      - name: Install dependencies
+        run: |
+          # Embedding goes through the OpenRouter API — no torch on the runner.
+          pip install --quiet openai numpy httpx
+          pip install --quiet -e .
 
-      - name: Build embeddings archive
+      - name: Ensure kb-latest release exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view kb-latest >/dev/null 2>&1 || \
+          gh release create kb-latest --title "Knowledge Base Embeddings" \
+            --notes "Per-category preCICE vector KB embeddings + a lexical KB snapshot. Rebuilt by kb-ingest.yml." \
+            --latest
+
+      - name: Download current kb_state.json from the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # kb_state.json lives on the kb-latest release, not in git — master's
+          # branch protection has no bypass for this bot, so a git commit here
+          # would fail every time (it used to, permanently). If the release
+          # doesn't have one yet (first run under this scheme), kb_state.py
+          # treats a missing state file as "everything is stale", which just
+          # means a one-time full rebuild — no different from every run today.
+          gh release download kb-latest -p kb_state.json -D . --clobber 2>/dev/null \
+            && echo "Loaded kb_state.json from the kb-latest release." \
+            || echo "No kb_state.json on the release yet — starting from empty state (full rebuild this run)."
+
+      - name: Compute category signatures and diff against kb_state.json
+        id: diff
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHECKOUT_DIRS: >-
+            precice/precice.github.io=precice-docs
+            precice/precice=precice-core
+            precice/tutorials=precice-tutorials-repo
+        run: |
+          set -euo pipefail
+          changed=""
+          : > kb_signatures.txt
+
+          check_and_track() {
+            category="$1"
+            sig="$2"
+            echo "$category=$sig" >> kb_signatures.txt
+            if python scripts/kb_state.py check --state-file kb_state.json --category "$category" --signature "$sig"; then
+              echo "  $category: stale -> rebuilding"
+              changed="$changed $category"
+            else
+              echo "  $category: unchanged -> skipping"
+            fi
+          }
+
+          for category in $GIT_CATEGORIES; do
+            args=""
+            for pair in $CHECKOUT_DIRS; do args="$args --checkout-dir $pair"; done
+            sig=$(python scripts/kb_state.py category-signature --config kb_sources.json --category "$category" $args)
+            check_and_track "$category" "$sig"
+          done
+
+          forum_sig=$(python scripts/kb_state.py forum-sig --url https://precice.discourse.group)
+          check_and_track "forum" "$forum_sig"
+
+          for kind in issues pulls; do
+            sig=$(python scripts/kb_state.py github-sig --repo precice/precice --kind "$kind" --github-token "$GH_TOKEN")
+            check_and_track "$kind" "$sig"
+          done
+
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+
+      - name: Build changed Markdown categories
+        if: steps.diff.outputs.changed != ''
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          CHANGED: ${{ steps.diff.outputs.changed }}
+          CHECKOUT_DIRS: >-
+            precice/precice.github.io=precice-docs
+            precice/precice=precice-core
+            precice/tutorials=precice-tutorials-repo
+        run: |
+          set -euo pipefail
+          for category in $CHANGED; do
+            case "$category" in
+              forum|issues|pulls) continue ;;
+            esac
+            args=""
+            for pair in $CHECKOUT_DIRS; do args="$args --checkout-dir $pair"; done
+            sources_json=$(python scripts/render_sources_json.py --config kb_sources.json --category "$category" $args)
+            echo "Building category: $category"
+            python scripts/build_embeddings.py \
+              --category "$category" \
+              --sources-json "$sources_json" \
+              --api-key "$OPENROUTER_API_KEY" \
+              --base-url "$EMBEDDING_BASE_URL" \
+              --model "$EMBEDDING_MODEL" \
+              --output "kb-embeddings-$category.npz" \
+              --lexical-output "kb-lexical-$category.json"
+          done
+
+      - name: Build forum category
+        if: contains(steps.diff.outputs.changed, 'forum')
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
-          python scripts/build_embeddings.py \
-            --docs-dir precice-docs/content \
-            --config kb_sources.json \
+          python scripts/build_forum_embeddings.py \
+            --forum-url "https://precice.discourse.group" \
+            --topics-limit "$FORUM_TOPICS_LIMIT" \
             --api-key "$OPENROUTER_API_KEY" \
-            --base-url "https://openrouter.ai/api/v1" \
-            --model "openai/text-embedding-3-small" \
-            --output kb-embeddings.npz
+            --base-url "$EMBEDDING_BASE_URL" \
+            --model "$EMBEDDING_MODEL" \
+            --output "kb-embeddings-forum.npz" \
+            --lexical-output "kb-lexical-forum.json"
 
-      - name: Verify archive
+      - name: Build GitHub issues/pulls categories
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHANGED: ${{ steps.diff.outputs.changed }}
         run: |
-          python - <<'EOF'
+          set -euo pipefail
+          for kind in issues pulls; do
+            case " $CHANGED " in
+              *" $kind "*)
+                echo "Building category: $kind"
+                python scripts/build_github_activity_embeddings.py \
+                  --repo precice/precice \
+                  --kind "$kind" \
+                  --items-limit "$GITHUB_ITEMS_LIMIT" \
+                  --comments-limit "$GITHUB_COMMENTS_LIMIT" \
+                  --api-key "$OPENROUTER_API_KEY" \
+                  --github-token "$GH_TOKEN" \
+                  --base-url "$EMBEDDING_BASE_URL" \
+                  --model "$EMBEDDING_MODEL" \
+                  --output "kb-embeddings-$kind.npz" \
+                  --lexical-output "kb-lexical-$kind.json"
+                ;;
+            esac
+          done
+
+      - name: Verify built vector archives
+        if: steps.diff.outputs.changed != ''
+        env:
+          CHANGED: ${{ steps.diff.outputs.changed }}
+        run: |
+          set -euo pipefail
+          for category in $CHANGED; do
+            python - "$category" <<'EOF'
           import numpy as np, json, sys
-          data = np.load("kb-embeddings.npz", allow_pickle=True)
+          category = sys.argv[1]
+          data = np.load(f"kb-embeddings-{category}.npz", allow_pickle=True)
           chunks = json.loads(data["chunks"].item())
           emb = data["embeddings"]
-          print(f"chunks={len(chunks)}  embeddings={emb.shape}  dtype={emb.dtype}")
+          print(f"{category}: chunks={len(chunks)} embeddings={emb.shape} dtype={emb.dtype}")
           if emb.shape[0] != len(chunks):
-              sys.exit("chunk/embedding count mismatch")
-          EOF
+              sys.exit(f"{category}: chunk/embedding count mismatch")
 
-      # Delete the previous release (tag + release) so the asset name stays stable.
-      - name: Delete previous release (if exists)
+          lexical = json.load(open(f"kb-lexical-{category}.json"))
+          lexical_chunks = lexical["chunks"]
+          print(f"{category}: lexical_chunks={len(lexical_chunks)}")
+          if len(lexical_chunks) != len(chunks):
+              sys.exit(f"{category}: lexical/vector chunk count mismatch")
+          EOF
+          done
+
+      - name: Download existing assets for unchanged categories
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release delete kb-latest --yes --cleanup-tag 2>/dev/null || true
+          CHANGED: ${{ steps.diff.outputs.changed }}
+        run: |
+          set -euo pipefail
+          # Merge/manifest below need all 7 categories' files locally. Categories
+          # that didn't change weren't rebuilt this run, so pull their current
+          # vector fragment back from the release (always present — uploaded
+          # per-category since this workflow's first version).
+          : > categories_needing_lexical_recovery.txt
+          for category in about community documentation tutorials forum issues pulls; do
+            case " $CHANGED " in
+              *" $category "*) continue ;;
+            esac
+            echo "Fetching existing assets for unchanged category: $category"
+            gh release download kb-latest -p "kb-embeddings-$category.npz" -D . --clobber
+            # Per-category lexical fragments are a new asset as of this change —
+            # older releases only ever published the merged kb-lexical.json, so
+            # the first run to see a given category as "unchanged" won't find
+            # one yet. Recover it below by slicing the merged file instead.
+            if ! gh release download kb-latest -p "kb-lexical-$category.json" -D . --clobber 2>/dev/null; then
+              echo "  no per-category lexical fragment yet for $category — recovering from kb-lexical.json"
+              echo "$category" >> categories_needing_lexical_recovery.txt
+            fi
+          done
 
-      - name: Create new release with embeddings asset
+          if [ -s categories_needing_lexical_recovery.txt ]; then
+            gh release download kb-latest -p kb-lexical.json -D . --clobber
+            python - <<'EOF'
+          import json
+
+          with open("kb-lexical.json") as f:
+              merged = json.load(f)
+          with open("categories_needing_lexical_recovery.txt") as f:
+              needed = [line.strip() for line in f if line.strip()]
+
+          for category in needed:
+              chunks = [c for c in merged["chunks"] if c.get("category") == category]
+              with open(f"kb-lexical-{category}.json", "w") as out:
+                  json.dump({"category": category, "count": len(chunks), "chunks": chunks}, out, ensure_ascii=False)
+              print(f"Recovered {len(chunks)} chunks for {category} from kb-lexical.json")
+          EOF
+          fi
+
+      - name: Merge lexical fragments
+        run: |
+          python - <<'EOF'
+          import json
+          from datetime import datetime, timezone
+
+          categories = "about community documentation tutorials forum issues pulls".split()
+          chunks = []
+          for category in categories:
+              with open(f"kb-lexical-{category}.json") as f:
+                  chunks.extend(json.load(f)["chunks"])
+
+          payload = {
+              "updated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+              "categories": categories,
+              "count": len(chunks),
+              "chunks": chunks,
+          }
+          with open("kb-lexical.json", "w") as f:
+              json.dump(payload, f, ensure_ascii=False)
+          print(f"Merged {len(chunks)} chunks across {len(categories)} categories into kb-lexical.json")
+          EOF
+
+      - name: Write embedding manifest
+        run: |
+          python - <<'EOF'
+          import json
+          import numpy as np
+          from datetime import datetime, timezone
+
+          categories = "about community documentation tutorials forum issues pulls".split()
+          data = np.load("kb-embeddings-documentation.npz", allow_pickle=True)
+          dim = int(data["embeddings"].shape[1])
+
+          manifest = {
+              "model": "${{ env.EMBEDDING_MODEL }}",
+              "dim": dim,
+              "normalized": True,
+              "categories": categories,
+              "built_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+          }
+          with open("kb-manifest.json", "w") as f:
+              json.dump(manifest, f, indent=2)
+          print(f"Wrote kb-manifest.json: {manifest}")
+          EOF
+
+      - name: Upload changed category assets
+        if: steps.diff.outputs.changed != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHANGED: ${{ steps.diff.outputs.changed }}
+        run: |
+          set -euo pipefail
+          for category in $CHANGED; do
+            gh release upload kb-latest "kb-embeddings-$category.npz" "kb-lexical-$category.json" --clobber
+          done
+
+      - name: Upload lexical KB asset
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          gh release upload kb-latest kb-lexical.json --clobber
+
+      - name: Upload embedding manifest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload kb-latest kb-manifest.json --clobber
+
+      - name: Update release notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHANGED: ${{ steps.diff.outputs.changed }}
+        run: |
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          gh release create kb-latest kb-embeddings.npz \
-            --title "Knowledge Base Embeddings" \
-            --notes "Auto-generated on ${TIMESTAMP} from precice/precice.github.io" \
-            --latest
+          gh release edit kb-latest --notes "Updated vector categories [$CHANGED] and lexical KB on ${TIMESTAMP} (model: ${EMBEDDING_MODEL}) from precice/precice.github.io, precice/precice, precice/tutorials, precice.discourse.group, precice/precice issues & pulls"
+
+      - name: Update kb_state.json and upload to release
+        if: steps.diff.outputs.changed != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHANGED: ${{ steps.diff.outputs.changed }}
+        run: |
+          set -euo pipefail
+          for category in $CHANGED; do
+            sig=$(grep "^$category=" kb_signatures.txt | head -1 | cut -d= -f2-)
+            python scripts/kb_state.py update --state-file kb_state.json --category "$category" --signature "$sig"
+          done
+          # Persisted on the kb-latest release, not git — see the earlier
+          # "Download current kb_state.json" step for why.
+          gh release upload kb-latest kb_state.json --clobber

@@ -11,7 +11,7 @@ def register_project_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     def list_precice_projects() -> list[str]:
-        """List available local preCICE tutorial projects."""
+        """List available local preCICE tutorial projects in the provided project directory from the environment variable or default location."""
         projects_dir = get_projects_dir()
         if not projects_dir.exists():
             return []
@@ -24,7 +24,7 @@ def register_project_tools(mcp: FastMCP) -> None:
         """Inspect the folder structure of a preCICE project.
 
         Args:
-            project_name: Name of the project inside test-projects.
+            project_name: Name of the project inside the provided project directory from the environment variable or default location.
             max_depth: Maximum folder depth to display.
         """
         project_path = get_project_path(project_name)

@@ -29,3 +29,6 @@ precice-ai-server = "precice_ai.server:main"
 
 [tool.setuptools.packages.find]
 include = ["precice_ai*"]
+
+[tool.setuptools.package-data]
+precice_ai = ["utils/*.json"]

@@ -2,12 +2,9 @@
 
 A Model Context Protocol (MCP) server for exploring and operating local preCICE simulation projects from AI coding tools such as Codex, Claude Code, Cursor, Windsurf, and Claude Desktop.
 
-<<<<<<< HEAD
 Exposes 26 tools covering project discovery, config inspection, `precice-cli` wrapping (version, config check/format/doc/init, profiling), command execution, log analysis, and a semantic knowledge base built from the preCICE documentation using vector embeddings.
-=======
-This README is the end-user guide: install it, register it with your MCP client, and start using the tools. If you want the architecture, file-by-file walkthrough, local development notes, or contribution workflow, read [CONTRIBUTOR_GUIDE.md](CONTRIBUTOR_GUIDE.md).
 
-> > > > > > > master
+This README is the end-user guide: install it, register it with your MCP client, and start using the tools. If you want the architecture, file-by-file walkthrough, local development notes, or contribution workflow, read [CONTRIBUTOR_GUIDE.md](CONTRIBUTOR_GUIDE.md).
 
 ## What It Does
 

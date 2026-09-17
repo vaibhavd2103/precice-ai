@@ -146,6 +146,18 @@ def setup(
     skip_kb_ingest: bool = typer.Option(
         False, "--skip-kb-ingest", help="Don't download the knowledge base during setup (e.g. for CI/offline)."
     ),
+    write_global_instructions: bool = typer.Option(
+        False,
+        "--write-global-instructions",
+        help=(
+            "Also append a steering snippet ('always use precice-ai for preCICE "
+            "questions') to this platform's global instructions file (e.g. "
+            "~/.claude/CLAUDE.md, ~/.codex/AGENTS.md), so any project on this "
+            "machine gets it automatically — not just the one you're in now. "
+            "Idempotent; skipped with a manual snippet if the platform has no "
+            "known global instructions file."
+        ),
+    ),
 ) -> None:
     """Register the precice-ai MCP server with a supported AI coding platform."""
     key = _resolve_platform(platform)
@@ -167,6 +179,9 @@ def setup(
 
     instance = platform_cls()
     instance.install(projects_dir=resolved_projects_dir, scope=scope, extra_env=extra_env)
+
+    if write_global_instructions:
+        typer.echo(instance.write_global_instructions())
 
     if not skip_kb_ingest:
         typer.echo("Downloading preCICE knowledge base (first run only)...")
@@ -244,6 +259,18 @@ def bootstrap(
     skip_kb_ingest: bool = typer.Option(
         False, "--skip-kb-ingest", help="Don't download the knowledge base during setup (e.g. for CI/offline)."
     ),
+    write_global_instructions: bool = typer.Option(
+        False,
+        "--write-global-instructions",
+        help=(
+            "Also append a steering snippet ('always use precice-ai for preCICE "
+            "questions') to this platform's global instructions file (e.g. "
+            "~/.claude/CLAUDE.md, ~/.codex/AGENTS.md), so any project on this "
+            "machine gets it automatically — not just the one you're in now. "
+            "Idempotent; skipped with a manual snippet if the platform has no "
+            "known global instructions file."
+        ),
+    ),
 ) -> None:
     """Create .env values and register the MCP server with a supported client."""
     resolved_projects_dir = projects_dir or (Path.cwd() / "test-projects")
@@ -284,6 +311,9 @@ def bootstrap(
 
     instance = platform_cls()
     instance.install(projects_dir=resolved_projects_dir, scope=scope, extra_env=extra_env)
+
+    if write_global_instructions:
+        typer.echo(instance.write_global_instructions())
 
     if not skip_kb_ingest:
         typer.echo("Downloading preCICE knowledge base (first run only)...")

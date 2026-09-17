@@ -8,6 +8,11 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
 
+from precice_ai.core.instructions import GLOBAL_MARKDOWN_SNIPPET
+
+GLOBAL_INSTRUCTIONS_MARKER_START = "<!-- precice-ai:global-instructions:start -->"
+GLOBAL_INSTRUCTIONS_MARKER_END = "<!-- precice-ai:global-instructions:end -->"
+
 
 def _relative_to(path: Path, root: Path) -> str | None:
     """Return ``path`` as a POSIX string relative to ``root``, or None if it
@@ -49,6 +54,47 @@ class Platform(ABC):
 
     def _spawn(self, args: list[str], cwd: Path) -> None:
         subprocess.Popen(args, cwd=str(cwd))
+
+    def global_instructions_path(self) -> Path | None:
+        """Return this platform's global steering-instructions file, if any.
+
+        None means the platform has no known global instructions file this
+        installer can safely write to (e.g. Claude Desktop's custom
+        instructions live in-app, not a file; Cursor/Windsurf's global rules
+        storage varies too much by version to target reliably).
+        """
+        return None
+
+    def write_global_instructions(self) -> str:
+        """Append the shared preCICE steering snippet to this platform's
+        global instructions file, idempotently (a no-op if already present).
+
+        Returns a human-readable status line for the CLI to print.
+        """
+        path = self.global_instructions_path()  # pylint: disable=assignment-from-none
+        if path is None:
+            return (
+                f"  [{self.display_name}] has no known global instructions file for this installer "
+                "to write.\n"
+                f"  Add this snippet yourself, wherever {self.display_name} reads global/user "
+                "instructions:\n\n"
+                f"{GLOBAL_MARKDOWN_SNIPPET}\n"
+            )
+
+        path.parent.mkdir(parents=True, exist_ok=True)
+        existing = path.read_text(encoding="utf-8") if path.exists() else ""
+        if GLOBAL_INSTRUCTIONS_MARKER_START in existing:
+            return f"  Already present: {path}"
+
+        separator = "\n" if existing and not existing.endswith("\n") else ""
+        block = (
+            f"{separator}\n{GLOBAL_INSTRUCTIONS_MARKER_START}\n"
+            f"{GLOBAL_MARKDOWN_SNIPPET}\n"
+            f"{GLOBAL_INSTRUCTIONS_MARKER_END}\n"
+        )
+        with path.open("a", encoding="utf-8") as f:
+            f.write(block)
+        return f"  Updated: {path}"
 
     def mcp_entry(
         self,

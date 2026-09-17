@@ -15,7 +15,31 @@ This README is the end-user guide: install it, register it with your MCP client,
 
 ## Installation
 
-### macOS / Linux
+### From PyPI (recommended)
+
+```bash
+pipx install precice-ai
+```
+
+[pipx](https://pipx.pypa.io) installs `precice-ai` into its own isolated
+environment and - critically on Windows - takes care of putting its `Scripts`
+folder on `PATH` for you (`pipx ensurepath`, then open a new terminal).
+
+Plain `pip install precice-ai` also works, but on Windows especially, a
+global (non-venv) `pip install` often places `precice-ai.exe` in a `Scripts`
+folder that isn't on `PATH` yet, so the freshly installed `precice-ai`
+command isn't recognized even though the install itself succeeded. If that
+happens:
+
+- Look for a pip warning line during install like `The script precice-ai.exe
+is installed in '...\Scripts' which is not on PATH` and add that folder to
+  `PATH` (or re-run with `pipx` instead, which does this automatically).
+- Or, as an immediate workaround that doesn't need `PATH` changes at all, run
+  `python -m precice_ai.cli.main` in place of `precice-ai`.
+
+### From source (for development)
+
+macOS / Linux:
 
 ```bash
 git clone https://github.com/vaibhavd2103/precice-ai
@@ -25,7 +49,7 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-### Windows PowerShell
+Windows PowerShell:
 
 ```powershell
 git clone https://github.com/vaibhavd2103/precice-ai
@@ -70,6 +94,23 @@ This command:
 - creates or updates `.env`
 - injects runtime variables into the MCP client config
 - registers `python -m precice_ai.server` as the MCP server command
+
+Registering the server only makes its tools *available* — it doesn't tell
+the client to actually use them for preCICE questions in every project on
+this machine (that's normally what a project's own `CLAUDE.md`/`AGENTS.md`
+does, but those are scoped to one project directory). To get the same
+"always use precice-ai for preCICE questions" behavior globally, add
+`--write-global-instructions`:
+
+```bash
+precice-ai bootstrap claude-code --write-global-instructions
+```
+
+This appends a steering snippet to the platform's global instructions file
+(`~/.claude/CLAUDE.md` for Claude Code, `~/.codex/AGENTS.md` for Codex) —
+idempotent, safe to run repeatedly. For platforms without a known global
+instructions file (Claude Desktop, Cursor, Windsurf, `generic`), the same
+snippet is printed instead so you can add it yourself.
 
 List which supported clients are detected locally:
 

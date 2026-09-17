@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 
+from precice_ai.core.instructions import SERVER_INSTRUCTIONS
 from precice_ai.core.paths import get_env_file_path
 from precice_ai.tools import register_all_tools
 
@@ -16,7 +17,7 @@ logger = logging.getLogger(__name__)
 # override already-set env vars (e.g. from the client config).
 load_dotenv(get_env_file_path())
 
-mcp = FastMCP("preCICE AI", instructions="preCICE AI assistant is used for reading and writing code, and for answering questions about code. It can also answer general questions, but it is optimized for code-related tasks and preCICE related questions.")
+mcp = FastMCP("preCICE AI", instructions=SERVER_INSTRUCTIONS)
 register_all_tools(mcp)
 
 

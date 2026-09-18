@@ -2,6 +2,8 @@
 
 A Model Context Protocol (MCP) server for exploring and operating local preCICE simulation projects from AI coding tools such as Codex, Claude Code, Cursor, Windsurf, and Claude Desktop.
 
+Exposes 26 tools covering project discovery, config inspection, `precice-cli` wrapping (version, config check/format/doc/init, profiling), command execution, log analysis, and a semantic knowledge base built from the preCICE documentation using vector embeddings.
+
 This README is the end-user guide: install it, register it with your MCP client, and start using the tools. If you want the architecture, file-by-file walkthrough, local development notes, or contribution workflow, read [CONTRIBUTOR_GUIDE.md](CONTRIBUTOR_GUIDE.md).
 
 ## What It Does
@@ -13,7 +15,31 @@ This README is the end-user guide: install it, register it with your MCP client,
 
 ## Installation
 
-### macOS / Linux
+### From PyPI (recommended)
+
+```bash
+pipx install precice-ai
+```
+
+[pipx](https://pipx.pypa.io) installs `precice-ai` into its own isolated
+environment and - critically on Windows - takes care of putting its `Scripts`
+folder on `PATH` for you (`pipx ensurepath`, then open a new terminal).
+
+Plain `pip install precice-ai` also works, but on Windows especially, a
+global (non-venv) `pip install` often places `precice-ai.exe` in a `Scripts`
+folder that isn't on `PATH` yet, so the freshly installed `precice-ai`
+command isn't recognized even though the install itself succeeded. If that
+happens:
+
+- Look for a pip warning line during install like `The script precice-ai.exe
+is installed in '...\Scripts' which is not on PATH` and add that folder to
+  `PATH` (or re-run with `pipx` instead, which does this automatically).
+- Or, as an immediate workaround that doesn't need `PATH` changes at all, run
+  `python -m precice_ai.cli.main` in place of `precice-ai`.
+
+### From source (for development)
+
+macOS / Linux:
 
 ```bash
 git clone https://github.com/vaibhavd2103/precice-ai
@@ -23,7 +49,7 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-### Windows PowerShell
+Windows PowerShell:
 
 ```powershell
 git clone https://github.com/vaibhavd2103/precice-ai
@@ -68,6 +94,23 @@ This command:
 - creates or updates `.env`
 - injects runtime variables into the MCP client config
 - registers `python -m precice_ai.server` as the MCP server command
+
+Registering the server only makes its tools *available* — it doesn't tell
+the client to actually use them for preCICE questions in every project on
+this machine (that's normally what a project's own `CLAUDE.md`/`AGENTS.md`
+does, but those are scoped to one project directory). To get the same
+"always use precice-ai for preCICE questions" behavior globally, add
+`--write-global-instructions`:
+
+```bash
+precice-ai bootstrap claude-code --write-global-instructions
+```
+
+This appends a steering snippet to the platform's global instructions file
+(`~/.claude/CLAUDE.md` for Claude Code, `~/.codex/AGENTS.md` for Codex) —
+idempotent, safe to run repeatedly. For platforms without a known global
+instructions file (Claude Desktop, Cursor, Windsurf, `generic`), the same
+snippet is printed instead so you can add it yourself.
 
 List which supported clients are detected locally:
 
@@ -202,16 +245,16 @@ model must match it (keep the `EMBEDDING_MODEL` default, or rebuild the KB).
 
 Common variables:
 
-| Variable                 | Default                                       | Purpose                                                          |
-| ------------------------ | --------------------------------------------- | ---------------------------------------------------------------- |
-| `PRECICE_PROJECTS_DIR`   | `./test-projects` when running from repo root | Directory scanned by the project tools.                          |
-| `PRECICE_KB_STORE_DIR`   | `~/.precice-ai/kb_store`                      | Local storage for downloaded KB assets.                          |
+| Variable                 | Default                                       | Purpose                                                                     |
+| ------------------------ | --------------------------------------------- | --------------------------------------------------------------------------- |
+| `PRECICE_PROJECTS_DIR`   | `./test-projects` when running from repo root | Directory scanned by the project tools.                                     |
+| `PRECICE_KB_STORE_DIR`   | `~/.precice-ai/kb_store`                      | Local storage for downloaded KB assets.                                     |
 | `OPENROUTER_API_KEY`     | none                                          | Embedding API key (OpenRouter). Required unless `BLABLADOR_API_KEY` is set. |
-| `BLABLADOR_API_KEY`      | none                                          | Embedding API key (Blablador). Alternative to `OPENROUTER_API_KEY`. |
-| `EMBEDDING_BASE_URL`     | OpenRouter, or Blablador if only that key set | OpenAI-compatible embeddings base URL.                           |
-| `EMBEDDING_MODEL`        | `openai/text-embedding-3-small`               | Embedding model name. Must match the model the KB was built with. |
-| `PRECICE_AI_GITHUB_REPO` | `vaibhavd2103/precice-ai`                     | GitHub repo used for KB asset downloads.                         |
-| `GITHUB_TOKEN`           | none                                          | Optional token for private release access or higher rate limits. |
+| `BLABLADOR_API_KEY`      | none                                          | Embedding API key (Blablador). Alternative to `OPENROUTER_API_KEY`.         |
+| `EMBEDDING_BASE_URL`     | OpenRouter, or Blablador if only that key set | OpenAI-compatible embeddings base URL.                                      |
+| `EMBEDDING_MODEL`        | `openai/text-embedding-3-small`               | Embedding model name. Must match the model the KB was built with.           |
+| `PRECICE_AI_GITHUB_REPO` | `vaibhavd2103/precice-ai`                     | GitHub repo used for KB asset downloads.                                    |
+| `GITHUB_TOKEN`           | none                                          | Optional token for private release access or higher rate limits.            |
 
 To use Blablador, set `BLABLADOR_API_KEY` and a matching model/endpoint:
 

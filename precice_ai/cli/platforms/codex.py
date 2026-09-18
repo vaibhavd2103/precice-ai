@@ -60,3 +60,6 @@ class CodexPlatform(Platform):
 
     def launch(self, workspace_dir: Path, **kwargs: Any) -> None:
         self._spawn(["codex"], cwd=workspace_dir)
+
+    def global_instructions_path(self) -> Path:
+        return Path.home() / ".codex" / "AGENTS.md"

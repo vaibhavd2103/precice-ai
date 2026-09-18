@@ -77,3 +77,6 @@ class ClaudeCodePlatform(Platform):
 
     def launch(self, workspace_dir: Path, **kwargs: Any) -> None:
         self._spawn(["claude"], cwd=workspace_dir)
+
+    def global_instructions_path(self) -> Path:
+        return Path.home() / ".claude" / "CLAUDE.md"

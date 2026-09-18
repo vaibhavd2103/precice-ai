@@ -3,6 +3,9 @@ name: Pylint
 on:
   push:
     branches-ignore: [master] # already ran on the branch itself before the merge-to-master push
+  pull_request:
+    branches: [release] # required check on release's ruleset — the head commit (often
+    # master's tip, which push-triggered runs skip) needs its own run regardless of origin
 
 permissions:
   contents: read

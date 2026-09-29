@@ -153,6 +153,115 @@ The CLI and the server are separate on purpose:
 - the CLI configures a client once
 - the server then runs repeatedly in that client over stdio
 
+## MCP Server Architecture In Detail
+
+The tree above shows how the code is wired. The diagram below shows what the server does at runtime: who talks to it, what it reads and writes, and where its knowledge-base data comes from.
+
+![preCICE AI MCP server architecture](images/precice-ai%20mcp%20architecture.svg)
+
+The Mermaid source is [`images/precice-ai mcp architecture.mmd`](images/precice-ai%20mcp%20architecture.mmd). A PNG export sits next to it. If you change the architecture, update the `.mmd` file and regenerate the `.svg` and `.png` so the three stay in sync.
+
+The diagram has six zones. Read it from left to right.
+
+### 1. MCP clients
+
+These are the programs that start and talk to the server:
+
+- Claude Code
+- Claude Desktop
+- Codex
+- Cursor
+- Windsurf
+- custom agents, such as a LangGraph agent that starts the server as a subprocess
+
+The first five match the installers in `precice_ai/cli/platforms/`. Custom agents can use the config printed by `generic.py`.
+
+Every client does the same thing. It starts `python -m precice_ai.server` as a child process and exchanges **JSON-RPC messages over stdio** with it. The server opens no network port. That is why the arrow between clients and the server goes both ways and is labelled `stdio JSON-RPC`.
+
+Consequences for contributors:
+
+- Anything a tool prints to **stdout** corrupts the protocol stream. Use `logging`, which goes to stderr, for diagnostics.
+- The client picks the process environment, and it is often empty. This is why `server.py` loads `.env` explicitly with `load_dotenv(get_env_file_path())`.
+- Each client session gets its own server process. The server keeps no state between sessions except the on-disk KB cache.
+
+### 2. The FastMCP server
+
+This is the green box in the diagram. It has three layers.
+
+**Registration entry point**: `precice_ai/server.py` and `precice_ai/tools/__init__.py`
+
+1. `server.py` creates `FastMCP("preCICE AI", instructions=SERVER_INSTRUCTIONS)`. The instructions come from `core/instructions.py` and are sent to the client when it connects. They tell the model to call `kb_precice_status()` first, prefer KB tools over training data, and back up configs before editing them.
+2. `register_all_tools(mcp)` calls each `register_*_tools(mcp)` function. Each one attaches its tools with `@mcp.tool()`.
+3. `main()` runs `_bootstrap_kb()` and then `mcp.run()`. `_bootstrap_kb()` does a best-effort sync of the local KB from the `kb-latest` release. It is skipped when `PRECICE_AI_SKIP_KB_BOOTSTRAP` is set. It never stops the server from starting.
+
+**Tool groups**: `precice_ai/tools/`
+
+| Group | Module | Tools | Touches |
+| --- | --- | --- | --- |
+| Project tools | `project_tools.py` | `list_precice_projects`, `inspect_project_structure`, `find_precice_config`, `run_command_in_project` | local project directory |
+| Config tools | `config_tools.py` | `inspect_precice_config`, `summarize_precice_config`, `backup_precice_config` | `precice-config.xml` |
+| Log tools | `log_tools.py` | `list_project_logs`, `read_project_logs`, `read_latest_log`, `analyze_precice_logs` | log files |
+| Knowledge tools | `knowledge_tools.py` | `kb_precice_status`, `kb_query_precice`, `kb_query_precice_live`, `kb_query_precice_lexical`, `kb_ingest_precice_data` | `~/.precice-ai/kb_store` |
+| CLI tools | `cli_tools.py` | `precice_version`, `precice_config_check`, `precice_config_visualize`, `precice_config_format`, `precice_config_doc`, `precice_init`, `precice_profiling_*` | the `precice-cli` binary |
+
+Tools are thin. They check arguments, call into `core/`, and format the result as text for the model. Put logic that more than one tool needs into `core/`, not into the tool function.
+
+**Core helpers**: `precice_ai/core/`
+
+The diagram shows these as three boxes that every tool group depends on:
+
+- `paths`: resolves the projects root, a project directory by name, its `precice-config.xml`, and the `.env` file. No other code should build these paths itself.
+- `safety` / `command_runner`: every shell command goes through here. `is_command_safe()` checks the command against `BLOCKED_PATTERNS` and `ALLOWED_COMMAND_PREFIXES`, and `run_safe_command()` runs it in a given working directory with a timeout (60 s by default). Any tool that shells out must use this path. See [`core/safety.py`](#coresafetypy).
+- `knowledge_base`: vector and lexical search, release-asset sync, and freshness tracking. It uses `embedding.py`, `text_cleaning.py`, and `discourse_api.py`, which the diagram leaves out for simplicity.
+
+### 3. Local preCICE project directory
+
+The project, config, and log tools work on the user's simulation case, which contains:
+
+- `precice-config.xml`: read by the config tools and copied by `backup_precice_config` before any change
+- run scripts: started through `run_command_in_project`, which goes through the safety layer
+- log files: found and read by the log tools
+- solver files: participant directories, meshes, and so on, listed by `inspect_project_structure`
+
+The project, config, and log tools take a `project_name` and resolve it through `paths`. They never take a raw filesystem path. The CLI tools are the exception: they take an absolute `cwd`, but their commands still go through `run_safe_command`.
+
+### 4. Local knowledge cache: `~/.precice-ai/kb_store`
+
+The knowledge tools never query GitHub or the forum directly on the normal path. They query a local cache that holds two indexes:
+
+- **Vector embeddings**: one `kb-embeddings-<category>.npz` per category. `kb_query_precice` embeds only the question and ranks the precomputed chunk vectors by cosine similarity.
+- **Lexical index**: `kb-lexical.json`, searched with a BM25-like score by `kb_query_precice_lexical`. It needs no embedding provider, so it still works when no embedding API key is set.
+
+Each cached asset has a `.meta.json` sidecar that records when it was last checked. An asset counts as fresh for `RELEASE_ASSET_MAX_AGE_HOURS` (96 hours). `kb_precice_status()` reports this as `is_fresh`. After that window, `kb_query_precice_live` downloads the asset again before it answers.
+
+The cache location can be changed with `PRECICE_KB_STORE_DIR`. See [Why the KB store lives outside the repo](#why-the-kb-store-lives-outside-the-repo).
+
+### 5. `precice-cli` binary
+
+The CLI tools shell out to `precice-cli`, which is installed separately and is not a Python dependency of this package. `_check_precice_cli()` runs first in every CLI tool and returns a readable error if the binary is not on `PATH`. The server keeps working without `precice-cli`; only this one tool group becomes unavailable.
+
+### 6. Offline build pipeline and GitHub Release assets
+
+The grey box at the bottom right never runs inside the MCP server. It is the `kb-ingest.yml` GitHub Actions workflow plus the scripts in `scripts/`:
+
+1. collect content from four kinds of source: the official preCICE website, tutorials, the Discourse forum, and GitHub issues and pull requests (see `kb_sources.json`)
+2. chunk, clean, and embed the content in the **Index + embed** step
+3. **publish** the `.npz` files and `kb-lexical.json` as assets on the `kb-latest` GitHub Release
+
+At runtime the server only runs the last arrow in the diagram: **download & cache** from the release into `kb_store`. This split is why queries are fast and cheap. The expensive work of crawling and embedding thousands of documents happens once, in CI. See [Knowledge Base Architecture](#knowledge-base-architecture) for the details of each phase.
+
+### Following one request through the diagram
+
+Take the question "Why does my coupling diverge?" in Claude Code:
+
+1. Claude Code sends a `tools/call` for `kb_precice_status` over stdio. `knowledge_tools` asks `knowledge_base` for the freshness of each category and returns it.
+2. The `forum` category is stale, so the model calls `kb_query_precice_live(question, category="forum")`. `knowledge_base` downloads the new `.npz` from the GitHub Release into `kb_store`, embeds the question, and returns the top-k chunks.
+3. The model then calls `read_latest_log("my-case")`. `log_tools` resolves the project through `paths`, finds the newest log file in the project directory, and returns its tail.
+4. The model calls `inspect_precice_config("my-case")` to check the coupling scheme and acceleration settings in `precice-config.xml`.
+5. If a change is needed, the model first calls `backup_precice_config` and then edits the file.
+
+Every step follows arrows that are already in the diagram. When you add a feature, find the arrows it belongs to. If it needs a new arrow, such as a new external system, update the diagram in the same PR.
+
 ## Local Development Setup
 
 ### Prerequisites

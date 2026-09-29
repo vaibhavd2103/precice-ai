@@ -1,0 +1,71 @@
+flowchart TB
+    %% ---------- Browser ----------
+    subgraph Browser["Browser — static/index.html"]
+        direction TB
+        UI["Chat UI<br/>session · working-dir picker<br/>attachments · tool cards · KB status"]
+    end
+
+    %% ---------- precice-ai-lang ----------
+    subgraph App["precice-ai-lang (local Python process)"]
+        direction TB
+
+        subgraph API["FastAPI server — server.py"]
+            direction TB
+            REST["REST endpoints<br/>/api/session · /workdir · /upload"]
+            CHAT["POST /api/chat<br/>stream_agent()"]
+            SESS["In-memory sessions<br/>+ attachments<br/>(conversation.py)"]
+        end
+
+        subgraph Graph["LangGraph StateGraph — graph.py"]
+            direction TB
+            START(["START"])
+            AGENT["agent node<br/>call_llm"]
+            TOOLS["tools node<br/>ToolNode"]
+            END_(["END"])
+
+            START --> AGENT
+            AGENT -->|"tool_calls"| TOOLS
+            TOOLS -->|"tool results"| AGENT
+            AGENT -->|"final answer<br/>(no tool calls)"| END_
+        end
+
+        LLM["llm.py<br/>ChatOpenAI"]
+
+        subgraph ToolSet["Tool set — tools.py · get_all_tools()"]
+            direction TB
+            NATIVE["Native tools<br/>file read / write / list<br/>config validation · forum search<br/>attachments<br/>(sandboxed to working_dir)"]
+            MCPC["MultiServerMCPClient<br/>(MCP adapter)"]
+        end
+
+        REST --> SESS
+        CHAT --> SESS
+        CHAT -->|"astream_events"| START
+        AGENT <-->|"bind_tools · invoke"| LLM
+        TOOLS --> NATIVE
+        TOOLS --> MCPC
+    end
+
+    %% ---------- External ----------
+    PROVIDER["OpenAI-compatible<br/>LLM provider<br/>(e.g. OpenRouter)"]
+    MCP["preCICE MCP server<br/>(Chapter 4)<br/>subprocess"]
+
+    UI -->|"HTTP REST"| REST
+    UI -->|"POST chat turn"| CHAT
+    CHAT -.->|"server-sent events<br/>token · tool_start · tool_end · done"| UI
+    LLM <-->|"HTTPS"| PROVIDER
+    MCPC <-->|"stdio JSON-RPC"| MCP
+
+    %% ---------- Styling ----------
+    classDef client fill:#e8f1fd,stroke:#3b7dd8,color:#0b2e5c
+    classDef server fill:#eef7ee,stroke:#3c9a4a,color:#123d18
+    classDef graphn fill:#fff6e0,stroke:#d19a1c,color:#4d3500
+    classDef tool fill:#f3eefb,stroke:#7a52c7,color:#2b1452
+    classDef ext fill:#f4f4f4,stroke:#777,color:#222
+    classDef term fill:#ffffff,stroke:#999,color:#333
+
+    class UI client
+    class REST,CHAT,SESS server
+    class AGENT,TOOLS graphn
+    class START,END_ term
+    class NATIVE,MCPC tool
+    class LLM,PROVIDER,MCP ext

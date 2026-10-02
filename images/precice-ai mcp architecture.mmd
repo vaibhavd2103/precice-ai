@@ -1,0 +1,87 @@
+flowchart TB
+    %% ---------- MCP clients ----------
+    subgraph Clients["MCP Clients"]
+        direction TB
+        CC["Claude Code"]
+        CD["Claude Desktop"]
+        CX["Codex"]
+        CU["Cursor"]
+        WS["Windsurf"]
+        LG["LangGraph agent<br/>(subprocess)"]
+    end
+
+    %% ---------- Server ----------
+    subgraph Server["preCICE AI FastMCP server"]
+        direction TB
+        REG["Registration entry point"]
+
+        subgraph Tools["Tool groups"]
+            direction TB
+            PT["Project tools"]
+            CT["Config tools"]
+            LT["Log tools"]
+            KT["Knowledge tools"]
+            CLT["CLI tools"]
+        end
+
+        subgraph Core["Core helpers"]
+            direction TB
+            P["paths"]
+            S["safety / command_runner"]
+            KB["knowledge_base"]
+        end
+
+        REG --> PT & CT & LT & KT & CLT
+        PT & CT & LT & KT & CLT --> Core
+    end
+
+    Clients <-->|"stdio JSON-RPC"| REG
+
+    %% ---------- Local project ----------
+    subgraph Proj["Local preCICE project directory"]
+        direction TB
+        XML["precice-config.xml"]
+        RUN["run scripts"]
+        LOGS["log files"]
+        SOL["solver files"]
+    end
+    PT & CT & LT --> Proj
+
+    %% ---------- Local knowledge store ----------
+    subgraph Store["Local cache: ~/.precice-ai/kb_store"]
+        direction TB
+        LEX["Lexical index"]
+        VEC["Vector embeddings<br/>(.npz per category)"]
+    end
+    KT -->|"query"| Store
+
+    %% ---------- CLI ----------
+    BIN["precice-cli binary<br/>(installed separately)"]
+    CLT -->|"shells out"| BIN
+
+    %% ---------- Offline build pipeline ----------
+    subgraph Offline["Offline build pipeline"]
+        direction TB
+        DOCS["preCICE official website"]
+        TUT["Tutorials"]
+        FORUM["Forum"]
+        GH["GitHub issues / PRs"]
+        BUILD["Index + embed"]
+        DOCS & TUT & FORUM & GH --> BUILD
+    end
+    REL[("GitHub Release assets")]
+    BUILD -->|"publish"| REL
+    REL -->|"download & cache"| Store
+
+    %% ---------- Styling ----------
+    classDef client fill:#e8f1fd,stroke:#3b7dd8,color:#0b2e5c
+    classDef server fill:#eef7ee,stroke:#3c9a4a,color:#123d18
+    classDef core fill:#fff6e0,stroke:#d19a1c,color:#4d3500
+    classDef data fill:#f3eefb,stroke:#7a52c7,color:#2b1452
+    classDef ext fill:#f4f4f4,stroke:#777,color:#222
+
+    class CC,CD,CX,CU,WS,LG client
+    class REG,PT,CT,LT,KT,CLT server
+    class P,S,KB core
+    class XML,RUN,LOGS,LEX,VEC,SOL,REL data
+    class DOCS,TUT,FORUM,GH,BUILD,BIN ext

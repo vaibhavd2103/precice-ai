@@ -11,6 +11,9 @@ from precice_ai.core.knowledge_base import KnowledgeBaseService, VectorKnowledge
 kb_service = KnowledgeBaseService()
 vector_kb = VectorKnowledgeBase()
 
+TECHNICAL_CATEGORIES = ("documentation", "tutorials", "forum", "issues", "pulls")
+
+
 
 def register_knowledge_tools(mcp: FastMCP) -> None:
     """Register knowledge-base tools for preCICE docs/forum retrieval."""
@@ -59,57 +62,84 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
             return json.dumps({"status": "error", "message": str(exc)}, indent=2)
 
     @mcp.tool()
-    def kb_query_precice(question: str, top_k: int = 5, category: str | None = None) -> str:
+    def kb_query_precice(
+        question: str,
+        is_technical: bool = False,
+        top_k: int = 5,
+        category: str | None = None,
+        top_k_per_technical_category: int = 5,
+    ) -> str:
         """Semantic search over the local preCICE vector KB.
+
+        Set is_technical=True for any question about configuring, running,
+        debugging, or developing with preCICE (adapters, config XML, mapping,
+        coupling schemes, build/install errors, API usage, etc.). Technical
+        questions are searched across ALL of these categories: "documentation",
+        "tutorials", "forum", "issues", and "pulls". "about" and "community" are
+        excluded. top_k_per_technical_category results are retrieved from each
+        category, merged, and sorted by relevance; top_k is ignored in this mode.
+
+        Leave is_technical=False for general questions about the project,
+        organisation, or community. The search then runs across every downloaded
+        category and returns top_k results.
+
+        Pass category ("about", "community", "documentation", "tutorials",
+        "forum", "issues", or "pulls") to restrict the search to exactly that
+        category. An explicit category overrides is_technical.
 
         Embeds the question through an OpenAI-compatible embeddings API
         (requires OPENROUTER_API_KEY or BLABLADOR_API_KEY; optionally
         EMBEDDING_BASE_URL / EMBEDDING_MODEL, default model
-        openai/text-embedding-3-small) and returns the top_k most similar
-        document chunks. For a keyword search that needs no API key, use
-        kb_query_precice_lexical instead.
+        openai/text-embedding-3-small). For a keyword search that needs no API
+        key, use kb_query_precice_lexical instead.
 
-        Pass category ("about", "community", "documentation", "tutorials",
-        "forum", "issues", or "pulls") to restrict the search to that category
-        only; omit it to search across every downloaded category.
-
-        Preferred when kb_precice_status shows the relevant local category is
-        present and fresh (checked less than 96h ago). If the category is
-        missing or stale, refresh it first with kb_query_precice_live or
+        Preferred when kb_precice_status shows the relevant local categories are
+        present and fresh (checked less than 96h ago). If a category is missing
+        or stale, refresh it first with kb_query_precice_live or
         kb_ingest_precice_data.
         """
         try:
-            result = vector_kb.query(question=question, top_k=top_k, category=category)
-            return json.dumps(result, indent=2)
-        except Exception as exc:
-            return json.dumps({"status": "error", "message": str(exc)}, indent=2)
+            # Explicit category or non-technical question: single query
+            if category is not None or not is_technical:
+                result = vector_kb.query(question=question, top_k=top_k, category=category)
+                return json.dumps(result, indent=2)
 
-    @mcp.tool()
-    def kb_query_precice_live(question: str, top_k: int = 5, category: str | None = None) -> str:
-        """Answer any question about preCICE using semantic search.
+            # Technical question: fan out across all technical categories.
+            merged: list[dict] = []
+            hits_per_category: dict[str, int] = {}
+            errors: dict[str, str] = {}
 
-        Use this when the relevant local KB category is missing, its
-        freshness is unknown, or kb_precice_status shows it is at least 96h
-        old. This refreshes the requested category from the published vector
-        KB release first, then runs cosine-similarity search so the answer
-        comes from updated local data. It is not the default for categories
-        that are already present and fresh.
+            for cat in TECHNICAL_CATEGORIES:
+                try:
+                    res = vector_kb.query(
+                        question=question,
+                        top_k=top_k_per_technical_category,
+                        category=cat,
+                    )
+                except Exception as exc:  # e.g. category not downloaded yet
+                    errors[cat] = str(exc)
+                    continue
 
-        Pass category ("about", "community", "documentation", "tutorials",
-        "forum", "issues", or "pulls") to restrict the search to that category
-        only.
-        
-        If answer not found in "issues" or "pulls" categories, then search in "forum" because it
-        contains the most up-to-date information about preCICE, including discussions, bug reports, and user experiences.
-        """
-        try:
-            token = os.environ.get("GITHUB_TOKEN")
-            dl = vector_kb.download_from_release(github_token=token, category=category)
-            if dl.get("status") == "error":
-                return json.dumps(dl, indent=2)
+                hits = res.get("results", [])
+                hits_per_category[cat] = len(hits)
+                for hit in hits:
+                    hit.setdefault("category", cat)
+                    merged.append(hit)
 
-            result = vector_kb.query(question=question, top_k=top_k, category=category)
-            return json.dumps(result, indent=2)
+            # Assumes higher score = more similar; flip if your KB returns distances.
+            merged.sort(key=lambda h: h.get("score", 0.0), reverse=True)
+
+            return json.dumps(
+                {
+                    "status": "ok" if merged else "empty",
+                    "mode": "technical_multi_category",
+                    "categories_searched": list(TECHNICAL_CATEGORIES),
+                    "hits_per_category": hits_per_category,
+                    "errors": errors or None,
+                    "results": merged,
+                },
+                indent=2,
+            )
         except Exception as exc:
             return json.dumps({"status": "error", "message": str(exc)}, indent=2)
 

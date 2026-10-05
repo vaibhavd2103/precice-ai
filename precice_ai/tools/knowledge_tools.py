@@ -11,7 +11,7 @@ from precice_ai.core.knowledge_base import KnowledgeBaseService, VectorKnowledge
 kb_service = KnowledgeBaseService()
 vector_kb = VectorKnowledgeBase()
 
-TECHNICAL_CATEGORIES = ("documentation", "tutorials", "forum", "issues", "pulls")
+TECHNICAL_CATEGORIES = ("documentation", "tutorials", "adapters", "forum", "issues", "pulls")
 
 
 
@@ -26,7 +26,7 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
         """Sync the local KB (vector + lexical) from GitHub Releases.
 
         The vector embeddings are built per category (about, community,
-        documentation, tutorials, forum, issues, pulls) and the lexical
+        documentation, tutorials, adapters, forum, issues, pulls) and the lexical
         (keyword) index is built from the same per-category chunk extraction
         (guaranteeing coverage parity between the two), both by a scheduled
         GitHub Action (kb-ingest.yml) that runs every 4 days and always
@@ -75,7 +75,7 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
         debugging, or developing with preCICE (adapters, config XML, mapping,
         coupling schemes, build/install errors, API usage, etc.). Technical
         questions are searched across ALL of these categories: "documentation",
-        "tutorials", "forum", "issues", and "pulls". "about" and "community" are
+        "tutorials", "adapters", "forum", "issues", and "pulls". "about" and "community" are
         excluded. top_k_per_technical_category results are retrieved from each
         category, merged, and sorted by relevance; top_k is ignored in this mode.
 
@@ -84,7 +84,7 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
         category and returns top_k results.
 
         Pass category ("about", "community", "documentation", "tutorials",
-        "forum", "issues", or "pulls") to restrict the search to exactly that
+        "adapters", "forum", "issues", or "pulls") to restrict the search to exactly that
         category. An explicit category overrides is_technical.
 
         Embeds the question through an OpenAI-compatible embeddings API
@@ -151,7 +151,7 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
         semantic search tools, or for exact-term lookups (error strings,
         config keys). The lexical KB is chunk-based and covers the same
         categories as the vector KB (about, community, documentation,
-        tutorials, forum, issues, pulls) — pass category to restrict the
+        tutorials, adapters, forum, issues, pulls) — pass category to restrict the
         search to one of them, omit it to search everything. The published
         lexical KB release (kb-lexical.json) is the source of truth: the
         local copy is trusted for up to 96h after the last check, then

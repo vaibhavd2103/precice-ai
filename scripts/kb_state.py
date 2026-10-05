@@ -137,6 +137,12 @@ def category_signature(
         kind = "issues" if cat_config["type"] == "github_issues" else "pulls"
         return github_activity_signature(cat_config["repo"], kind)
 
+    if cat_config.get("type") == "gitmodules":
+        raise SystemExit(
+            f"Category '{category}' is discovered from .gitmodules; use "
+            "`python scripts/adapter_repos.py signature --manifest ...` instead."
+        )
+
     parts: list[str] = []
     for source in cat_config.get("sources", []):
         repo = source["repo"]

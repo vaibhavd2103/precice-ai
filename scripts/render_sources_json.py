@@ -24,6 +24,11 @@ def render(config: dict, category: str, checkout_map: dict[str, str]) -> list[di
     cat_config = config.get("categories", {}).get(category)
     if cat_config is None:
         raise SystemExit(f"Unknown category: {category}")
+    if cat_config.get("type") == "gitmodules":
+        raise SystemExit(
+            f"Category '{category}' is discovered from .gitmodules; use "
+            "`python scripts/adapter_repos.py sources --manifest ...` instead."
+        )
 
     base_url = config.get("base_url", "https://precice.org")
     exclude_patterns = cat_config.get("exclude_patterns", [])

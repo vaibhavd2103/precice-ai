@@ -74,6 +74,7 @@ jobs:
             content/tutorials
             content/community
             content/about
+            /.gitmodules
           sparse-checkout-cone-mode: false
 
       - name: Checkout precice/precice (docs/ only)
@@ -105,6 +106,15 @@ jobs:
           # Embedding goes through the OpenRouter API — no torch on the runner.
           pip install --quiet openai numpy httpx
           pip install --quiet -e .
+
+      - name: Checkout adapter repos (from precice.github.io .gitmodules)
+        run: |
+          # Every submodule of the website except tutorials (which has its own
+          # category); only README.md + docs/ of each repo is checked out.
+          python scripts/adapter_repos.py checkout \
+            --config kb_sources.json \
+            --gitmodules-file precice-docs/.gitmodules \
+            --dest adapter-repos
 
       - name: Ensure kb-latest release exists
         env:
@@ -161,6 +171,9 @@ jobs:
             check_and_track "$category" "$sig"
           done
 
+          adapters_sig=$(python scripts/adapter_repos.py signature --manifest adapter-repos/manifest.json)
+          check_and_track "adapters" "$adapters_sig"
+
           forum_sig=$(python scripts/kb_state.py forum-sig --url https://precice.discourse.group)
           check_and_track "forum" "$forum_sig"
 
@@ -184,7 +197,7 @@ jobs:
           set -euo pipefail
           for category in $CHANGED; do
             case "$category" in
-              forum|issues|pulls) continue ;;
+              adapters|forum|issues|pulls) continue ;;
             esac
             args=""
             for pair in $CHECKOUT_DIRS; do args="$args --checkout-dir $pair"; done
@@ -199,6 +212,22 @@ jobs:
               --output "kb-embeddings-$category.npz" \
               --lexical-output "kb-lexical-$category.json"
           done
+
+      - name: Build adapters category
+        if: contains(steps.diff.outputs.changed, 'adapters')
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          set -euo pipefail
+          sources_json=$(python scripts/adapter_repos.py sources --config kb_sources.json --manifest adapter-repos/manifest.json)
+          python scripts/build_embeddings.py \
+            --category adapters \
+            --sources-json "$sources_json" \
+            --api-key "$OPENROUTER_API_KEY" \
+            --base-url "$EMBEDDING_BASE_URL" \
+            --model "$EMBEDDING_MODEL" \
+            --output "kb-embeddings-adapters.npz" \
+            --lexical-output "kb-lexical-adapters.json"
 
       - name: Build forum category
         if: contains(steps.diff.outputs.changed, 'forum')
@@ -271,12 +300,12 @@ jobs:
           CHANGED: ${{ steps.diff.outputs.changed }}
         run: |
           set -euo pipefail
-          # Merge/manifest below need all 7 categories' files locally. Categories
+          # Merge/manifest below need all 8 categories' files locally. Categories
           # that didn't change weren't rebuilt this run, so pull their current
           # vector fragment back from the release (always present — uploaded
           # per-category since this workflow's first version).
           : > categories_needing_lexical_recovery.txt
-          for category in about community documentation tutorials forum issues pulls; do
+          for category in about community documentation tutorials adapters forum issues pulls; do
             case " $CHANGED " in
               *" $category "*) continue ;;
             esac
@@ -316,7 +345,7 @@ jobs:
           import json
           from datetime import datetime, timezone
 
-          categories = "about community documentation tutorials forum issues pulls".split()
+          categories = "about community documentation tutorials adapters forum issues pulls".split()
           chunks = []
           for category in categories:
               with open(f"kb-lexical-{category}.json") as f:
@@ -340,7 +369,7 @@ jobs:
           import numpy as np
           from datetime import datetime, timezone
 
-          categories = "about community documentation tutorials forum issues pulls".split()
+          categories = "about community documentation tutorials adapters forum issues pulls".split()
           data = np.load("kb-embeddings-documentation.npz", allow_pickle=True)
           dim = int(data["embeddings"].shape[1])
 
@@ -385,7 +414,7 @@ jobs:
           CHANGED: ${{ steps.diff.outputs.changed }}
         run: |
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          gh release edit kb-latest --notes "Updated vector categories [$CHANGED] and lexical KB on ${TIMESTAMP} (model: ${EMBEDDING_MODEL}) from precice/precice.github.io, precice/precice, precice/tutorials, precice.discourse.group, precice/precice issues & pulls"
+          gh release edit kb-latest --notes "Updated vector categories [$CHANGED] and lexical KB on ${TIMESTAMP} (model: ${EMBEDDING_MODEL}) from precice/precice.github.io (+ its .gitmodules adapter repos), precice/precice, precice/tutorials, precice.discourse.group, precice/precice issues & pulls"
 
       - name: Update kb_state.json and upload to release
         if: steps.diff.outputs.changed != ''

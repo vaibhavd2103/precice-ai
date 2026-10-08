@@ -708,7 +708,12 @@ class VectorKnowledgeBase:
                 any_ok = True
 
         # The manifest is advisory (freshness/counts); never fail a sync over it.
+        # Re-fetch it whenever a category was just replaced or the local copy is
+        # a legacy one, so it never lags behind the files it describes.
+        local_manifest = kb_store.read_manifest(self._dir)
         manifest_result = sync_release_asset(
+            force=any(str(r.get("action", "")).startswith("downloaded") for r in per_category.values() if isinstance(r, dict))
+            or (local_manifest is not None and local_manifest.get("schema_version") != SCHEMA_VERSION),
             local_path=self._dir / kb_store.MANIFEST_NAME,
             asset_name=kb_store.MANIFEST_NAME,
             repo=repo,
@@ -790,7 +795,7 @@ class VectorKnowledgeBase:
         for cat, npz_file in self._npz_files.items():
             freshness = _freshness_details(
                 npz_file,
-                fallback_checked_at=(manifest or {}).get("categories", {}).get(cat, {}).get("built_at"),
+                fallback_checked_at=kb_store.manifest_categories(manifest).get(cat, {}).get("built_at"),
             )
             if not npz_file.exists():
                 categories[cat] = {

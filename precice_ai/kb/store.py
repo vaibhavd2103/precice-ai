@@ -276,3 +276,10 @@ def read_manifest(directory: Path) -> dict | None:
     except Exception:
         return None
     return data if isinstance(data, dict) else None
+
+
+def manifest_categories(manifest: dict | None) -> dict:
+    """Per-category stats from a manifest; {} for a legacy manifest whose
+    "categories" is a plain list of names."""
+    cats = (manifest or {}).get("categories")
+    return cats if isinstance(cats, dict) else {}

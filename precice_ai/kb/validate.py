@@ -151,12 +151,17 @@ def validate_directory(directory: Path, *, lexical_name: str = "knowledge_base.j
     if manifest is None:
         warnings.append(f"{store.MANIFEST_NAME} missing")
     else:
-        if manifest.get("schema_version") != SCHEMA_VERSION:
-            errors.append(f"manifest schema_version {manifest.get('schema_version')} != {SCHEMA_VERSION}")
-        for cat, chunks in vector.items():
-            declared = manifest.get("categories", {}).get(cat, {}).get("chunks")
-            if declared != len(chunks):
-                errors.append(f"manifest says {declared} chunks for {cat}, store has {len(chunks)}")
+        if manifest.get("schema_version") != SCHEMA_VERSION or not isinstance(manifest.get("categories"), dict):
+            # Advisory file: a legacy one just means it has not been re-synced yet.
+            warnings.append(
+                f"{store.MANIFEST_NAME} is legacy/stale (schema_version {manifest.get('schema_version')!r}); "
+                "run `precice-ai kb ingest` to refresh it"
+            )
+        else:
+            for cat, chunks in vector.items():
+                declared = store.manifest_categories(manifest).get(cat, {}).get("chunks")
+                if declared != len(chunks):
+                    errors.append(f"manifest says {declared} chunks for {cat}, store has {len(chunks)}")
 
     return {"ok": not errors, "errors": errors, "warnings": warnings, "stats": category_table(vector)}
 

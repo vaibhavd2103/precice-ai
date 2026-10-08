@@ -1,7 +1,7 @@
 """Shared embedding helper — the single source of truth for turning text into
-vectors, used by both the KB build scripts (scripts/build_embeddings.py and
-the two builders that reuse it) and the MCP server's query path
-(precice_ai/core/knowledge_base.py).
+vectors, used by the MCP server's query path (precice_ai/core/knowledge_base.py)
+and for resolving the model/endpoint the KB build (precice_ai/kb/rebuild.py)
+embeds with.
 
 Embedding always goes through an OpenAI-compatible embeddings API. Provide
 one of:
@@ -71,3 +71,8 @@ def embed_texts(texts: list[str], model: str | None = None) -> list[list[float]]
 def embed_query(text: str, model: str | None = None) -> list[float]:
     """Embed a single query string."""
     return embed_texts([text], model=model)[0]
+
+
+def configured_model() -> str:
+    """The embedding model queries will use (EMBEDDING_MODEL or the default)."""
+    return _resolve_model(None)

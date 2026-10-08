@@ -491,6 +491,45 @@ def kb_ingest(
     typer.echo(json.dumps(result, indent=2))
 
 
+@kb_app.command("rebuild")
+def kb_rebuild(
+    category: Optional[list[str]] = typer.Option(
+        None, "--category", "-c", help="Category to rebuild (repeatable); default: all seven."
+    ),
+    out_dir: Optional[Path] = typer.Option(None, "--out-dir", help="Default: the local kb_store."),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Chunk and print stats only; no embedding calls."),
+    github_token: Optional[str] = typer.Option(None, "--github-token", help="Defaults to $GITHUB_TOKEN."),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show debug logs."),
+) -> None:
+    """Rebuild both KB stores (vector + lexical) from scratch in the canonical chunk format.
+
+    Clones the sources, chunks and embeds them (needs OPENROUTER_API_KEY or
+    BLABLADOR_API_KEY), writes the npz files, the lexical store and the
+    manifest, then validates the result.
+    """
+    _configure_logging(verbose)
+    from precice_ai.kb.rebuild import main as rebuild_main
+
+    argv = ["--categories", *(category or [])] if category else []
+    if out_dir:
+        argv += ["--out-dir", str(out_dir)]
+    if dry_run:
+        argv.append("--dry-run")
+    if github_token:
+        argv += ["--github-token", github_token]
+    rebuild_main(argv)
+
+
+@kb_app.command("validate")
+def kb_validate(
+    directory: Optional[Path] = typer.Option(None, "--dir", help="Default: the local kb_store."),
+) -> None:
+    """Validate the local KB stores against the canonical schema and print per-category stats."""
+    from precice_ai.kb.validate import main as validate_main
+
+    validate_main(["--dir", str(directory)] if directory else [])
+
+
 @kb_app.command("query")
 def kb_query(
     question: str = typer.Argument(..., help="Question to search for."),

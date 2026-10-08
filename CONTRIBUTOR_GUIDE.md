@@ -212,7 +212,7 @@ The diagram shows these as three boxes that every tool group depends on:
 
 - `paths`: resolves the projects root, a project directory by name, its `precice-config.xml`, and the `.env` file. No other code should build these paths itself.
 - `safety` / `command_runner`: every shell command goes through here. `is_command_safe()` checks the command against `BLOCKED_PATTERNS` and `ALLOWED_COMMAND_PREFIXES`, and `run_safe_command()` runs it in a given working directory with a timeout (60 s by default). Any tool that shells out must use this path. See [`core/safety.py`](#coresafetypy).
-- `knowledge_base`: vector and lexical search, release-asset sync, and freshness tracking. It uses `embedding.py`, `text_cleaning.py`, and `discourse_api.py`, which the diagram leaves out for simplicity.
+- `knowledge_base`: vector and lexical search, release-asset sync, and freshness tracking. It uses `embedding.py`, `discourse_api.py`, and the `precice_ai/kb/` package (canonical chunk schema, cleaning, chunking, store I/O, validation), which the diagram leaves out for simplicity.
 
 ### 3. Local preCICE project directory
 
@@ -554,19 +554,35 @@ The lexical path still matters because:
 - it provides a fallback or comparison baseline
 - scripts such as `scripts/compare_kb_search.py` depend on it
 
-`KnowledgeBaseService` still owns querying/syncing `kb-lexical.json`
-(`query()`, `sync_from_release()`, `kb_status()`), but it's no longer the
-thing that *builds* that file in CI. `kb-ingest.yml` now has
-`build_embeddings.py` / `build_forum_embeddings.py` /
-`build_github_activity_embeddings.py` each write their chunk list to a
-`--lexical-output` fragment (same chunk schema as the `.npz` files: `title,
-url, source, category, chunk_index, text`) before embedding, then merges
-all 7 fragments into `kb-lexical.json`. This guarantees the lexical and
-vector KBs cover the exact same content by construction. `ingest_precice_sources()`
-(the live HTML/discourse crawl, still driven by `scripts/build_lexical_kb.py`
-for manual use) is now only the runtime fallback used when no release is
-reachable and there's no local cache — its coverage (docs + forum only) is
-intentionally narrower than the primary pipeline.
+`KnowledgeBaseService` owns querying/syncing `kb-lexical.json`
+(`query()`, `sync_from_release()`, `kb_status()`); it does not build it.
+`ingest_precice_sources()` (the live HTML/discourse crawl, still driven by
+`scripts/build_lexical_kb.py` for manual use) is only the runtime fallback used
+when no release is reachable and there's no local cache. It writes the same
+canonical chunk records as the main pipeline, but only for documentation and forum.
+
+#### Canonical chunk format (`precice_ai/kb/`)
+
+Both stores hold the same chunk records, defined once in `kb/schema.py`
+(`Chunk`, `SCHEMA_VERSION`): `chunk_id` (`{doc_id}#{chunk_index}`), `doc_id`
+(hash of the normalised URL), `url`, `title`, `section_path`, `category`,
+`source`, `chunk_index`, `chunk_count`, full `text`, `embed_text`
+(`title > section path` + text, which is what gets embedded), `char_len`,
+timestamps, category-specific `extra`, and `schema_version`.
+
+| Module | Role |
+|---|---|
+| `kb/cleaning.py` | Structure-preserving cleaning. Keeps headings, tables, fenced code and inline code (as backticks); drops front matter, comments, Liquid, images, link targets, nav/footer/cookie boilerplate (HTML path), Discourse quotes. |
+| `kb/chunking.py` | Heading-based chunking (H1–H3 → `section_path`, ~800–1500 chars, ~150 overlap, code fences atomic), forum/issue segment merging, near-empty (<150) and exact-duplicate removal, id assignment. |
+| `kb/builder.py` | One builder per source family (Markdown, forum, GitHub issues/pulls, live HTML). Excludes changelog entries, CHANGELOG/CONTRIBUTING/LICENSE files at ingestion. |
+| `kb/store.py` | npz (`embeddings`, `chunk_ids`, `chunks`, `meta`) and lexical JSON I/O, the manifest, and the schema/model compatibility checks. The lexical store is derived from the npz files, so ids match by construction. |
+| `kb/rebuild.py`, `kb/validate.py` | `precice-ai kb rebuild` / `kb validate` (also `scripts/rebuild_kb.py`, `scripts/validate_kb.py`). |
+
+When you change cleaning or chunking in a way that alters chunk boundaries, or
+add/remove/rename a schema field, bump `SCHEMA_VERSION`. Local stores built
+with another version then fail to load with a "re-ingest" error (instead of
+returning wrong results), and `kb_state.py` marks every category stale so the
+next `kb-ingest.yml` run rebuilds everything.
 
 ## Tool Modules
 
@@ -685,9 +701,9 @@ Categories are configured in `kb_sources.json`, including:
 
 The main helper scripts are:
 
-- `scripts/build_embeddings.py`
-- `scripts/build_forum_embeddings.py`
-- `scripts/build_github_activity_embeddings.py`
+- `scripts/rebuild_kb.py` (clone/fetch, clean, chunk, embed; writes the npz files)
+- `scripts/finalize_kb.py` (derives `kb-lexical.json` + `kb-manifest.json` from the npz files and validates)
+- `scripts/validate_kb.py` (schema/consistency checks and per-category stats)
 - `scripts/render_sources_json.py`
 - `scripts/kb_state.py`
 - `scripts/compare_kb_search.py`

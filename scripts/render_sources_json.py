@@ -1,4 +1,4 @@
-"""Render the --sources-json argument for build_embeddings.py from kb_sources.json.
+"""Render the per-category source descriptors (label, path, url_mode, url_base) from kb_sources.json.
 
 Resolves each category's configured {repo, checkout_path} sources to local
 checkout directories (as laid out by the workflow) and picks a URL mode:
@@ -15,57 +15,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
-WEBSITE_REPO = "precice/precice.github.io"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-
-def render(config: dict, category: str, checkout_map: dict[str, str]) -> list[dict[str, object]]:
-    cat_config = config.get("categories", {}).get(category)
-    if cat_config is None:
-        raise SystemExit(f"Unknown category: {category}")
-
-    base_url = config.get("base_url", "https://precice.org")
-    exclude_patterns = cat_config.get("exclude_patterns", [])
-
-    sources: list[dict[str, object]] = []
-    for source in cat_config.get("sources", []):
-        repo = source["repo"]
-        checkout_path = source.get("checkout_path", "")
-        local_dir = checkout_map.get(repo)
-        if not local_dir:
-            raise SystemExit(f"No --checkout-dir given for repo {repo}")
-
-        local_path = str(Path(local_dir) / checkout_path) if checkout_path else local_dir
-
-        if repo == WEBSITE_REPO:
-            sources.append(
-                {
-                    "label": f"{category}-website",
-                    "path": local_path,
-                    "url_mode": "website",
-                    "url_base": base_url,
-                    "exclude_patterns": exclude_patterns,
-                }
-            )
-        else:
-            branch = source.get("branch", "main")
-            repo_slug = repo.split("/")[-1]
-            url_base = f"https://github.com/{repo}/blob/{branch}"
-            if checkout_path:
-                url_base += f"/{checkout_path}"
-            sources.append(
-                {
-                    "label": f"{category}-{repo_slug}",
-                    "path": local_path,
-                    "url_mode": "github",
-                    "url_base": url_base,
-                    "exclude_patterns": exclude_patterns,
-                }
-            )
-
-    return sources
-
+from precice_ai.kb.sources import render_sources as render
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)

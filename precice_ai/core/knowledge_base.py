@@ -654,7 +654,7 @@ _DEFAULT_GITHUB_REPO = "vaibhavd2103/precice-ai"
 # Must match the category keys in kb_sources.json and the asset names the
 # kb-ingest.yml workflow uploads (kb-embeddings-<category>.npz), one per
 # category, so a changed category can be re-fetched without touching the rest.
-CATEGORIES = ["about", "community", "documentation", "tutorials", "forum", "issues", "pulls"]
+CATEGORIES = ["about", "community", "documentation", "tutorials", "adapters", "forum", "issues", "pulls"]
 
 
 def _asset_name(category: str) -> str:
@@ -819,6 +819,31 @@ class VectorKnowledgeBase:
                     github_token = os.environ.get("GITHUB_TOKEN")
                     if github_token:
                         cmd += ["--github-token", github_token]
+                elif cat_config.get("type") == "gitmodules":
+                    adapter_script = str(scripts_dir / "adapter_repos.py")
+                    checkout = subprocess.run(
+                        [
+                            sys.executable, adapter_script, "checkout",
+                            "--config", str(config_path), "--dest", str(tmp_path / "adapter-repos"),
+                        ],
+                        check=True, capture_output=True, text=True, timeout=timeout_seconds,
+                    )
+                    manifest_path = checkout.stdout.strip().splitlines()[-1]
+                    rendered = subprocess.run(
+                        [
+                            sys.executable, adapter_script, "sources",
+                            "--config", str(config_path), "--manifest", manifest_path,
+                        ],
+                        check=True, capture_output=True, text=True, timeout=60,
+                    )
+                    cmd = [
+                        sys.executable, str(scripts_dir / "build_embeddings.py"),
+                        "--category", category,
+                        "--sources-json", rendered.stdout.strip(),
+                        "--api-key", api_key,
+                        "--output", str(output_path),
+                        *model_args,
+                    ]
                 else:
                     checkout_dirs: list[str] = []
                     for source in cat_config.get("sources", []):

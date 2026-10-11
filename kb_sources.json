@@ -62,6 +62,13 @@
         "tutorials/_index.md"
       ]
     },
+    "adapters": {
+      "description": "adapter and tooling repos imported by precice.github.io (.gitmodules): root README.md + docs/",
+      "type": "gitmodules",
+      "gitmodules_repo": "precice/precice.github.io",
+      "gitmodules_branch": "master",
+      "exclude_patterns": []
+    },
     "forum": {
       "description": "recent precice.discourse.group topics",
       "type": "discourse",

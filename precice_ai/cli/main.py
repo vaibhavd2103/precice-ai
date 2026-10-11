@@ -469,7 +469,7 @@ def _sync_kb(
 def kb_ingest(
     category: Optional[str] = typer.Option(
         None, "--category", "-c",
-        help="Only sync this vector category (about, community, documentation, tutorials, forum, issues, pulls).",
+        help="Only sync this vector category (about, community, documentation, tutorials, adapters, forum, issues, pulls).",
     ),
     github_token: Optional[str] = typer.Option(
         None, "--github-token", help="Defaults to $GITHUB_TOKEN if unset (only needed for a private repo)."

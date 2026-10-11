@@ -374,6 +374,7 @@ Vector KB assets are stored outside the repo by default:
 ~/.precice-ai/kb_store/kb-embeddings-community.npz
 ~/.precice-ai/kb_store/kb-embeddings-documentation.npz
 ~/.precice-ai/kb_store/kb-embeddings-tutorials.npz
+~/.precice-ai/kb_store/kb-embeddings-adapters.npz
 ~/.precice-ai/kb_store/kb-embeddings-forum.npz
 ~/.precice-ai/kb_store/kb-embeddings-issues.npz
 ~/.precice-ai/kb_store/kb-embeddings-pulls.npz

@@ -6,12 +6,22 @@ chunks via an OpenAI-compatible API (OpenRouter by default, Blablador via
 tagged with a category, ready to be uploaded as a GitHub Release asset.
 
 Sources are passed as a JSON list, each entry:
-    {"label": str, "path": str, "url_mode": "website" | "github",
-     "url_base": str, "exclude_patterns": [str, ...]}
+    {"label": str, "path": str,
+     "url_mode": "website" | "github" | "permalink_or_github",
+     "url_base": str, "exclude_patterns": [str, ...],
+     "website_base": str, "title_prefix": str, "include_paths": [str, ...]}
+(the last three are optional).
 
 "website" mode builds precice.org URLs from frontmatter permalinks (or the
 file's relative path). "github" mode builds GitHub blob URLs by joining
 url_base with the file's path relative to its source directory.
+"permalink_or_github" (used for the adapter repos, whose docs/ pages are
+rendered on precice.org) uses website_base + permalink when the file has one
+and falls back to the GitHub blob URL otherwise.
+
+include_paths restricts a source to the given files/directories (relative
+to its path); title_prefix is prepended to every chunk title so pages from
+different repos (e.g. each adapter's README) stay distinguishable.
 
 Usage:
     python scripts/build_embeddings.py \
@@ -160,6 +170,15 @@ def _file_to_url(filepath: Path, source_dir: Path, source: dict) -> str:
         # content/docs/configuration-overview.md → /configuration-overview.html
         return f"{url_base}/{rel.stem}.html"
 
+    if source["url_mode"] == "permalink_or_github":
+        meta, _ = _parse_frontmatter(
+            filepath.read_text(encoding="utf-8", errors="replace")
+        )
+        permalink = meta.get("permalink", "")
+        if permalink:
+            website_base = source["website_base"].rstrip("/")
+            return website_base + ("" if permalink.startswith("/") else "/") + permalink
+
     # github mode: link straight to the file in the repo, on its configured branch
     return f"{url_base}/{rel.as_posix()}"
 
@@ -209,12 +228,21 @@ def _embed_batch(
 # ---------------------------------------------------------------------------
 
 
-def _collect_md_files(source_dir: Path, exclude_patterns: list[str]) -> list[Path]:
+def _collect_md_files(
+    source_dir: Path, exclude_patterns: list[str], include_paths: list[str] | None = None
+) -> list[Path]:
     if not source_dir.exists():
         print(f"  warning: source dir not found: {source_dir}", file=sys.stderr)
         return []
 
     files = sorted(source_dir.rglob("*.md"))
+    if include_paths:
+
+        def _is_included(p: Path) -> bool:
+            rel = p.relative_to(source_dir).as_posix()
+            return any(rel == inc or rel.startswith(inc.rstrip("/") + "/") for inc in include_paths)
+
+        files = [f for f in files if _is_included(f)]
     if exclude_patterns:
 
         def _is_excluded(p: Path) -> bool:
@@ -269,7 +297,7 @@ def main() -> None:
     for source in sources:
         source_dir = Path(source["path"]).resolve()
         exclude_patterns = source.get("exclude_patterns", [])
-        md_files = _collect_md_files(source_dir, exclude_patterns)
+        md_files = _collect_md_files(source_dir, exclude_patterns, source.get("include_paths"))
         print(
             f"[{source['label']}] {len(md_files)} markdown files in {source_dir}",
             file=sys.stderr,
@@ -284,6 +312,8 @@ def main() -> None:
 
             meta, body = _parse_frontmatter(raw)
             title = meta.get("title") or filepath.stem.replace("-", " ").title()
+            if source.get("title_prefix"):
+                title = f"{source['title_prefix']}: {title}"
             url = _file_to_url(filepath, source_dir, source)
             plain = strip_markdown(body)
 

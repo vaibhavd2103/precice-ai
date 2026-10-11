@@ -244,7 +244,7 @@ The CLI tools shell out to `precice-cli`, which is installed separately and is n
 
 The grey box at the bottom right never runs inside the MCP server. It is the `kb-ingest.yml` GitHub Actions workflow plus the scripts in `scripts/`:
 
-1. collect content from four kinds of source: the official preCICE website, tutorials, the Discourse forum, and GitHub issues and pull requests (see `kb_sources.json`)
+1. collect content from five kinds of source: the official preCICE website, tutorials, the adapter and tooling repos imported by the website's `.gitmodules` (root `README.md` + `docs/`, skipping `tutorials`), the Discourse forum, and GitHub issues and pull requests (see `kb_sources.json`)
 2. chunk, clean, and embed the content in the **Index + embed** step
 3. **publish** the `.npz` files and `kb-lexical.json` as assets on the `kb-latest` GitHub Release
 
@@ -679,6 +679,7 @@ Categories are configured in `kb_sources.json`, including:
 - `community`
 - `documentation`
 - `tutorials`
+- `adapters` (repos discovered from `precice/precice.github.io`'s `.gitmodules`, via `scripts/adapter_repos.py`)
 - `forum`
 - `issues`
 - `pulls`

@@ -469,7 +469,7 @@ def _sync_kb(
 def kb_ingest(
     category: Optional[str] = typer.Option(
         None, "--category", "-c",
-        help="Only sync this vector category (about, community, documentation, tutorials, forum, issues, pulls).",
+        help="Only sync this vector category (about, community, documentation, tutorials, adapters, forum, issues, pulls).",
     ),
     github_token: Optional[str] = typer.Option(
         None, "--github-token", help="Defaults to $GITHUB_TOKEN if unset (only needed for a private repo)."
@@ -494,7 +494,7 @@ def kb_ingest(
 @kb_app.command("rebuild")
 def kb_rebuild(
     category: Optional[list[str]] = typer.Option(
-        None, "--category", "-c", help="Category to rebuild (repeatable); default: all seven."
+        None, "--category", "-c", help="Category to rebuild (repeatable); default: all categories."
     ),
     out_dir: Optional[Path] = typer.Option(None, "--out-dir", help="Default: the local kb_store."),
     dry_run: bool = typer.Option(False, "--dry-run", help="Chunk and print stats only; no embedding calls."),

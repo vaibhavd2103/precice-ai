@@ -12,20 +12,20 @@ from precice_ai.core.knowledge_base import KnowledgeBaseService, VectorKnowledge
 kb_service = KnowledgeBaseService()
 vector_kb = VectorKnowledgeBase()
 
-TECHNICAL_CATEGORIES = ("documentation", "tutorials", "forum", "issues", "pulls", "about", "community")
+TECHNICAL_CATEGORIES = ("documentation", "tutorials", "adapters", "forum", "issues", "pulls", "about", "community")
 
 ALL_CATEGORIES = (
-    "documentation", "tutorials", "forum", "issues", "pulls", "about", "community",
+    "documentation", "tutorials", "adapters", "forum", "issues", "pulls", "about", "community",
 )
  
 # Category weights for rank fusion. Every category is always searched;
 # weights only change how much each one contributes to the final ranking.
 WEIGHTS_TECHNICAL = {
-    "documentation": 1.0, "tutorials": 0.9, "forum": 0.8,
+    "documentation": 1.0, "tutorials": 0.9, "adapters": 0.9, "forum": 0.8,
     "issues": 0.6, "pulls": 0.4, "about": 0.3, "community": 0.2,
 }
 WEIGHTS_GENERAL = {
-    "documentation": 1.0, "about": 1.0, "tutorials": 0.7, "community": 0.6,
+    "documentation": 1.0, "about": 1.0, "tutorials": 0.7, "adapters": 0.6, "community": 0.6,
     "forum": 0.5, "issues": 0.3, "pulls": 0.2,
 }
  
@@ -52,7 +52,7 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
         """Sync the local KB (vector + lexical) from GitHub Releases.
 
         The vector embeddings are built per category (about, community,
-        documentation, tutorials, forum, issues, pulls) and the lexical
+        documentation, tutorials, adapters, forum, issues, pulls) and the lexical
         (keyword) index is built from the same per-category chunk extraction
         (guaranteeing coverage parity between the two), both by a scheduled
         GitHub Action (kb-ingest.yml) that runs every 4 days and always
@@ -98,14 +98,15 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
         """Semantic search over the local preCICE knowledge base.
     
         ALL categories are searched by default: "documentation", "tutorials",
-        "forum", "issues", "pulls", "about", "community". Results from each
+        "adapters", "forum", "issues", "pulls", "about", "community". Results from each
         category are fused by rank (not raw score), deduplicated per source
         document, and the best top_k are returned.
     
         is_technical only changes ranking weights:
         - True  (configuring, running, debugging, adapters, config XML, mapping,
                 coupling schemes, build errors, API usage): documentation,
-                tutorials and forum are favoured.
+                tutorials, adapters (each adapter repo's README + docs/) and
+                forum are favoured.
         - False (what preCICE is, how to get started, project, community):
                 documentation and about pages are favoured.
     
@@ -203,7 +204,7 @@ def register_knowledge_tools(mcp: FastMCP) -> None:
         semantic search tools, or for exact-term lookups (error strings,
         config keys). The lexical KB is chunk-based and covers the same
         categories as the vector KB (about, community, documentation,
-        tutorials, forum, issues, pulls) — pass category to restrict the
+        tutorials, adapters, forum, issues, pulls) — pass category to restrict the
         search to one of them, omit it to search everything. The published
         lexical KB release (kb-lexical.json) is the source of truth: the
         local copy is trusted for up to 96h after the last check, then

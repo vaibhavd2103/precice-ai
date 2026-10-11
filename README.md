@@ -362,7 +362,7 @@ This is mostly useful for local debugging or manual client integration.
 ## Knowledge Base Storage
 
 `precice-ai setup`/`bootstrap` automatically download the full knowledge base
-(all 7 vector categories + the lexical index) the first time you run them, so
+(all 8 vector categories + the lexical index) the first time you run them, so
 it's ready to query immediately. This is a best-effort step — it never fails
 setup, even if GitHub is unreachable. Pass `--skip-kb-ingest` to skip it (e.g.
 in CI or offline environments), and run `precice-ai kb ingest` manually later.
@@ -374,6 +374,7 @@ Vector KB assets are stored outside the repo by default:
 ~/.precice-ai/kb_store/kb-embeddings-community.npz
 ~/.precice-ai/kb_store/kb-embeddings-documentation.npz
 ~/.precice-ai/kb_store/kb-embeddings-tutorials.npz
+~/.precice-ai/kb_store/kb-embeddings-adapters.npz
 ~/.precice-ai/kb_store/kb-embeddings-forum.npz
 ~/.precice-ai/kb_store/kb-embeddings-issues.npz
 ~/.precice-ai/kb_store/kb-embeddings-pulls.npz

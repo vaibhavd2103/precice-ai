@@ -35,6 +35,11 @@ def render_sources(config: dict, category: str, checkout_map: dict[str, str]) ->
     cat_config = config.get("categories", {}).get(category)
     if cat_config is None:
         raise SystemExit(f"Unknown category: {category}")
+    if cat_config.get("type") == "gitmodules":
+        raise SystemExit(
+            f"Category '{category}' is discovered from .gitmodules; use "
+            "precice_ai.kb.adapters.render_sources (scripts/adapter_repos.py sources) instead."
+        )
 
     base_url = config.get("base_url", "https://precice.org")
     exclude_patterns = cat_config.get("exclude_patterns", [])

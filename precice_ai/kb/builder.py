@@ -29,19 +29,29 @@ def _log(msg: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Git-backed Markdown (about, community, documentation, tutorials)
+# Git-backed Markdown (about, community, documentation, tutorials, adapters)
 # ---------------------------------------------------------------------------
 
 
 def _file_url(filepath: Path, source_dir: Path, source: dict, meta: dict) -> str:
     url_base = source["url_base"].rstrip("/")
     rel = filepath.relative_to(source_dir)
+    permalink = meta.get("permalink", "")
     if source["url_mode"] == "website":
-        permalink = meta.get("permalink", "")
         if permalink:
             return url_base + ("" if permalink.startswith("/") else "/") + permalink
         return f"{url_base}/{rel.stem}.html"
+    if source["url_mode"] == "permalink_or_github" and permalink:
+        # Adapter repo docs/ pages are rendered on precice.org under their permalink.
+        website_base = source["website_base"].rstrip("/")
+        return website_base + ("" if permalink.startswith("/") else "/") + permalink
     return f"{url_base}/{rel.as_posix()}"
+
+
+def _is_included(rel: str, include_paths: list[str] | None) -> bool:
+    if not include_paths:
+        return True
+    return any(rel == inc or rel.startswith(inc.rstrip("/") + "/") for inc in include_paths)
 
 
 def _doc_title(meta: dict, body: str, filepath: Path) -> str:
@@ -73,6 +83,8 @@ def build_markdown_chunks(category: str, sources: list[dict], stats: dict | None
 
         for filepath in files:
             rel = filepath.relative_to(source_dir).as_posix()
+            if not _is_included(rel, source.get("include_paths")):
+                continue
             if is_excluded_path(rel) or any(p in rel for p in patterns):
                 stats["excluded_files"] = stats.get("excluded_files", 0) + 1
                 continue
@@ -93,13 +105,16 @@ def build_markdown_chunks(category: str, sources: list[dict], stats: dict | None
                 continue
 
             cleaned = clean_markdown(body)
-            title = _doc_title(meta, cleaned, filepath)
+            page_title = _doc_title(meta, cleaned, filepath)
+            # Prefix (adapter repo name) keeps the many README.md files apart; the
+            # chunker gets the bare title so it still drops the matching H1.
+            title = f"{source['title_prefix']}: {page_title}" if source.get("title_prefix") else page_title
             doc_chunks = assemble_document(
                 category=category,
                 source=source["label"],
                 url=url,
                 title=title,
-                raw_chunks=chunk_markdown(cleaned, title),
+                raw_chunks=chunk_markdown(cleaned, page_title),
                 dedup=dedup,
                 created_at=meta.get("date") or None,
                 updated_at=meta.get("last_updated") or None,

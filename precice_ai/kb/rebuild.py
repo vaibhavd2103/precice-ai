@@ -3,6 +3,7 @@
     precice-ai kb rebuild                      # all categories, into the local kb_store
     python scripts/rebuild_kb.py --out-dir out --categories documentation forum
     python scripts/rebuild_kb.py --dry-run     # chunk + stats only, no embedding API calls
+    python scripts/rebuild_kb.py --categories adapters --adapter-manifest adapter-repos/manifest.json
 
 Writes kb-embeddings-<category>.npz for each category, then (unless
 --no-finalize) derives the lexical store (knowledge_base.json) and
@@ -18,7 +19,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from precice_ai.kb import builder, store
+from precice_ai.kb import adapters, builder, store
 from precice_ai.kb.fetch import fetch_github_items
 from precice_ai.kb.schema import CATEGORIES, Chunk
 from precice_ai.kb.sources import clone_category_sources, load_sources_config, render_sources
@@ -35,6 +36,7 @@ def collect_category_chunks(
     config: dict,
     *,
     checkout_map: dict[str, str] | None = None,
+    adapter_manifest: Path | None = None,
     forum_topics_limit: int | None = None,
     items_limit: int = 100_000,
     comments_limit: int = 100,
@@ -65,6 +67,17 @@ def collect_category_chunks(
         items = fetch_github_items(cat_config["repo"], gh_kind, items_limit, comments_limit, github_token)
         return builder.build_github_chunks(gh_kind, cat_config["repo"], items, stats)
 
+    if kind == "gitmodules":
+        if adapter_manifest:
+            return builder.build_markdown_chunks(
+                category, adapters.render_sources(config, adapters.load_manifest(adapter_manifest)), stats
+            )
+        with tempfile.TemporaryDirectory(prefix="precice-kb-adapters-") as tmp:
+            _log(f"[{category}] discovering repos from .gitmodules and cloning README.md + docs/")
+            manifest_path = adapters.checkout_all(config, Path(tmp))
+            sources = adapters.render_sources(config, adapters.load_manifest(manifest_path))
+            return builder.build_markdown_chunks(category, sources, stats)
+
     with tempfile.TemporaryDirectory(prefix="precice-kb-src-") as tmp:
         mapping = dict(checkout_map or {})
         missing = [s["repo"] for s in cat_config["sources"] if s["repo"] not in mapping]
@@ -81,6 +94,7 @@ def rebuild(
     *,
     config_path: Path | None = None,
     checkout_map: dict[str, str] | None = None,
+    adapter_manifest: Path | None = None,
     forum_topics_limit: int | None = None,
     items_limit: int = 100_000,
     comments_limit: int = 100,
@@ -103,7 +117,8 @@ def rebuild(
         _log(f"=== {category} ===")
         stats: dict = {}
         chunks = collect_category_chunks(
-            category, config, checkout_map=checkout_map, forum_topics_limit=forum_topics_limit,
+            category, config, checkout_map=checkout_map, adapter_manifest=adapter_manifest,
+            forum_topics_limit=forum_topics_limit,
             items_limit=items_limit, comments_limit=comments_limit, github_token=github_token, stats=stats,
         )
         ingestion_stats[category] = stats
@@ -138,6 +153,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
     p.add_argument("--categories", nargs="+", choices=CATEGORIES, default=list(CATEGORIES))
     p.add_argument("--config", type=Path, default=None, help="kb_sources.json (default: auto-detected).")
     p.add_argument("--checkout-dir", action="append", default=[], help="repo=local_dir; skips cloning that repo.")
+    p.add_argument(
+        "--adapter-manifest", type=Path, default=None,
+        help="manifest.json from `adapter_repos.py checkout`; skips cloning the adapter repos.",
+    )
     p.add_argument("--forum-topics-limit", type=int, default=0, help="0 = every topic.")
     p.add_argument("--items-limit", type=int, default=100_000)
     p.add_argument("--comments-limit", type=int, default=100)
@@ -164,6 +183,7 @@ def main(argv: list[str] | None = None) -> None:
         args.categories,
         config_path=args.config,
         checkout_map=checkout_map,
+        adapter_manifest=args.adapter_manifest,
         forum_topics_limit=args.forum_topics_limit or None,
         items_limit=args.items_limit,
         comments_limit=args.comments_limit,

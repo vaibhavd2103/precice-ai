@@ -1,6 +1,6 @@
 """Canonical chunk schema shared by the vector and lexical knowledge bases.
 
-Every ingestion path (git-backed Markdown, Discourse forum, GitHub
+Every ingestion path (git-backed Markdown incl. adapter repos, Discourse forum, GitHub
 issues/pulls, live-crawl fallback) produces `Chunk` records, and both stores
 (`kb-embeddings-<category>.npz` and `kb-lexical.json`) carry the very same
 records keyed by `chunk_id`. Retrieval relies on that: neighbour expansion
@@ -20,7 +20,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 SCHEMA_VERSION = 1
 
-CATEGORIES = ("about", "community", "documentation", "tutorials", "forum", "issues", "pulls")
+CATEGORIES = ("about", "community", "documentation", "tutorials", "adapters", "forum", "issues", "pulls")
 
 MIN_CHUNK_CHARS = 150
 

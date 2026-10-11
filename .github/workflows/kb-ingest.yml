@@ -74,6 +74,7 @@ jobs:
             content/tutorials
             content/community
             content/about
+            /.gitmodules
           sparse-checkout-cone-mode: false
 
       - name: Checkout precice/precice (docs/ only)
@@ -105,6 +106,15 @@ jobs:
           # Embedding goes through the OpenRouter API — no torch on the runner.
           pip install --quiet openai numpy httpx
           pip install --quiet -e .
+
+      - name: Checkout adapter repos (from precice.github.io .gitmodules)
+        run: |
+          # Every submodule of the website except tutorials (which has its own
+          # category); only README.md + docs/ of each repo is checked out.
+          python scripts/adapter_repos.py checkout \
+            --config kb_sources.json \
+            --gitmodules-file precice-docs/.gitmodules \
+            --dest adapter-repos
 
       - name: Ensure kb-latest release exists
         env:
@@ -161,6 +171,9 @@ jobs:
             check_and_track "$category" "$sig"
           done
 
+          adapters_sig=$(python scripts/adapter_repos.py signature --manifest adapter-repos/manifest.json)
+          check_and_track "adapters" "$adapters_sig"
+
           forum_sig=$(python scripts/kb_state.py forum-sig --url https://precice.discourse.group)
           check_and_track "forum" "$forum_sig"
 
@@ -191,6 +204,7 @@ jobs:
             --checkout-dir precice/precice.github.io=precice-docs \
             --checkout-dir precice/precice=precice-core \
             --checkout-dir precice/tutorials=precice-tutorials-repo \
+            --adapter-manifest adapter-repos/manifest.json \
             --forum-topics-limit "$FORUM_TOPICS_LIMIT" \
             --items-limit "$GITHUB_ITEMS_LIMIT" \
             --comments-limit "$GITHUB_COMMENTS_LIMIT"
@@ -201,9 +215,9 @@ jobs:
           CHANGED: ${{ steps.diff.outputs.changed }}
         run: |
           set -euo pipefail
-          # Finalize below needs all 7 categories' npz files locally; unchanged
+          # Finalize below needs all 8 categories' npz files locally; unchanged
           # categories weren't rebuilt this run, so pull them from the release.
-          for category in about community documentation tutorials forum issues pulls; do
+          for category in about community documentation tutorials adapters forum issues pulls; do
             case " $CHANGED " in
               *" $category "*) continue ;;
             esac
@@ -247,7 +261,7 @@ jobs:
           CHANGED: ${{ steps.diff.outputs.changed }}
         run: |
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          gh release edit kb-latest --notes "Updated vector categories [$CHANGED] and lexical KB on ${TIMESTAMP} (model: ${EMBEDDING_MODEL}) from precice/precice.github.io, precice/precice, precice/tutorials, precice.discourse.group, precice/precice issues & pulls"
+          gh release edit kb-latest --notes "Updated vector categories [$CHANGED] and lexical KB on ${TIMESTAMP} (model: ${EMBEDDING_MODEL}) from precice/precice.github.io (+ its .gitmodules adapter repos), precice/precice, precice/tutorials, precice.discourse.group, precice/precice issues & pulls"
 
       - name: Update kb_state.json and upload to release
         if: steps.diff.outputs.changed != ''

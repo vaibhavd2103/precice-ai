@@ -14,8 +14,8 @@ from pathlib import Path
 
 import numpy as np
 
-from precice_ai.kb import store
-from precice_ai.kb.builder import build_forum_chunks, build_github_chunks
+from precice_ai.kb import adapters, store
+from precice_ai.kb.builder import build_forum_chunks, build_github_chunks, build_markdown_chunks
 from precice_ai.kb.chunking import (
     HARD_MAX_CHARS,
     TARGET_MAX_CHARS,
@@ -231,6 +231,42 @@ class SourceBuilderTests(unittest.TestCase):
         self.assertEqual(first.extra["number"], 1)
         self.assertTrue(first.extra["merged"])
         self.assertEqual(first.title, "#1 Fix 1")
+
+    def test_adapter_markdown_chunks(self):
+        gitmodules = (
+            '[submodule "imported/openfoam-adapter"]\n'
+            "\tpath = imported/openfoam-adapter\n"
+            "\turl = https://github.com/precice/openfoam-adapter.git\n"
+            '[submodule "imported/tutorials"]\n'
+            "\tpath = imported/tutorials\n"
+            "\turl = https://github.com/precice/tutorials\n"
+        )
+        repos = adapters.parse_gitmodules(gitmodules)
+        self.assertEqual(repos, [{"name": "openfoam-adapter", "repo": "precice/openfoam-adapter", "branch": None}])
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_dir = Path(tmp) / "openfoam-adapter"
+            (repo_dir / "docs").mkdir(parents=True)
+            (repo_dir / "README.md").write_text("# OpenFOAM-preCICE adapter\n\n" + PROSE)
+            (repo_dir / "docs" / "config.md").write_text(
+                "---\ntitle: Configure the OpenFOAM adapter\npermalink: adapter-openfoam-config.html\n---\n\n" + PROSE.replace("Mapping", "Config")
+            )
+            (repo_dir / "src").mkdir()
+            (repo_dir / "src" / "notes.md").write_text("# Not ingested\n\n" + PROSE.replace("Mapping", "Src"))
+            manifest = [{"name": "openfoam-adapter", "repo": "precice/openfoam-adapter",
+                         "branch": "master", "dir": str(repo_dir)}]
+            config = {"base_url": "https://precice.org", "categories": {"adapters": {"type": "gitmodules"}}}
+            chunks = build_markdown_chunks("adapters", adapters.render_sources(config, manifest))
+
+        urls = {c.url for c in chunks}
+        self.assertEqual(urls, {
+            "https://github.com/precice/openfoam-adapter/blob/master/README.md",
+            "https://precice.org/adapter-openfoam-config.html",
+        })
+        readme = next(c for c in chunks if c.url.endswith("README.md"))
+        self.assertEqual(readme.title, "openfoam-adapter: OpenFOAM-preCICE adapter")
+        self.assertEqual(readme.section_path, [], "H1 matching the bare title is not repeated")
+        self.assertTrue(all(c.category == "adapters" and not validate_chunk_dict(c.to_dict()) for c in chunks))
 
     def test_bot_detection(self):
         self.assertTrue(is_bot_user({"login": "dependabot[bot]", "type": "Bot"}))

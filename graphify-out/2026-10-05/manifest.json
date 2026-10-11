@@ -1,0 +1,272 @@
+{
+  "/home/vaibhav/precice-ai-workspace/precice-ai/kb_sources.json": {
+    "mtime": 1785312716.5745268,
+    "ast_hash": "c29016a0be530177b1ef89001d1794d1",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/server.py": {
+    "mtime": 1783077597.2451434,
+    "ast_hash": "f2a588106cf29c2cbb762c2bc177fa57",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/scripts/build_forum_embeddings.py": {
+    "mtime": 1789298212.7630365,
+    "ast_hash": "fc4e0243e1d59f875b865d7c9912e1fe",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/scripts/compare_kb_search.py": {
+    "mtime": 1789298212.7630365,
+    "ast_hash": "a4a0c89966ec8a28d657a7ace13697c4",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/scripts/build_embeddings.py": {
+    "mtime": 1789298212.7630365,
+    "ast_hash": "4f0c2546aaee4d13d1d8cdcdc7f85bf3",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/scripts/render_sources_json.py": {
+    "mtime": 1785312716.5745268,
+    "ast_hash": "ac18130e731cd569859f0b2dc296465e",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/scripts/kb_state.py": {
+    "mtime": 1785312716.5745268,
+    "ast_hash": "af42e306731b1b4d6df9d7172a3c2410",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/server.py": {
+    "mtime": 1789309152.2998106,
+    "ast_hash": "4d6032ebb3cfcc5213abb815d1f05f2f",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/__init__.py": {
+    "mtime": 1783077597.2343435,
+    "ast_hash": "4867131295172353fe6c2295851defc7",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/cli/main.py": {
+    "mtime": 1789309152.2998106,
+    "ast_hash": "1822a968bd78ecbb7e9f082425fc117c",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/cli/__init__.py": {
+    "mtime": 1783077597.2343435,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/cli/platforms/base.py": {
+    "mtime": 1789298212.7630365,
+    "ast_hash": "ec44f4e494d82a700d84abd62ffe1a18",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/cli/platforms/cursor.py": {
+    "mtime": 1785749366.336894,
+    "ast_hash": "8cd46d0a2a9c47529235cba730eb4096",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/cli/platforms/claude_code.py": {
+    "mtime": 1789298212.7630365,
+    "ast_hash": "fdcdbcb1e58d1f233b1f2104053b58e2",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/cli/platforms/claude_desktop.py": {
+    "mtime": 1785749366.336894,
+    "ast_hash": "e138dd0de7e9f4e2cb221115b6fa6b70",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/cli/platforms/generic.py": {
+    "mtime": 1785749366.340742,
+    "ast_hash": "ebed5e4f6fcca9b04d27e50d5f640017",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/cli/platforms/windsurf.py": {
+    "mtime": 1785749366.340742,
+    "ast_hash": "425edbf047d6d85bf8f6b3860e4bece1",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/cli/platforms/codex.py": {
+    "mtime": 1785749366.336894,
+    "ast_hash": "2960d8acdfdd3ba442f520121ccaa3ea",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/cli/platforms/__init__.py": {
+    "mtime": 1783077597.2343435,
+    "ast_hash": "ed8189129f0c68cb8912e66408227ece",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/core/paths.py": {
+    "mtime": 1789309152.2998106,
+    "ast_hash": "f69b0dd9041ea0a333d3ff67ed6fc1ef",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/core/knowledge_base.py": {
+    "mtime": 1789298389.5854657,
+    "ast_hash": "89edd7a2e92ac772361d7d299106b3c5",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/core/safety.py": {
+    "mtime": 1783077597.2415435,
+    "ast_hash": "ef8c2c7507a72f5c0fa37b93c0882b47",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/core/command_runner.py": {
+    "mtime": 1783077597.2379434,
+    "ast_hash": "5e80cc1674671f62b137ebd0ab19dcb2",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/core/__init__.py": {
+    "mtime": 1783077597.2379434,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/tools/config_tools.py": {
+    "mtime": 1783077597.2415435,
+    "ast_hash": "9fffb64e063b9d366fca8878957016f5",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/tools/log_tools.py": {
+    "mtime": 1783077597.2415435,
+    "ast_hash": "7c2e58d623258f12da18281e1d29e457",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/tools/project_tools.py": {
+    "mtime": 1789298212.7630365,
+    "ast_hash": "f914a606cb4c3b761c0174afe63b2d31",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/tools/knowledge_tools.py": {
+    "mtime": 1789298212.7630365,
+    "ast_hash": "14e57ed31e1340e96de2997d1dd64450",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/tools/cli_tools.py": {
+    "mtime": 1785312659.6225069,
+    "ast_hash": "81dd899d9d28cae6f223129752ed29a5",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/tools/__init__.py": {
+    "mtime": 1783077597.2415435,
+    "ast_hash": "aea47fc76df5b6143bab78de851c3c94",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/.claude/settings.json": {
+    "mtime": 1779705875.146471,
+    "ast_hash": "87f0d903477984d0587a02f8fe185263",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/.claude/settings.local.json": {
+    "mtime": 1783769361.7142942,
+    "ast_hash": "ad6c7cc36f9da1250c4a119fac5059ad",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/CLAUDE.md": {
+    "mtime": 1789298212.7630365,
+    "ast_hash": "2922cebac176a0f6e1a24b320eb30df5",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/AGENTS.md": {
+    "mtime": 1789298212.7630365,
+    "ast_hash": "38543bcd67fd5cfa0893c5e1cba8ca6f",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/README.md": {
+    "mtime": 1789309152.2998106,
+    "ast_hash": "e2aaccb0d3cfb7d8311bdafadab436a2",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/requirements.txt": {
+    "mtime": 1789298389.5854657,
+    "ast_hash": "93daf543e9058ffa08ff2dd66cfd6379",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/document.md": {
+    "mtime": 1779626415.161488,
+    "ast_hash": "5c739017fad9d7940df59564c794d2d9",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/.agents/skills/graphify/SKILL.md": {
+    "mtime": 1779705875.146471,
+    "ast_hash": "8a98d44ea5c92ab83d0c18efb43b57de",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/.claude/CLAUDE.md": {
+    "mtime": 1779705875.146471,
+    "ast_hash": "db73b0edd7ffbc61ceac177130730865",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/.claude/skills/graphify/SKILL.md": {
+    "mtime": 1779705875.150121,
+    "ast_hash": "4a17dc07aaa132bf50debae26386d2ea",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/.github/workflows/kb-ingest.yml": {
+    "mtime": 1789309152.295929,
+    "ast_hash": "0adc284402094fe4defb2e0b619322e4",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/.github/workflows/pylint.yml": {
+    "mtime": 1789309152.2998106,
+    "ast_hash": "e522005ba51e7a15cddf41f974137e43",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/install.sh": {
+    "mtime": 1785749366.3330462,
+    "ast_hash": "a89c074e2146c8bf4e6f7a82c748cf6e",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/scripts/build_github_activity_embeddings.py": {
+    "mtime": 1789298212.7630365,
+    "ast_hash": "4bda4e8672c42a195beee637e03f22b8",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/scripts/build_lexical_kb.py": {
+    "mtime": 1789298212.7630365,
+    "ast_hash": "621afa893e0f704cda2e2e697941b53a",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/cli/bootstrap.py": {
+    "mtime": 1789309152.2998106,
+    "ast_hash": "c9343ec31f948ed1c982795279fc5ff5",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/core/discourse_api.py": {
+    "mtime": 1789298212.7630365,
+    "ast_hash": "29166fa545270b68c1f0f077735e9088",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/utils/topology_schema.json": {
+    "mtime": 1785312659.6225069,
+    "ast_hash": "4cbc757b59a1ca4ae048ad6e710c82f6",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/CONTRIBUTOR_GUIDE.md": {
+    "mtime": 1789309152.2998106,
+    "ast_hash": "a1e144a9442d1bb2f80984b5e0ae09ad",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/install.ps1": {
+    "mtime": 1787736895.7709644,
+    "ast_hash": "65a5392231bf4c1097694732220fce13",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/core/text_cleaning.py": {
+    "mtime": 1789298212.7630365,
+    "ast_hash": "77a8035bfca68976d4872aff3445d9e2",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/precice_ai/core/embedding.py": {
+    "mtime": 1789298212.7630365,
+    "ast_hash": "19439eeed54306d752c15a92eab0a72b",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/.github/workflows/publish.yml": {
+    "mtime": 1789309152.295929,
+    "ast_hash": "33518593b2aebfc703563983273751cb",
+    "semantic_hash": ""
+  },
+  "/home/vaibhav/precice-ai-workspace/precice-ai/.github/workflows/version-check.yml": {
+    "mtime": 1789309152.2998106,
+    "ast_hash": "018776332033e0f7ae62417661678270",
+    "semantic_hash": ""
+  }
+}

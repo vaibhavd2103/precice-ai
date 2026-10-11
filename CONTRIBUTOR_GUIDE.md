@@ -244,7 +244,7 @@ The CLI tools shell out to `precice-cli`, which is installed separately and is n
 
 The grey box at the bottom right never runs inside the MCP server. It is the `kb-ingest.yml` GitHub Actions workflow plus the scripts in `scripts/`:
 
-1. collect content from four kinds of source: the official preCICE website, tutorials, the Discourse forum, and GitHub issues and pull requests (see `kb_sources.json`)
+1. collect content from five kinds of source: the official preCICE website, tutorials, the adapter and tooling repos imported by the website's `.gitmodules` (root `README.md` + `docs/`, skipping `tutorials`), the Discourse forum, and GitHub issues and pull requests (see `kb_sources.json`)
 2. chunk, clean, and embed the content in the **Index + embed** step
 3. **publish** the `.npz` files and `kb-lexical.json` as assets on the `kb-latest` GitHub Release
 
@@ -695,6 +695,7 @@ Categories are configured in `kb_sources.json`, including:
 - `community`
 - `documentation`
 - `tutorials`
+- `adapters` (repos discovered from `precice/precice.github.io`'s `.gitmodules`; only each repo's root `README.md` + `docs/` are ingested — see `precice_ai/kb/adapters.py`)
 - `forum`
 - `issues`
 - `pulls`
@@ -705,6 +706,7 @@ The main helper scripts are:
 - `scripts/finalize_kb.py` (derives `kb-lexical.json` + `kb-manifest.json` from the npz files and validates)
 - `scripts/validate_kb.py` (schema/consistency checks and per-category stats)
 - `scripts/render_sources_json.py`
+- `scripts/adapter_repos.py` (checks out the adapter repos and prints their change signature; `rebuild_kb.py --adapter-manifest` builds from that checkout)
 - `scripts/kb_state.py`
 - `scripts/compare_kb_search.py`
 
@@ -821,10 +823,11 @@ kb_precice_status()
 ### Add a new KB category
 
 1. Add the source definition to `kb_sources.json`.
-2. Update `precice_ai/core/knowledge_base.py` so the category is recognized.
-3. Update any local fallback logic for building that category.
-4. Update the build workflow if it needs special handling.
-5. Regenerate or publish the release assets.
+2. Add it to `CATEGORIES` in `precice_ai/kb/schema.py` (the vector KB, lexical KB, validator and manifest all derive from that list).
+3. If it is not plain git-backed Markdown, add a branch for its `type` in `precice_ai/kb/rebuild.py` (`collect_category_chunks`); the MCP local fallback builds through the same function.
+4. Add it to `ALL_CATEGORIES` and both weight tables in `precice_ai/tools/knowledge_tools.py`.
+5. Update the build workflow if it needs special handling (signature, checkout, and the unchanged-category download loop).
+6. Regenerate or publish the release assets.
 
 ## Graphify And Codebase Navigation
 

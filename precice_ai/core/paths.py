@@ -17,19 +17,28 @@ def get_projects_dir() -> Path:
     return Path.cwd() / "test-projects"
 
 
-def get_project_path(project_name: str) -> Path:
-    """Return the absolute path of a project, preventing path traversal."""
-    projects_dir = get_projects_dir()
-    project_path = (projects_dir / project_name).resolve()
+def get_project_path(project_path: str) -> Path:
+    """Return the absolute path of a project directory.
 
-    if not str(project_path).startswith(str(projects_dir.resolve())):
-        raise ValueError(f"Invalid project path: {project_name}")
+    Agents pass the project directory itself, so an absolute path (or one
+    starting with ~) is used as given. A bare project name is still resolved
+    inside the projects directory, preventing path traversal out of it.
+    """
+    candidate = Path(project_path).expanduser()
+    if candidate.is_absolute():
+        return candidate.resolve()
 
-    return project_path
+    projects_dir = get_projects_dir().resolve()
+    resolved = (projects_dir / candidate).resolve()
+
+    if not resolved.is_relative_to(projects_dir):
+        raise ValueError(f"Invalid project path: {project_path}")
+
+    return resolved
 
 
-def get_precice_config_path(project_name: str) -> Path:
-    return get_project_path(project_name) / "precice-config.xml"
+def get_precice_config_path(project_path: str) -> Path:
+    return get_project_path(project_path) / "precice-config.xml"
 
 
 def get_env_file_path() -> Path:

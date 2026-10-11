@@ -7,7 +7,7 @@ This project implements an MCP server for assisting users with local preCICE sim
 - Do not run destructive shell commands.
 - Do not delete project files.
 - Always inspect `precice-config.xml` before modifying it.
-- Always call `backup_precice_config(project_name)` before applying config changes.
+- Always call `backup_precice_config(project_path)` before applying config changes.
 - Prefer MCP tools over raw shell commands.
 - Explain simulation/configuration errors in simple language.
 
@@ -28,14 +28,14 @@ Use this decision rule for the relevant KB category:
 
 For a new project:
 
-1. `list_precice_projects`
+1. `list_precice_projects(path)` — pass the absolute path of the directory holding the cases (usually the current workspace); it returns absolute project paths to use as `project_path` below
 2. `inspect_project_structure`
 3. `find_precice_config`
 4. `inspect_precice_config`
 5. `summarize_precice_config`
-6. `precice_config_check(cwd, config_file)` — requires `precice-cli` on `PATH` (`pip install precice`); `cwd` is the project directory, not `project_name`
+6. `precice_config_check(cwd, config_file)` — requires `precice-cli` on `PATH` (`pip install precice`); `cwd` is the project directory
 
-Before editing a config: `backup_precice_config(project_name)`, then `precice_config_format`/`precice_config_doc` as needed.
+Before editing a config: `backup_precice_config(project_path)`, then `precice_config_format`/`precice_config_doc` as needed.
 
 For logs:
 

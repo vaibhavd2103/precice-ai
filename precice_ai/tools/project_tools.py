@@ -2,7 +2,7 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
-from precice_ai.core.paths import get_projects_dir, get_project_path
+from precice_ai.core.paths import get_project_path
 from precice_ai.core.command_runner import run_safe_command
 
 
@@ -10,32 +10,43 @@ def register_project_tools(mcp: FastMCP) -> None:
     """Register project-related MCP tools."""
 
     @mcp.tool()
-    def list_precice_projects() -> list[str]:
-        """List available local preCICE tutorial projects in the provided project directory from the environment variable or default location."""
-        projects_dir = get_projects_dir()
-        if not projects_dir.exists():
-            return []
+    def list_precice_projects(path: str) -> list[str]:
+        """List the preCICE projects (case directories) inside a directory.
+
+        Args:
+            path: Absolute path of the directory to scan, e.g. the user's
+                current workspace. The server does not assume a default
+                location, so always pass it.
+
+        Returns the absolute path of every sub-directory. Pass one of them as
+        project_path to the other project, config and log tools.
+        """
+        projects_dir = Path(path).expanduser().resolve()
+        if not projects_dir.is_dir():
+            raise ValueError(f"Not a directory: {projects_dir}")
         return sorted(
-            [project.name for project in projects_dir.iterdir() if project.is_dir()]
+            str(project)
+            for project in projects_dir.iterdir()
+            if project.is_dir() and not project.name.startswith(".")
         )
 
     @mcp.tool()
-    def inspect_project_structure(project_name: str, max_depth: int = 3) -> str:
+    def inspect_project_structure(project_path: str, max_depth: int = 3) -> str:
         """Inspect the folder structure of a preCICE project.
 
         Args:
-            project_name: Name of the project inside the provided project directory from the environment variable or default location.
+            project_path: Absolute path of the project directory, as returned by list_precice_projects.
             max_depth: Maximum folder depth to display.
         """
-        project_path = get_project_path(project_name)
+        project_dir = get_project_path(project_path)
 
-        if not project_path.exists():
-            return f"Project not found: {project_name}"
+        if not project_dir.exists():
+            return f"Project not found: {project_path}"
 
-        lines: list[str] = [f"Project structure for: {project_name}\n"]
-        base_depth = len(project_path.parts)
+        lines: list[str] = [f"Project structure for: {project_path}\n"]
+        base_depth = len(project_dir.parts)
 
-        for path in sorted(project_path.rglob("*")):
+        for path in sorted(project_dir.rglob("*")):
             relative_depth = len(path.parts) - base_depth
             if relative_depth > max_depth:
                 continue
@@ -46,33 +57,41 @@ def register_project_tools(mcp: FastMCP) -> None:
         return "\n".join(lines)
 
     @mcp.tool()
-    def find_precice_config(project_name: str) -> str:
-        """Find all precice-config.xml files inside a project."""
-        project_path = get_project_path(project_name)
+    def find_precice_config(project_path: str) -> str:
+        """Find all precice-config.xml files inside a project.
 
-        if not project_path.exists():
-            return f"Project not found: {project_name}"
+        Args:
+            project_path: Absolute path of the project directory.
+        """
+        project_dir = get_project_path(project_path)
 
-        config_files = list(project_path.rglob("precice-config.xml"))
+        if not project_dir.exists():
+            return f"Project not found: {project_path}"
+
+        config_files = list(project_dir.rglob("precice-config.xml"))
 
         if not config_files:
-            return f"No precice-config.xml found in project: {project_name}"
+            return f"No precice-config.xml found in project: {project_path}"
 
         result = ["Found preCICE config file(s):"]
         for config_file in config_files:
-            result.append(f"- {config_file.relative_to(project_path)}")
+            result.append(f"- {config_file.relative_to(project_dir)}")
 
         return "\n".join(result)
 
     @mcp.tool()
-    def run_command_in_project(project_name: str, command: str) -> str:
+    def run_command_in_project(project_path: str, command: str) -> str:
         """Run a safe command inside a preCICE project.
 
         Only allowlisted read/list/test commands are permitted.
+
+        Args:
+            project_path: Absolute path of the project directory.
+            command: The command to run with the project directory as cwd.
         """
-        project_path = get_project_path(project_name)
+        project_dir = get_project_path(project_path)
 
-        if not project_path.exists():
-            return f"Project not found: {project_name}"
+        if not project_dir.exists():
+            return f"Project not found: {project_path}"
 
-        return run_safe_command(command=command, cwd=project_path)
+        return run_safe_command(command=command, cwd=project_dir)

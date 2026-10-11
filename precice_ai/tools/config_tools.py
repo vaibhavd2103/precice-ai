@@ -12,17 +12,23 @@ def register_config_tools(mcp: FastMCP) -> None:
     """Register preCICE configuration-related MCP tools."""
 
     @mcp.tool()
-    def inspect_precice_config(project_name: str) -> str:
-        """Read the precice-config.xml file of a project."""
-        config_file = get_precice_config_path(project_name)
+    def inspect_precice_config(project_path: str) -> str:
+        """Read the precice-config.xml file of a project.
+
+        project_path is the absolute path of the project directory.
+        """
+        config_file = get_precice_config_path(project_path)
         if not config_file.exists():
             return f"No precice-config.xml found at: {config_file}"
         return config_file.read_text(errors="ignore")
 
     @mcp.tool()
-    def summarize_precice_config(project_name: str) -> str:
-        """Summarize important information from precice-config.xml."""
-        config_file = get_precice_config_path(project_name)
+    def summarize_precice_config(project_path: str) -> str:
+        """Summarize important information from precice-config.xml.
+
+        project_path is the absolute path of the project directory.
+        """
+        config_file = get_precice_config_path(project_path)
         if not config_file.exists():
             return f"No precice-config.xml found at: {config_file}"
 
@@ -57,7 +63,7 @@ def register_config_tools(mcp: FastMCP) -> None:
         return f"""preCICE configuration summary
 
 Project:
-{project_name}
+{project_path}
 
 Config file:
 {config_file}
@@ -76,9 +82,12 @@ Coupling scheme tags:
 """
 
     @mcp.tool()
-    def backup_precice_config(project_name: str) -> str:
-        """Create a timestamped backup of precice-config.xml."""
-        config_file = get_precice_config_path(project_name)
+    def backup_precice_config(project_path: str) -> str:
+        """Create a timestamped backup of precice-config.xml.
+
+        project_path is the absolute path of the project directory.
+        """
+        config_file = get_precice_config_path(project_path)
         if not config_file.exists():
             return f"No precice-config.xml found at: {config_file}"
 

@@ -496,7 +496,7 @@
       "source_file": "scripts/build_forum_embeddings.py",
       "source_location": "L1",
       "id": "scripts_build_forum_embeddings_py",
-      "community": 13,
+      "community": 58,
       "norm_label": "build_forum_embeddings.py"
     },
     {
@@ -505,7 +505,7 @@
       "source_file": "scripts/build_forum_embeddings.py",
       "source_location": "L34",
       "id": "scripts_build_forum_embeddings_fetch_topics",
-      "community": 13,
+      "community": 58,
       "norm_label": "_fetch_topics()"
     },
     {
@@ -523,7 +523,7 @@
       "source_file": "scripts/build_forum_embeddings.py",
       "source_location": "L1",
       "id": "scripts_build_forum_embeddings_rationale_1",
-      "community": 13,
+      "community": 58,
       "norm_label": "build the 'forum' vector kb category from precice.discourse.group topics.  unlik"
     },
     {
@@ -532,7 +532,7 @@
       "source_file": "scripts/compare_kb_search.py",
       "source_location": "L1",
       "id": "scripts_compare_kb_search_py",
-      "community": 75,
+      "community": 1,
       "norm_label": "compare_kb_search.py"
     },
     {
@@ -541,7 +541,7 @@
       "source_file": "scripts/compare_kb_search.py",
       "source_location": "L39",
       "id": "scripts_compare_kb_search_run_lexical",
-      "community": 75,
+      "community": 1,
       "norm_label": "_run_lexical()"
     },
     {
@@ -550,7 +550,7 @@
       "source_file": "scripts/compare_kb_search.py",
       "source_location": "L47",
       "id": "scripts_compare_kb_search_run_vector",
-      "community": 75,
+      "community": 1,
       "norm_label": "_run_vector()"
     },
     {
@@ -559,7 +559,7 @@
       "source_file": "scripts/compare_kb_search.py",
       "source_location": "L80",
       "id": "scripts_compare_kb_search_print_results",
-      "community": 75,
+      "community": 1,
       "norm_label": "_print_results()"
     },
     {
@@ -568,7 +568,7 @@
       "source_file": "scripts/compare_kb_search.py",
       "source_location": "L98",
       "id": "scripts_compare_kb_search_main",
-      "community": 75,
+      "community": 1,
       "norm_label": "main()"
     },
     {
@@ -577,7 +577,7 @@
       "source_file": "scripts/compare_kb_search.py",
       "source_location": "L1",
       "id": "scripts_compare_kb_search_rationale_1",
-      "community": 75,
+      "community": 1,
       "norm_label": "run lexical (bm25-like) and vector (embedding cosine-similarity) search against"
     },
     {
@@ -845,7 +845,7 @@
       "label": "_category_config()",
       "file_type": "code",
       "source_file": "scripts/adapter_repos.py",
-      "source_location": "L50",
+      "source_location": "L47",
       "id": "scripts_adapter_repos_category_config",
       "community": 100,
       "norm_label": "_category_config()"
@@ -854,7 +854,7 @@
       "label": "read_gitmodules()",
       "file_type": "code",
       "source_file": "scripts/adapter_repos.py",
-      "source_location": "L57",
+      "source_location": "L54",
       "id": "scripts_adapter_repos_read_gitmodules",
       "community": 100,
       "norm_label": "read_gitmodules()"
@@ -863,7 +863,7 @@
       "label": "parse_gitmodules()",
       "file_type": "code",
       "source_file": "scripts/adapter_repos.py",
-      "source_location": "L69",
+      "source_location": "L66",
       "id": "scripts_adapter_repos_parse_gitmodules",
       "community": 100,
       "norm_label": "parse_gitmodules()"
@@ -872,7 +872,7 @@
       "label": "_git()",
       "file_type": "code",
       "source_file": "scripts/adapter_repos.py",
-      "source_location": "L102",
+      "source_location": "L97",
       "id": "scripts_adapter_repos_git",
       "community": 100,
       "norm_label": "_git()"
@@ -881,7 +881,7 @@
       "label": "checkout()",
       "file_type": "code",
       "source_file": "scripts/adapter_repos.py",
-      "source_location": "L109",
+      "source_location": "L104",
       "id": "scripts_adapter_repos_checkout",
       "community": 100,
       "norm_label": "checkout()"
@@ -890,7 +890,7 @@
       "label": "signature()",
       "file_type": "code",
       "source_file": "scripts/adapter_repos.py",
-      "source_location": "L139",
+      "source_location": "L133",
       "id": "scripts_adapter_repos_signature",
       "community": 100,
       "norm_label": "signature()"
@@ -899,7 +899,7 @@
       "label": "sources()",
       "file_type": "code",
       "source_file": "scripts/adapter_repos.py",
-      "source_location": "L158",
+      "source_location": "L152",
       "id": "scripts_adapter_repos_sources",
       "community": 100,
       "norm_label": "sources()"
@@ -908,7 +908,7 @@
       "label": "_load_manifest()",
       "file_type": "code",
       "source_file": "scripts/adapter_repos.py",
-      "source_location": "L178",
+      "source_location": "L172",
       "id": "scripts_adapter_repos_load_manifest",
       "community": 100,
       "norm_label": "_load_manifest()"
@@ -917,7 +917,7 @@
       "label": "main()",
       "file_type": "code",
       "source_file": "scripts/adapter_repos.py",
-      "source_location": "L182",
+      "source_location": "L176",
       "id": "scripts_adapter_repos_main",
       "community": 100,
       "norm_label": "main()"
@@ -935,8 +935,8 @@
       "label": "Return .gitmodules text from a local checkout, or fetch it from GitHub.",
       "file_type": "rationale",
       "source_file": "scripts/adapter_repos.py",
-      "source_location": "L58",
-      "id": "scripts_adapter_repos_rationale_58",
+      "source_location": "L55",
+      "id": "scripts_adapter_repos_rationale_55",
       "community": 100,
       "norm_label": "return .gitmodules text from a local checkout, or fetch it from github."
     },
@@ -944,8 +944,8 @@
       "label": "Return [{name, repo, branch}] for every included GitHub submodule.",
       "file_type": "rationale",
       "source_file": "scripts/adapter_repos.py",
-      "source_location": "L70",
-      "id": "scripts_adapter_repos_rationale_70",
+      "source_location": "L67",
+      "id": "scripts_adapter_repos_rationale_67",
       "community": 100,
       "norm_label": "return [{name, repo, branch}] for every included github submodule."
     },
@@ -953,8 +953,8 @@
       "label": "Sparse-clone README.md + docs/ of each repo into dest; return the manifest.",
       "file_type": "rationale",
       "source_file": "scripts/adapter_repos.py",
-      "source_location": "L110",
-      "id": "scripts_adapter_repos_rationale_110",
+      "source_location": "L105",
+      "id": "scripts_adapter_repos_rationale_105",
       "community": 100,
       "norm_label": "sparse-clone readme.md + docs/ of each repo into dest; return the manifest."
     },
@@ -962,8 +962,8 @@
       "label": "Content signature: git object ids of each repo's README.md and docs/.      Like",
       "file_type": "rationale",
       "source_file": "scripts/adapter_repos.py",
-      "source_location": "L140",
-      "id": "scripts_adapter_repos_rationale_140",
+      "source_location": "L134",
+      "id": "scripts_adapter_repos_rationale_134",
       "community": 100,
       "norm_label": "content signature: git object ids of each repo's readme.md and docs/.      like"
     },
@@ -971,8 +971,8 @@
       "label": "build_embeddings.py sources: precice.org URLs for docs pages with a     permalin",
       "file_type": "rationale",
       "source_file": "scripts/adapter_repos.py",
-      "source_location": "L159",
-      "id": "scripts_adapter_repos_rationale_159",
+      "source_location": "L153",
+      "id": "scripts_adapter_repos_rationale_153",
       "community": 100,
       "norm_label": "build_embeddings.py sources: precice.org urls for docs pages with a     permalin"
     },
@@ -1126,7 +1126,7 @@
       "source_file": "precice_ai/server.py",
       "source_location": "L1",
       "id": "precice_ai_server_py",
-      "community": 59,
+      "community": 57,
       "norm_label": "server.py"
     },
     {
@@ -1243,7 +1243,7 @@
       "source_file": "precice_ai/cli/main.py",
       "source_location": "L413",
       "id": "cli_main_list_platforms",
-      "community": 57,
+      "community": 54,
       "norm_label": "list_platforms()"
     },
     {
@@ -1324,7 +1324,7 @@
       "source_file": "precice_ai/cli/main.py",
       "source_location": "L414",
       "id": "cli_main_rationale_414",
-      "community": 57,
+      "community": 54,
       "norm_label": "list all supported platforms and whether they appear to be installed."
     },
     {
@@ -2042,7 +2042,7 @@
       "label": "get_precice_config_path()",
       "file_type": "code",
       "source_file": "precice_ai/core/paths.py",
-      "source_location": "L31",
+      "source_location": "L40",
       "id": "core_paths_get_precice_config_path",
       "community": 62,
       "norm_label": "get_precice_config_path()"
@@ -2051,7 +2051,7 @@
       "label": "get_env_file_path()",
       "file_type": "code",
       "source_file": "precice_ai/core/paths.py",
-      "source_location": "L35",
+      "source_location": "L44",
       "id": "core_paths_get_env_file_path",
       "community": 57,
       "norm_label": "get_env_file_path()"
@@ -2066,20 +2066,20 @@
       "norm_label": "return the precice projects directory.      resolved from precice_projects_dir e"
     },
     {
-      "label": "Return the absolute path of a project, preventing path traversal.",
+      "label": "Return the absolute path of a project directory.      Agents pass the project di",
       "file_type": "rationale",
       "source_file": "precice_ai/core/paths.py",
       "source_location": "L21",
       "id": "core_paths_rationale_21",
       "community": 62,
-      "norm_label": "return the absolute path of a project, preventing path traversal."
+      "norm_label": "return the absolute path of a project directory.      agents pass the project di"
     },
     {
       "label": "Return the .env file to load API keys and other settings from.      Resolved in",
       "file_type": "rationale",
       "source_file": "precice_ai/core/paths.py",
-      "source_location": "L36",
-      "id": "core_paths_rationale_36",
+      "source_location": "L45",
+      "id": "core_paths_rationale_45",
       "community": 57,
       "norm_label": "return the .env file to load api keys and other settings from.      resolved in"
     },
@@ -2089,7 +2089,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L1",
       "id": "precice_ai_core_knowledge_base_py",
-      "community": 98,
+      "community": 1,
       "norm_label": "knowledge_base.py"
     },
     {
@@ -2098,7 +2098,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L20",
       "id": "core_knowledge_base_get_kb_dir",
-      "community": 112,
+      "community": 1,
       "norm_label": "_get_kb_dir()"
     },
     {
@@ -2107,7 +2107,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L59",
       "id": "core_knowledge_base_meta_path",
-      "community": 98,
+      "community": 1,
       "norm_label": "_meta_path()"
     },
     {
@@ -2116,7 +2116,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L63",
       "id": "core_knowledge_base_load_asset_meta",
-      "community": 98,
+      "community": 1,
       "norm_label": "_load_asset_meta()"
     },
     {
@@ -2125,7 +2125,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L74",
       "id": "core_knowledge_base_save_asset_meta",
-      "community": 98,
+      "community": 1,
       "norm_label": "_save_asset_meta()"
     },
     {
@@ -2134,7 +2134,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L81",
       "id": "core_knowledge_base_meta_expired",
-      "community": 98,
+      "community": 1,
       "norm_label": "_meta_expired()"
     },
     {
@@ -2143,7 +2143,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L93",
       "id": "core_knowledge_base_parse_iso_datetime",
-      "community": 98,
+      "community": 1,
       "norm_label": "_parse_iso_datetime()"
     },
     {
@@ -2152,7 +2152,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L102",
       "id": "core_knowledge_base_freshness_details",
-      "community": 98,
+      "community": 1,
       "norm_label": "_freshness_details()"
     },
     {
@@ -2161,7 +2161,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L158",
       "id": "core_knowledge_base_fetch_release_assets",
-      "community": 98,
+      "community": 1,
       "norm_label": "_fetch_release_assets()"
     },
     {
@@ -2170,7 +2170,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L187",
       "id": "core_knowledge_base_sync_release_asset",
-      "community": 98,
+      "community": 1,
       "norm_label": "sync_release_asset()"
     },
     {
@@ -2197,7 +2197,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L261",
       "id": "core_knowledge_base_knowledgebaseservice_init",
-      "community": 112,
+      "community": 1,
       "norm_label": ".__init__()"
     },
     {
@@ -2215,7 +2215,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L354",
       "id": "core_knowledge_base_knowledgebaseservice_query",
-      "community": 98,
+      "community": 1,
       "norm_label": ".query()"
     },
     {
@@ -2224,7 +2224,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L412",
       "id": "core_knowledge_base_knowledgebaseservice_sync_from_release",
-      "community": 107,
+      "community": 1,
       "norm_label": ".sync_from_release()"
     },
     {
@@ -2296,7 +2296,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L579",
       "id": "core_knowledge_base_extract_html_document",
-      "community": 98,
+      "community": 1,
       "norm_label": "_extract_html_document()"
     },
     {
@@ -2314,7 +2314,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L603",
       "id": "core_knowledge_base_bm25_like_score",
-      "community": 98,
+      "community": 1,
       "norm_label": "_bm25_like_score()"
     },
     {
@@ -2323,7 +2323,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L621",
       "id": "core_knowledge_base_snippet_for_terms",
-      "community": 98,
+      "community": 1,
       "norm_label": "_snippet_for_terms()"
     },
     {
@@ -2341,7 +2341,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L643",
       "id": "core_knowledge_base_now_iso",
-      "community": 98,
+      "community": 1,
       "norm_label": "_now_iso()"
     },
     {
@@ -2350,7 +2350,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L660",
       "id": "core_knowledge_base_asset_name",
-      "community": 112,
+      "community": 1,
       "norm_label": "_asset_name()"
     },
     {
@@ -2359,7 +2359,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L664",
       "id": "core_knowledge_base_find_repo_scripts_dir",
-      "community": 107,
+      "community": 1,
       "norm_label": "_find_repo_scripts_dir()"
     },
     {
@@ -2368,7 +2368,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L680",
       "id": "core_knowledge_base_find_kb_sources_config",
-      "community": 107,
+      "community": 1,
       "norm_label": "_find_kb_sources_config()"
     },
     {
@@ -2377,7 +2377,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L689",
       "id": "core_knowledge_base_vectorknowledgebase",
-      "community": 75,
+      "community": 1,
       "norm_label": "vectorknowledgebase"
     },
     {
@@ -2386,7 +2386,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L694",
       "id": "core_knowledge_base_vectorknowledgebase_init",
-      "community": 112,
+      "community": 1,
       "norm_label": ".__init__()"
     },
     {
@@ -2395,7 +2395,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L706",
       "id": "core_knowledge_base_vectorknowledgebase_download_from_release",
-      "community": 107,
+      "community": 1,
       "norm_label": ".download_from_release()"
     },
     {
@@ -2404,7 +2404,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L751",
       "id": "core_knowledge_base_vectorknowledgebase_build_category_locally",
-      "community": 107,
+      "community": 1,
       "norm_label": "._build_category_locally()"
     },
     {
@@ -2413,7 +2413,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L917",
       "id": "core_knowledge_base_vectorknowledgebase_is_available",
-      "community": 75,
+      "community": 1,
       "norm_label": ".is_available()"
     },
     {
@@ -2422,7 +2422,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L922",
       "id": "core_knowledge_base_vectorknowledgebase_status",
-      "community": 75,
+      "community": 1,
       "norm_label": ".status()"
     },
     {
@@ -2440,7 +2440,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L1030",
       "id": "core_knowledge_base_sync_kb_from_release",
-      "community": 107,
+      "community": 1,
       "norm_label": "sync_kb_from_release()"
     },
     {
@@ -2449,7 +2449,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L21",
       "id": "core_knowledge_base_rationale_21",
-      "community": 112,
+      "community": 1,
       "norm_label": "return the kb store directory.      uses precice_kb_store_dir env var when set ("
     },
     {
@@ -2458,7 +2458,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L108",
       "id": "core_knowledge_base_rationale_108",
-      "community": 98,
+      "community": 1,
       "norm_label": "return cache-freshness metadata for a local kb asset.      prefer the release-as"
     },
     {
@@ -2467,7 +2467,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L161",
       "id": "core_knowledge_base_rationale_161",
-      "community": 98,
+      "community": 1,
       "norm_label": "map of asset name -> {digest, url} for a github release, via the api     (metada"
     },
     {
@@ -2476,7 +2476,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L197",
       "id": "core_knowledge_base_rationale_197",
-      "community": 98,
+      "community": 1,
       "norm_label": "ensure local_path mirrors the named release asset, treating the     release as t"
     },
     {
@@ -2485,7 +2485,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L413",
       "id": "core_knowledge_base_rationale_413",
-      "community": 107,
+      "community": 1,
       "norm_label": "sync kb_file from the kb-latest release's kb-lexical.json asset.          the re"
     },
     {
@@ -2494,7 +2494,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L665",
       "id": "core_knowledge_base_rationale_665",
-      "community": 107,
+      "community": 1,
       "norm_label": "locate the precice-ai source checkout's scripts/ dir, if any.      only availabl"
     },
     {
@@ -2503,7 +2503,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L690",
       "id": "core_knowledge_base_rationale_690",
-      "community": 75,
+      "community": 1,
       "norm_label": "downloads pre-built per-category .npz embedding archives from a github     relea"
     },
     {
@@ -2512,7 +2512,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L709",
       "id": "core_knowledge_base_rationale_709",
-      "community": 107,
+      "community": 1,
       "norm_label": "sync each category's .npz from the kb-latest release.          the release is th"
     },
     {
@@ -2521,7 +2521,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L752",
       "id": "core_knowledge_base_rationale_752",
-      "community": 107,
+      "community": 1,
       "norm_label": "fallback for when no github release asset exists yet for a category.          cl"
     },
     {
@@ -2530,7 +2530,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L1037",
       "id": "core_knowledge_base_rationale_1037",
-      "community": 107,
+      "community": 1,
       "norm_label": "sync the local kb (vector + lexical) from the kb-latest github release.      sin"
     },
     {
@@ -2593,7 +2593,7 @@
       "source_file": "precice_ai/core/text_cleaning.py",
       "source_location": "L1",
       "id": "precice_ai_core_text_cleaning_py",
-      "community": 98,
+      "community": 13,
       "norm_label": "text_cleaning.py"
     },
     {
@@ -2602,7 +2602,7 @@
       "source_file": "precice_ai/core/text_cleaning.py",
       "source_location": "L14",
       "id": "core_text_cleaning_strip_markdown",
-      "community": 98,
+      "community": 13,
       "norm_label": "strip_markdown()"
     },
     {
@@ -2611,7 +2611,7 @@
       "source_file": "precice_ai/core/text_cleaning.py",
       "source_location": "L1",
       "id": "core_text_cleaning_rationale_1",
-      "community": 98,
+      "community": 13,
       "norm_label": "shared text-cleaning helpers for every kb ingestion path.  strips markdown synta"
     },
     {
@@ -2620,7 +2620,7 @@
       "source_file": "precice_ai/core/text_cleaning.py",
       "source_location": "L15",
       "id": "core_text_cleaning_rationale_15",
-      "community": 98,
+      "community": 13,
       "norm_label": "best-effort markdown/html/liquid \u2192 plain text."
     },
     {
@@ -2818,7 +2818,7 @@
       "source_file": "precice_ai/core/embedding.py",
       "source_location": "L71",
       "id": "core_embedding_embed_query",
-      "community": 58,
+      "community": 1,
       "norm_label": "embed_query()"
     },
     {
@@ -2854,7 +2854,7 @@
       "source_file": "precice_ai/core/embedding.py",
       "source_location": "L72",
       "id": "core_embedding_rationale_72",
-      "community": 58,
+      "community": 1,
       "norm_label": "embed a single query string."
     },
     {
@@ -2888,7 +2888,7 @@
       "label": "_clean_xml_tag()",
       "file_type": "code",
       "source_file": "precice_ai/tools/config_tools.py",
-      "source_location": "L91",
+      "source_location": "L100",
       "id": "tools_config_tools_clean_xml_tag",
       "community": 117,
       "norm_label": "_clean_xml_tag()"
@@ -2897,7 +2897,7 @@
       "label": "_format_list()",
       "file_type": "code",
       "source_file": "precice_ai/tools/config_tools.py",
-      "source_location": "L97",
+      "source_location": "L106",
       "id": "tools_config_tools_format_list",
       "community": 117,
       "norm_label": "_format_list()"
@@ -2917,7 +2917,7 @@
       "source_file": "precice_ai/tools/log_tools.py",
       "source_location": "L1",
       "id": "precice_ai_tools_log_tools_py",
-      "community": 59,
+      "community": 0,
       "norm_label": "log_tools.py"
     },
     {
@@ -2933,7 +2933,7 @@
       "label": "_find_log_files()",
       "file_type": "code",
       "source_file": "precice_ai/tools/log_tools.py",
-      "source_location": "L107",
+      "source_location": "L119",
       "id": "tools_log_tools_find_log_files",
       "community": 0,
       "norm_label": "_find_log_files()"
@@ -2980,7 +2980,7 @@
       "source_file": "precice_ai/tools/knowledge_tools.py",
       "source_location": "L1",
       "id": "precice_ai_tools_knowledge_tools_py",
-      "community": 75,
+      "community": 59,
       "norm_label": "knowledge_tools.py"
     },
     {
@@ -3178,7 +3178,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L10",
       "id": "utils_topology_schema_properties_name",
-      "community": 68,
+      "community": 107,
       "norm_label": "name"
     },
     {
@@ -3187,7 +3187,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L11",
       "id": "utils_topology_schema_name_type",
-      "community": 68,
+      "community": 107,
       "norm_label": "type"
     },
     {
@@ -3196,7 +3196,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L12",
       "id": "utils_topology_schema_name_description",
-      "community": 68,
+      "community": 107,
       "norm_label": "description"
     },
     {
@@ -3439,7 +3439,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L51",
       "id": "utils_topology_schema_properties_data",
-      "community": 125,
+      "community": 68,
       "norm_label": "data"
     },
     {
@@ -3448,7 +3448,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L52",
       "id": "utils_topology_schema_data_type",
-      "community": 125,
+      "community": 68,
       "norm_label": "type"
     },
     {
@@ -3457,7 +3457,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L53",
       "id": "utils_topology_schema_data_description",
-      "community": 125,
+      "community": 68,
       "norm_label": "description"
     },
     {
@@ -4690,7 +4690,7 @@
       "source_file": "README.md",
       "source_location": "L40",
       "id": "precice_ai_readme_from_source_for_development",
-      "community": 4,
+      "community": 116,
       "norm_label": "from source (for development)"
     },
     {
@@ -4699,7 +4699,7 @@
       "source_file": "README.md",
       "source_location": "L44",
       "id": "precice_ai_readme_codeblock_2",
-      "community": 4,
+      "community": 116,
       "norm_label": "code:bash (git clone https://github.com/vaibhavd2103/precice-ai)"
     },
     {
@@ -4708,7 +4708,7 @@
       "source_file": "README.md",
       "source_location": "L54",
       "id": "precice_ai_readme_codeblock_3",
-      "community": 4,
+      "community": 116,
       "norm_label": "code:powershell (git clone https://github.com/vaibhavd2103/precice-ai)"
     },
     {
@@ -4717,7 +4717,7 @@
       "source_file": "README.md",
       "source_location": "L62",
       "id": "precice_ai_readme_one_command_bootstrap_helper",
-      "community": 4,
+      "community": 116,
       "norm_label": "one-command bootstrap helper"
     },
     {
@@ -4726,7 +4726,7 @@
       "source_file": "README.md",
       "source_location": "L66",
       "id": "precice_ai_readme_codeblock_4",
-      "community": 4,
+      "community": 116,
       "norm_label": "code:bash (./install.sh auto --projects-dir /path/to/precice/cases)"
     },
     {
@@ -4843,7 +4843,7 @@
       "source_file": "README.md",
       "source_location": "L202",
       "id": "precice_ai_readme_codex",
-      "community": 54,
+      "community": 4,
       "norm_label": "codex"
     },
     {
@@ -4852,7 +4852,7 @@
       "source_file": "README.md",
       "source_location": "L206",
       "id": "precice_ai_readme_codeblock_12",
-      "community": 54,
+      "community": 4,
       "norm_label": "code:bash (codex mcp add precice-ai \\)"
     },
     {
@@ -4861,7 +4861,7 @@
       "source_file": "README.md",
       "source_location": "L214",
       "id": "precice_ai_readme_codeblock_13",
-      "community": 54,
+      "community": 11,
       "norm_label": "code:toml ([mcp_servers.\"precice-ai\"])"
     },
     {
@@ -4879,7 +4879,7 @@
       "source_file": "README.md",
       "source_location": "L239",
       "id": "precice_ai_readme_environment_variables",
-      "community": 54,
+      "community": 11,
       "norm_label": "environment variables"
     },
     {
@@ -4888,7 +4888,7 @@
       "source_file": "README.md",
       "source_location": "L261",
       "id": "precice_ai_readme_codeblock_14",
-      "community": 54,
+      "community": 11,
       "norm_label": "code:bash (precice-ai bootstrap codex \\)"
     },
     {
@@ -4897,17 +4897,17 @@
       "source_file": "README.md",
       "source_location": "L273",
       "id": "precice_ai_readme_how_to_use_it",
-      "community": 54,
+      "community": 11,
       "norm_label": "how to use it"
     },
     {
-      "label": "code:text (list_precice_projects())",
+      "label": "code:text (list_precice_projects(\"/absolute/path/to/preCICE/cases\"))",
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L285",
       "id": "precice_ai_readme_codeblock_15",
-      "community": 115,
-      "norm_label": "code:text (list_precice_projects())"
+      "community": 11,
+      "norm_label": "code:text (list_precice_projects(\"/absolute/path/to/precice/cases\"))"
     },
     {
       "label": "code:text (run_command_in_project(\"partitioned-heat-conduction\", \"ls -l)",
@@ -4924,7 +4924,7 @@
       "source_file": "README.md",
       "source_location": "L309",
       "id": "precice_ai_readme_precice_cli_backed_tools",
-      "community": 115,
+      "community": 11,
       "norm_label": "`precice-cli`-backed tools"
     },
     {
@@ -4933,7 +4933,7 @@
       "source_file": "README.md",
       "source_location": "L315",
       "id": "precice_ai_readme_codeblock_17",
-      "community": 115,
+      "community": 11,
       "norm_label": "code:text (precice_version())"
     },
     {
@@ -4960,7 +4960,7 @@
       "source_file": "README.md",
       "source_location": "L350",
       "id": "precice_ai_readme_running_the_server_manually",
-      "community": 115,
+      "community": 11,
       "norm_label": "running the server manually"
     },
     {
@@ -4996,7 +4996,7 @@
       "source_file": "README.md",
       "source_location": "L385",
       "id": "precice_ai_readme_codeblock_21",
-      "community": 11,
+      "community": 108,
       "norm_label": "code:bash (precice-ai kb status)"
     },
     {
@@ -5023,7 +5023,7 @@
       "source_file": "README.md",
       "source_location": "L402",
       "id": "precice_ai_readme_project_layout",
-      "community": 11,
+      "community": 108,
       "norm_label": "project layout"
     },
     {
@@ -5653,7 +5653,7 @@
       "source_file": "document.md",
       "source_location": "L489",
       "id": "precice_ai_document_approach_d_graphrag_knowledge_graph",
-      "community": 46,
+      "community": 75,
       "norm_label": "approach d: graphrag / knowledge graph"
     },
     {
@@ -5662,7 +5662,7 @@
       "source_file": "document.md",
       "source_location": "L491",
       "id": "precice_ai_document_overview_491",
-      "community": 46,
+      "community": 75,
       "norm_label": "overview"
     },
     {
@@ -5671,7 +5671,7 @@
       "source_file": "document.md",
       "source_location": "L497",
       "id": "precice_ai_document_advantages_497",
-      "community": 46,
+      "community": 75,
       "norm_label": "advantages"
     },
     {
@@ -5680,7 +5680,7 @@
       "source_file": "document.md",
       "source_location": "L504",
       "id": "precice_ai_document_disadvantages_504",
-      "community": 46,
+      "community": 75,
       "norm_label": "disadvantages"
     },
     {
@@ -5689,7 +5689,7 @@
       "source_file": "document.md",
       "source_location": "L511",
       "id": "precice_ai_document_best_suited_for_511",
-      "community": 46,
+      "community": 75,
       "norm_label": "best suited for"
     },
     {
@@ -5770,7 +5770,7 @@
       "source_file": "document.md",
       "source_location": "L573",
       "id": "precice_ai_document_5_best_approach_recommended_architecture",
-      "community": 111,
+      "community": 10,
       "norm_label": "5. best approach & recommended architecture"
     },
     {
@@ -5779,7 +5779,7 @@
       "source_file": "document.md",
       "source_location": "L575",
       "id": "precice_ai_document_verdict",
-      "community": 111,
+      "community": 10,
       "norm_label": "verdict"
     },
     {
@@ -5788,7 +5788,7 @@
       "source_file": "document.md",
       "source_location": "L581",
       "id": "precice_ai_document_why_this_combination",
-      "community": 111,
+      "community": 10,
       "norm_label": "why this combination"
     },
     {
@@ -5797,7 +5797,7 @@
       "source_file": "document.md",
       "source_location": "L610",
       "id": "precice_ai_document_architecture_diagram",
-      "community": 111,
+      "community": 10,
       "norm_label": "architecture diagram"
     },
     {
@@ -5806,7 +5806,7 @@
       "source_file": "document.md",
       "source_location": "L612",
       "id": "precice_ai_document_codeblock_11",
-      "community": 111,
+      "community": 10,
       "norm_label": "code:block11 (\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510)"
     },
     {
@@ -5815,7 +5815,7 @@
       "source_file": "document.md",
       "source_location": "L646",
       "id": "precice_ai_document_evaluation_strategy_for_the_thesis",
-      "community": 111,
+      "community": 10,
       "norm_label": "evaluation strategy for the thesis"
     },
     {
@@ -5824,7 +5824,7 @@
       "source_file": "document.md",
       "source_location": "L660",
       "id": "precice_ai_document_roadmap_for_implementation",
-      "community": 111,
+      "community": 10,
       "norm_label": "roadmap for implementation"
     },
     {
@@ -7322,6 +7322,60 @@
       "norm_label": "honesty rules"
     },
     {
+      "label": "Return .gitmodules text from a local checkout, or fetch it from GitHub.",
+      "file_type": "rationale",
+      "source_file": "scripts/adapter_repos.py",
+      "source_location": "L58",
+      "community": 100,
+      "norm_label": "return .gitmodules text from a local checkout, or fetch it from github.",
+      "id": "scripts_adapter_repos_rationale_58"
+    },
+    {
+      "label": "Return [{name, repo, branch}] for every included GitHub submodule.",
+      "file_type": "rationale",
+      "source_file": "scripts/adapter_repos.py",
+      "source_location": "L70",
+      "community": 100,
+      "norm_label": "return [{name, repo, branch}] for every included github submodule.",
+      "id": "scripts_adapter_repos_rationale_70"
+    },
+    {
+      "label": "Sparse-clone README.md + docs/ of each repo into dest; return the manifest.",
+      "file_type": "rationale",
+      "source_file": "scripts/adapter_repos.py",
+      "source_location": "L110",
+      "community": 100,
+      "norm_label": "sparse-clone readme.md + docs/ of each repo into dest; return the manifest.",
+      "id": "scripts_adapter_repos_rationale_110"
+    },
+    {
+      "label": "Content signature: git object ids of each repo's README.md and docs/.      Like",
+      "file_type": "rationale",
+      "source_file": "scripts/adapter_repos.py",
+      "source_location": "L140",
+      "community": 100,
+      "norm_label": "content signature: git object ids of each repo's readme.md and docs/.      like",
+      "id": "scripts_adapter_repos_rationale_140"
+    },
+    {
+      "label": "build_embeddings.py sources: precice.org URLs for docs pages with a     permalin",
+      "file_type": "rationale",
+      "source_file": "scripts/adapter_repos.py",
+      "source_location": "L159",
+      "community": 100,
+      "norm_label": "build_embeddings.py sources: precice.org urls for docs pages with a     permalin",
+      "id": "scripts_adapter_repos_rationale_159"
+    },
+    {
+      "label": "Return the .env file to load API keys and other settings from.      Resolved in",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/paths.py",
+      "source_location": "L36",
+      "community": 57,
+      "norm_label": "return the .env file to load api keys and other settings from.      resolved in",
+      "id": "core_paths_rationale_36"
+    },
+    {
       "label": "Return (meta, body) stripping YAML frontmatter.",
       "file_type": "rationale",
       "source_file": "scripts/build_embeddings.py",
@@ -7389,7 +7443,7 @@
       "file_type": "rationale",
       "source_file": "precice_ai/cli/main.py",
       "source_location": "L384",
-      "community": 57,
+      "community": 54,
       "norm_label": "list all supported platforms and whether they appear to be installed.",
       "id": "cli_main_rationale_384"
     },
@@ -7497,7 +7551,7 @@
       "file_type": "rationale",
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L1012",
-      "community": 107,
+      "community": 1,
       "norm_label": "sync the local kb (vector + lexical) from the kb-latest github release.      sin",
       "id": "core_knowledge_base_rationale_1012"
     },
@@ -7551,7 +7605,7 @@
       "file_type": "code",
       "source_file": "scripts/build_forum_embeddings.py",
       "source_location": "L33",
-      "community": 13,
+      "community": 58,
       "norm_label": "_strip_html()",
       "id": "scripts_build_forum_embeddings_strip_html"
     },
@@ -7632,7 +7686,7 @@
       "file_type": "rationale",
       "source_file": "precice_ai/cli/main.py",
       "source_location": "L64",
-      "community": 57,
+      "community": 54,
       "norm_label": "list all supported platforms and whether they appear to be installed.",
       "id": "cli_main_rationale_64"
     },
@@ -7749,7 +7803,7 @@
       "file_type": "rationale",
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L15",
-      "community": 112,
+      "community": 1,
       "norm_label": "return the kb store directory.      uses precice_kb_store_dir env var when set (",
       "id": "core_knowledge_base_rationale_15"
     },
@@ -7758,7 +7812,7 @@
       "file_type": "rationale",
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L424",
-      "community": 75,
+      "community": 1,
       "norm_label": "downloads pre-built per-category .npz embedding archives from a github     relea",
       "id": "core_knowledge_base_rationale_424"
     },
@@ -7812,7 +7866,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L67",
-      "community": 4,
+      "community": 74,
       "norm_label": "claude desktop",
       "id": "precice_ai_readme_claude_desktop"
     },
@@ -7929,7 +7983,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L252",
-      "community": 115,
+      "community": 11,
       "norm_label": "2. discover your projects",
       "id": "precice_ai_readme_2_discover_your_projects"
     },
@@ -7965,7 +8019,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L282",
-      "community": 11,
+      "community": 108,
       "norm_label": "6. read and analyze logs",
       "id": "precice_ai_readme_6_read_and_analyze_logs"
     },
@@ -8154,7 +8208,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L491",
-      "community": 17,
+      "community": 41,
       "norm_label": "starting the server manually",
       "id": "precice_ai_readme_starting_the_server_manually"
     },
@@ -8334,7 +8388,7 @@
       "file_type": "rationale",
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L416",
-      "community": 75,
+      "community": 1,
       "norm_label": "downloads a pre-built .npz embeddings archive from a github release and     answ",
       "id": "core_knowledge_base_rationale_416"
     },
@@ -8352,7 +8406,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L304",
-      "community": 54,
+      "community": 4,
       "norm_label": "controlling what gets indexed",
       "id": "precice_ai_readme_controlling_what_gets_indexed"
     },
@@ -8406,7 +8460,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L442",
-      "community": 17,
+      "community": 41,
       "norm_label": "code:bash (# via the cli)",
       "id": "precice_ai_readme_codeblock_32"
     },
@@ -8415,7 +8469,7 @@
       "file_type": "code",
       "source_file": "core/paths.py",
       "source_location": "L1",
-      "community": 62,
+      "community": 117,
       "norm_label": "paths.py",
       "id": "core_paths_py"
     },
@@ -8424,7 +8478,7 @@
       "file_type": "rationale",
       "source_file": "core/paths.py",
       "source_location": "L9",
-      "community": 62,
+      "community": 0,
       "norm_label": "return the absolute path of a project inside test-projects.      this also preve",
       "id": "core_paths_rationale_9"
     },
@@ -8433,7 +8487,7 @@
       "file_type": "rationale",
       "source_file": "core/paths.py",
       "source_location": "L24",
-      "community": 62,
+      "community": 117,
       "norm_label": "return the expected precice-config.xml path for a project.",
       "id": "core_paths_rationale_24"
     },
@@ -8559,7 +8613,7 @@
       "file_type": "code",
       "source_file": "tools/project_tools.py",
       "source_location": "L1",
-      "community": 62,
+      "community": 59,
       "norm_label": "project_tools.py",
       "id": "tools_project_tools_py"
     },
@@ -8766,7 +8820,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L74",
-      "community": 4,
+      "community": 116,
       "norm_label": "setup",
       "id": "precice_ai_readme_setup"
     },
@@ -8775,7 +8829,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L76",
-      "community": 4,
+      "community": 116,
       "norm_label": "1. create and activate a python environment",
       "id": "precice_ai_readme_1_create_and_activate_a_python_environment"
     },
@@ -8784,7 +8838,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L83",
-      "community": 4,
+      "community": 116,
       "norm_label": "2. install dependencies",
       "id": "precice_ai_readme_2_install_dependencies"
     },
@@ -8793,7 +8847,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L91",
-      "community": 4,
+      "community": 116,
       "norm_label": "3. start the mcp server",
       "id": "precice_ai_readme_3_start_the_mcp_server"
     },
@@ -8802,7 +8856,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L97",
-      "community": 41,
+      "community": 116,
       "norm_label": "using with codex",
       "id": "precice_ai_readme_using_with_codex"
     },
@@ -9284,7 +9338,7 @@
       "captured_at": null,
       "author": "Vaibhav Dange",
       "contributor": null,
-      "community": 0,
+      "community": 98,
       "norm_label": "thesis comparative analysis",
       "id": "concept_thesis_comparative_analysis"
     },
@@ -9310,7 +9364,7 @@
       "captured_at": "May 2026",
       "author": "Vaibhav Dange",
       "contributor": null,
-      "community": 0,
+      "community": 98,
       "norm_label": "approach 2: langchain/langgraph",
       "id": "approach_langgraph"
     },
@@ -9323,7 +9377,7 @@
       "captured_at": "May 2026",
       "author": "Vaibhav Dange",
       "contributor": null,
-      "community": 0,
+      "community": 98,
       "norm_label": "approach 3: raw function calling",
       "id": "approach_raw_function_calling"
     },
@@ -9375,7 +9429,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 75,
+      "community": 1,
       "norm_label": "_run_lexical",
       "id": "compare_kb_search_run_lexical"
     },
@@ -9388,7 +9442,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 75,
+      "community": 1,
       "norm_label": "_run_vector",
       "id": "compare_kb_search_run_vector"
     },
@@ -9401,7 +9455,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 75,
+      "community": 1,
       "norm_label": "_print_results",
       "id": "compare_kb_search_print_results"
     },
@@ -9414,7 +9468,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 75,
+      "community": 1,
       "norm_label": "compare_kb_search main()",
       "id": "compare_kb_search_main"
     },
@@ -9570,7 +9624,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 70,
+      "community": 54,
       "norm_label": "registry dict of platform classes",
       "id": "platforms_registry"
     },
@@ -9596,7 +9650,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 72,
+      "community": 3,
       "norm_label": "platform.mcp_entry",
       "id": "base_platform_mcp_entry"
     },
@@ -9726,7 +9780,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 62,
+      "community": 0,
       "norm_label": "get_project_path",
       "id": "paths_get_project_path"
     },
@@ -9739,7 +9793,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 62,
+      "community": 117,
       "norm_label": "get_precice_config_path",
       "id": "paths_get_precice_config_path"
     },
@@ -9856,7 +9910,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 75,
+      "community": 1,
       "norm_label": "vectorknowledgebase.download_from_release",
       "id": "knowledge_base_download_from_release"
     },
@@ -9869,7 +9923,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 75,
+      "community": 1,
       "norm_label": "vectorknowledgebase.query",
       "id": "knowledge_base_vector_query"
     },
@@ -9882,7 +9936,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 75,
+      "community": 1,
       "norm_label": "vectorknowledgebase.is_available",
       "id": "knowledge_base_is_available"
     },
@@ -9960,7 +10014,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 75,
+      "community": 1,
       "norm_label": "lexical vs. vector kb dual retrieval pattern",
       "id": "kb_lexical_vs_vector_pattern"
     },
@@ -9986,7 +10040,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 117,
       "norm_label": "summarize_precice_config",
       "id": "tools_config_tools_summarize_precice_config"
     },
@@ -10923,9 +10977,9 @@
       "source_file": "kb_sources.json",
       "source_location": "L65",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_kb_sources_categories",
-      "target": "precice_ai_kb_sources_categories_adapters",
-      "confidence_score": 1.0
+      "target": "precice_ai_kb_sources_categories_adapters"
     },
     {
       "relation": "contains",
@@ -11083,9 +11137,9 @@
       "source_file": "kb_sources.json",
       "source_location": "L66",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_kb_sources_categories_adapters",
-      "target": "precice_ai_kb_sources_adapters_description",
-      "confidence_score": 1.0
+      "target": "precice_ai_kb_sources_adapters_description"
     },
     {
       "relation": "contains",
@@ -11093,9 +11147,9 @@
       "source_file": "kb_sources.json",
       "source_location": "L67",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_kb_sources_categories_adapters",
-      "target": "precice_ai_kb_sources_adapters_type",
-      "confidence_score": 1.0
+      "target": "precice_ai_kb_sources_adapters_type"
     },
     {
       "relation": "contains",
@@ -11103,9 +11157,9 @@
       "source_file": "kb_sources.json",
       "source_location": "L68",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_kb_sources_categories_adapters",
-      "target": "precice_ai_kb_sources_adapters_gitmodules_repo",
-      "confidence_score": 1.0
+      "target": "precice_ai_kb_sources_adapters_gitmodules_repo"
     },
     {
       "relation": "contains",
@@ -11113,9 +11167,9 @@
       "source_file": "kb_sources.json",
       "source_location": "L69",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_kb_sources_categories_adapters",
-      "target": "precice_ai_kb_sources_adapters_gitmodules_branch",
-      "confidence_score": 1.0
+      "target": "precice_ai_kb_sources_adapters_gitmodules_branch"
     },
     {
       "relation": "contains",
@@ -11123,9 +11177,9 @@
       "source_file": "kb_sources.json",
       "source_location": "L70",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_kb_sources_categories_adapters",
-      "target": "precice_ai_kb_sources_adapters_exclude_patterns",
-      "confidence_score": 1.0
+      "target": "precice_ai_kb_sources_adapters_exclude_patterns"
     },
     {
       "relation": "contains",
@@ -11788,9 +11842,9 @@
       "source_file": "scripts/build_embeddings.py",
       "source_location": "L75",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_build_embeddings_rationale_75",
-      "target": "scripts_build_embeddings_parse_frontmatter",
-      "confidence_score": 1.0
+      "target": "scripts_build_embeddings_parse_frontmatter"
     },
     {
       "relation": "rationale_for",
@@ -11840,9 +11894,9 @@
       "source_file": "scripts/build_embeddings.py",
       "source_location": "L92",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_build_embeddings_rationale_92",
-      "target": "scripts_build_embeddings_chunk",
-      "confidence_score": 1.0
+      "target": "scripts_build_embeddings_chunk"
     },
     {
       "relation": "calls",
@@ -11871,9 +11925,9 @@
       "source_file": "scripts/build_embeddings.py",
       "source_location": "L142",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_build_embeddings_rationale_142",
-      "target": "scripts_build_embeddings_split_utf8",
-      "confidence_score": 1.0
+      "target": "scripts_build_embeddings_split_utf8"
     },
     {
       "relation": "rationale_for",
@@ -12275,9 +12329,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L50",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_py",
-      "target": "scripts_adapter_repos_category_config",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_category_config"
     },
     {
       "relation": "contains",
@@ -12285,9 +12339,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L57",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_py",
-      "target": "scripts_adapter_repos_read_gitmodules",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_read_gitmodules"
     },
     {
       "relation": "contains",
@@ -12295,9 +12349,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L69",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_py",
-      "target": "scripts_adapter_repos_parse_gitmodules",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_parse_gitmodules"
     },
     {
       "relation": "contains",
@@ -12305,9 +12359,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L102",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_py",
-      "target": "scripts_adapter_repos_git",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_git"
     },
     {
       "relation": "contains",
@@ -12315,9 +12369,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L109",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_py",
-      "target": "scripts_adapter_repos_checkout",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_checkout"
     },
     {
       "relation": "contains",
@@ -12325,9 +12379,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L139",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_py",
-      "target": "scripts_adapter_repos_signature",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_signature"
     },
     {
       "relation": "contains",
@@ -12335,9 +12389,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L158",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_py",
-      "target": "scripts_adapter_repos_sources",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_sources"
     },
     {
       "relation": "contains",
@@ -12345,9 +12399,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L178",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_py",
-      "target": "scripts_adapter_repos_load_manifest",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_load_manifest"
     },
     {
       "relation": "contains",
@@ -12355,9 +12409,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L182",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_py",
-      "target": "scripts_adapter_repos_main",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_main"
     },
     {
       "relation": "rationale_for",
@@ -12365,9 +12419,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_rationale_1",
-      "target": "scripts_adapter_repos_py",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_py"
     },
     {
       "relation": "calls",
@@ -12376,9 +12430,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L161",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_sources",
-      "target": "scripts_adapter_repos_category_config",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_category_config"
     },
     {
       "relation": "calls",
@@ -12387,9 +12441,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L206",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_main",
-      "target": "scripts_adapter_repos_category_config",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_category_config"
     },
     {
       "relation": "calls",
@@ -12398,7 +12452,17 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L206",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_main",
+      "target": "scripts_adapter_repos_read_gitmodules"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/adapter_repos.py",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "scripts_adapter_repos_rationale_55",
       "target": "scripts_adapter_repos_read_gitmodules",
       "confidence_score": 1.0
     },
@@ -12408,9 +12472,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L58",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_rationale_58",
-      "target": "scripts_adapter_repos_read_gitmodules",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_read_gitmodules"
     },
     {
       "relation": "calls",
@@ -12419,7 +12483,17 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L207",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_main",
+      "target": "scripts_adapter_repos_parse_gitmodules"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/adapter_repos.py",
+      "source_location": "L67",
+      "weight": 1.0,
+      "source": "scripts_adapter_repos_rationale_67",
       "target": "scripts_adapter_repos_parse_gitmodules",
       "confidence_score": 1.0
     },
@@ -12429,9 +12503,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L70",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_rationale_70",
-      "target": "scripts_adapter_repos_parse_gitmodules",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_parse_gitmodules"
     },
     {
       "relation": "calls",
@@ -12440,9 +12514,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L120",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_checkout",
-      "target": "scripts_adapter_repos_git",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_git"
     },
     {
       "relation": "calls",
@@ -12451,9 +12525,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L151",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_signature",
-      "target": "scripts_adapter_repos_git",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_git"
     },
     {
       "relation": "calls",
@@ -12462,7 +12536,17 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L209",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_main",
+      "target": "scripts_adapter_repos_checkout"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/adapter_repos.py",
+      "source_location": "L105",
+      "weight": 1.0,
+      "source": "scripts_adapter_repos_rationale_105",
       "target": "scripts_adapter_repos_checkout",
       "confidence_score": 1.0
     },
@@ -12472,9 +12556,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L110",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_rationale_110",
-      "target": "scripts_adapter_repos_checkout",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_checkout"
     },
     {
       "relation": "calls",
@@ -12483,7 +12567,17 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L214",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_main",
+      "target": "scripts_adapter_repos_signature"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/adapter_repos.py",
+      "source_location": "L134",
+      "weight": 1.0,
+      "source": "scripts_adapter_repos_rationale_134",
       "target": "scripts_adapter_repos_signature",
       "confidence_score": 1.0
     },
@@ -12493,9 +12587,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L140",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_rationale_140",
-      "target": "scripts_adapter_repos_signature",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_signature"
     },
     {
       "relation": "calls",
@@ -12504,7 +12598,17 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L217",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_main",
+      "target": "scripts_adapter_repos_sources"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/adapter_repos.py",
+      "source_location": "L153",
+      "weight": 1.0,
+      "source": "scripts_adapter_repos_rationale_153",
       "target": "scripts_adapter_repos_sources",
       "confidence_score": 1.0
     },
@@ -12514,9 +12618,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L159",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_rationale_159",
-      "target": "scripts_adapter_repos_sources",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_sources"
     },
     {
       "relation": "calls",
@@ -12525,9 +12629,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L214",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_main",
-      "target": "scripts_adapter_repos_load_manifest",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_load_manifest"
     },
     {
       "relation": "contains",
@@ -12944,9 +13048,9 @@
       "source_file": "precice_ai/server.py",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_server_rationale_25",
-      "target": "precice_ai_server_bootstrap_kb",
-      "confidence_score": 1.0
+      "target": "precice_ai_server_bootstrap_kb"
     },
     {
       "relation": "calls",
@@ -13344,9 +13448,9 @@
       "source_file": "precice_ai/cli/main.py",
       "source_location": "L162",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "cli_main_rationale_162",
-      "target": "cli_main_setup",
-      "confidence_score": 1.0
+      "target": "cli_main_setup"
     },
     {
       "relation": "rationale_for",
@@ -13405,9 +13509,9 @@
       "source_file": "precice_ai/cli/main.py",
       "source_location": "L275",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "cli_main_rationale_275",
-      "target": "cli_main_bootstrap",
-      "confidence_score": 1.0
+      "target": "cli_main_bootstrap"
     },
     {
       "relation": "calls",
@@ -13447,9 +13551,9 @@
       "source_file": "precice_ai/cli/main.py",
       "source_location": "L380",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "cli_main_rationale_380",
-      "target": "cli_main_open",
-      "confidence_score": 1.0
+      "target": "cli_main_open"
     },
     {
       "relation": "rationale_for",
@@ -13467,9 +13571,9 @@
       "source_file": "precice_ai/cli/main.py",
       "source_location": "L414",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "cli_main_rationale_414",
-      "target": "cli_main_list_platforms",
-      "confidence_score": 1.0
+      "target": "cli_main_list_platforms"
     },
     {
       "relation": "rationale_for",
@@ -13507,9 +13611,9 @@
       "source_file": "precice_ai/cli/main.py",
       "source_location": "L425",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "cli_main_rationale_425",
-      "target": "cli_main_server",
-      "confidence_score": 1.0
+      "target": "cli_main_server"
     },
     {
       "relation": "rationale_for",
@@ -13537,9 +13641,9 @@
       "source_file": "precice_ai/cli/main.py",
       "source_location": "L434",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "cli_main_rationale_434",
-      "target": "cli_main_kb_status",
-      "confidence_score": 1.0
+      "target": "cli_main_kb_status"
     },
     {
       "relation": "calls",
@@ -13590,9 +13694,9 @@
       "source_file": "precice_ai/cli/main.py",
       "source_location": "L452",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "cli_main_rationale_452",
-      "target": "cli_main_sync_kb",
-      "confidence_score": 1.0
+      "target": "cli_main_sync_kb"
     },
     {
       "relation": "calls",
@@ -13621,9 +13725,9 @@
       "source_file": "precice_ai/cli/main.py",
       "source_location": "L481",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "cli_main_rationale_481",
-      "target": "cli_main_kb_ingest",
-      "confidence_score": 1.0
+      "target": "cli_main_kb_ingest"
     },
     {
       "relation": "rationale_for",
@@ -13641,9 +13745,9 @@
       "source_file": "precice_ai/cli/main.py",
       "source_location": "L509",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "cli_main_rationale_509",
-      "target": "cli_main_kb_query",
-      "confidence_score": 1.0
+      "target": "cli_main_kb_query"
     },
     {
       "relation": "calls",
@@ -13765,9 +13869,9 @@
       "source_file": "precice_ai/cli/platforms/base.py",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "platforms_base_rationale_18",
-      "target": "platforms_base_relative_to",
-      "confidence_score": 1.0
+      "target": "platforms_base_relative_to"
     },
     {
       "relation": "rationale_for",
@@ -13825,9 +13929,9 @@
       "source_file": "precice_ai/cli/platforms/base.py",
       "source_location": "L58",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "platforms_base_platform",
-      "target": "platforms_base_platform_global_instructions_path",
-      "confidence_score": 1.0
+      "target": "platforms_base_platform_global_instructions_path"
     },
     {
       "relation": "method",
@@ -13835,9 +13939,9 @@
       "source_file": "precice_ai/cli/platforms/base.py",
       "source_location": "L68",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "platforms_base_platform",
-      "target": "platforms_base_platform_write_global_instructions",
-      "confidence_score": 1.0
+      "target": "platforms_base_platform_write_global_instructions"
     },
     {
       "relation": "method",
@@ -14083,9 +14187,9 @@
       "source_file": "precice_ai/cli/platforms/base.py",
       "source_location": "L48",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "platforms_base_rationale_48",
-      "target": "platforms_base_platform_can_launch",
-      "confidence_score": 1.0
+      "target": "platforms_base_platform_can_launch"
     },
     {
       "relation": "rationale_for",
@@ -14103,9 +14207,9 @@
       "source_file": "precice_ai/cli/platforms/base.py",
       "source_location": "L52",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "platforms_base_rationale_52",
-      "target": "platforms_base_platform_launch",
-      "confidence_score": 1.0
+      "target": "platforms_base_platform_launch"
     },
     {
       "relation": "rationale_for",
@@ -14124,9 +14228,9 @@
       "source_file": "precice_ai/cli/platforms/base.py",
       "source_location": "L74",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "platforms_base_platform_write_global_instructions",
-      "target": "platforms_base_platform_global_instructions_path",
-      "confidence_score": 1.0
+      "target": "platforms_base_platform_global_instructions_path"
     },
     {
       "relation": "rationale_for",
@@ -14134,9 +14238,9 @@
       "source_file": "precice_ai/cli/platforms/base.py",
       "source_location": "L59",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "platforms_base_rationale_59",
-      "target": "platforms_base_platform_global_instructions_path",
-      "confidence_score": 1.0
+      "target": "platforms_base_platform_global_instructions_path"
     },
     {
       "relation": "rationale_for",
@@ -14144,9 +14248,9 @@
       "source_file": "precice_ai/cli/platforms/base.py",
       "source_location": "L69",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "platforms_base_rationale_69",
-      "target": "platforms_base_platform_write_global_instructions",
-      "confidence_score": 1.0
+      "target": "platforms_base_platform_write_global_instructions"
     },
     {
       "relation": "rationale_for",
@@ -14154,9 +14258,9 @@
       "source_file": "precice_ai/cli/platforms/base.py",
       "source_location": "L105",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "platforms_base_rationale_105",
-      "target": "platforms_base_platform_mcp_entry",
-      "confidence_score": 1.0
+      "target": "platforms_base_platform_mcp_entry"
     },
     {
       "relation": "rationale_for",
@@ -14195,9 +14299,9 @@
       "source_file": "precice_ai/cli/platforms/base.py",
       "source_location": "L140",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "platforms_base_rationale_140",
-      "target": "platforms_base_platform_load_json_config",
-      "confidence_score": 1.0
+      "target": "platforms_base_platform_load_json_config"
     },
     {
       "relation": "calls",
@@ -14226,9 +14330,9 @@
       "source_file": "precice_ai/cli/platforms/base.py",
       "source_location": "L161",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "platforms_base_rationale_161",
-      "target": "platforms_base_platform_merge_json_config",
-      "confidence_score": 1.0
+      "target": "platforms_base_platform_merge_json_config"
     },
     {
       "relation": "rationale_for",
@@ -14449,9 +14553,9 @@
       "source_file": "precice_ai/cli/platforms/claude_code.py",
       "source_location": "L81",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "platforms_claude_code_claudecodeplatform",
-      "target": "platforms_claude_code_claudecodeplatform_global_instructions_path",
-      "confidence_score": 1.0
+      "target": "platforms_claude_code_claudecodeplatform_global_instructions_path"
     },
     {
       "relation": "rationale_for",
@@ -14952,9 +15056,9 @@
       "source_file": "precice_ai/cli/platforms/codex.py",
       "source_location": "L64",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "platforms_codex_codexplatform",
-      "target": "platforms_codex_codexplatform_global_instructions_path",
-      "confidence_score": 1.0
+      "target": "platforms_codex_codexplatform_global_instructions_path"
     },
     {
       "relation": "rationale_for",
@@ -15327,6 +15431,16 @@
       "confidence_score": 1.0,
       "source": "tools_config_tools_register_config_tools",
       "target": "core_paths_get_precice_config_path"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/paths.py",
+      "source_location": "L45",
+      "weight": 1.0,
+      "source": "core_paths_rationale_45",
+      "target": "core_paths_get_env_file_path",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -16766,9 +16880,9 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L1037",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "core_knowledge_base_rationale_1037",
-      "target": "core_knowledge_base_sync_kb_from_release",
-      "confidence_score": 1.0
+      "target": "core_knowledge_base_sync_kb_from_release"
     },
     {
       "relation": "rationale_for",
@@ -16868,9 +16982,9 @@
       "source_file": "precice_ai/core/instructions.py",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "core_instructions_rationale_1",
-      "target": "precice_ai_core_instructions_py",
-      "confidence_score": 1.0
+      "target": "precice_ai_core_instructions_py"
     },
     {
       "relation": "contains",
@@ -18022,9 +18136,9 @@
       "source_file": "precice_ai/tools/knowledge_tools.py",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tools_knowledge_tools_rationale_19",
-      "target": "tools_knowledge_tools_register_knowledge_tools",
-      "confidence_score": 1.0
+      "target": "tools_knowledge_tools_register_knowledge_tools"
     },
     {
       "relation": "imports",
@@ -19153,9 +19267,9 @@
       "source_file": "CONTRIBUTOR_GUIDE.md",
       "source_location": "L156",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_contributor_guide_contributor_guide",
-      "target": "precice_ai_contributor_guide_mcp_server_architecture_in_detail",
-      "confidence_score": 1.0
+      "target": "precice_ai_contributor_guide_mcp_server_architecture_in_detail"
     },
     {
       "relation": "contains",
@@ -19393,9 +19507,9 @@
       "source_file": "CONTRIBUTOR_GUIDE.md",
       "source_location": "L166",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_contributor_guide_mcp_server_architecture_in_detail",
-      "target": "precice_ai_contributor_guide_1_mcp_clients",
-      "confidence_score": 1.0
+      "target": "precice_ai_contributor_guide_1_mcp_clients"
     },
     {
       "relation": "contains",
@@ -19403,9 +19517,9 @@
       "source_file": "CONTRIBUTOR_GUIDE.md",
       "source_location": "L187",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_contributor_guide_mcp_server_architecture_in_detail",
-      "target": "precice_ai_contributor_guide_2_the_fastmcp_server",
-      "confidence_score": 1.0
+      "target": "precice_ai_contributor_guide_2_the_fastmcp_server"
     },
     {
       "relation": "contains",
@@ -19413,9 +19527,9 @@
       "source_file": "CONTRIBUTOR_GUIDE.md",
       "source_location": "L217",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_contributor_guide_mcp_server_architecture_in_detail",
-      "target": "precice_ai_contributor_guide_3_local_precice_project_directory",
-      "confidence_score": 1.0
+      "target": "precice_ai_contributor_guide_3_local_precice_project_directory"
     },
     {
       "relation": "contains",
@@ -19423,9 +19537,9 @@
       "source_file": "CONTRIBUTOR_GUIDE.md",
       "source_location": "L228",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_contributor_guide_mcp_server_architecture_in_detail",
-      "target": "precice_ai_contributor_guide_4_local_knowledge_cache_precice_ai_kb_store",
-      "confidence_score": 1.0
+      "target": "precice_ai_contributor_guide_4_local_knowledge_cache_precice_ai_kb_store"
     },
     {
       "relation": "contains",
@@ -19433,9 +19547,9 @@
       "source_file": "CONTRIBUTOR_GUIDE.md",
       "source_location": "L239",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_contributor_guide_mcp_server_architecture_in_detail",
-      "target": "precice_ai_contributor_guide_5_precice_cli_binary",
-      "confidence_score": 1.0
+      "target": "precice_ai_contributor_guide_5_precice_cli_binary"
     },
     {
       "relation": "contains",
@@ -19443,9 +19557,9 @@
       "source_file": "CONTRIBUTOR_GUIDE.md",
       "source_location": "L243",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_contributor_guide_mcp_server_architecture_in_detail",
-      "target": "precice_ai_contributor_guide_6_offline_build_pipeline_and_github_release_assets",
-      "confidence_score": 1.0
+      "target": "precice_ai_contributor_guide_6_offline_build_pipeline_and_github_release_assets"
     },
     {
       "relation": "contains",
@@ -19453,9 +19567,9 @@
       "source_file": "CONTRIBUTOR_GUIDE.md",
       "source_location": "L253",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_contributor_guide_mcp_server_architecture_in_detail",
-      "target": "precice_ai_contributor_guide_following_one_request_through_the_diagram",
-      "confidence_score": 1.0
+      "target": "precice_ai_contributor_guide_following_one_request_through_the_diagram"
     },
     {
       "relation": "contains",
@@ -20363,9 +20477,9 @@
       "source_file": "README.md",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_installation",
-      "target": "precice_ai_readme_from_pypi_recommended",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_from_pypi_recommended"
     },
     {
       "relation": "contains",
@@ -20373,9 +20487,9 @@
       "source_file": "README.md",
       "source_location": "L40",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_installation",
-      "target": "precice_ai_readme_from_source_for_development",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_from_source_for_development"
     },
     {
       "relation": "contains",
@@ -20433,9 +20547,9 @@
       "source_file": "README.md",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_from_pypi_recommended",
-      "target": "precice_ai_readme_codeblock_1",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_1"
     },
     {
       "relation": "contains",
@@ -20463,9 +20577,9 @@
       "source_file": "README.md",
       "source_location": "L44",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_from_source_for_development",
-      "target": "precice_ai_readme_codeblock_2",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_2"
     },
     {
       "relation": "contains",
@@ -20473,9 +20587,9 @@
       "source_file": "README.md",
       "source_location": "L54",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_from_source_for_development",
-      "target": "precice_ai_readme_codeblock_3",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_3"
     },
     {
       "relation": "contains",
@@ -20593,9 +20707,9 @@
       "source_file": "README.md",
       "source_location": "L66",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_one_command_bootstrap_helper",
-      "target": "precice_ai_readme_codeblock_4",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_4"
     },
     {
       "relation": "contains",
@@ -20653,9 +20767,9 @@
       "source_file": "README.md",
       "source_location": "L105",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_quick_start",
-      "target": "precice_ai_readme_codeblock_7",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_7"
     },
     {
       "relation": "contains",
@@ -20663,9 +20777,9 @@
       "source_file": "README.md",
       "source_location": "L117",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_quick_start",
-      "target": "precice_ai_readme_codeblock_8",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_8"
     },
     {
       "relation": "contains",
@@ -20733,9 +20847,9 @@
       "source_file": "README.md",
       "source_location": "L144",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_manual_mcp_setup",
-      "target": "precice_ai_readme_codeblock_9",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_9"
     },
     {
       "relation": "contains",
@@ -20793,9 +20907,9 @@
       "source_file": "README.md",
       "source_location": "L152",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_json_based_clients",
-      "target": "precice_ai_readme_codeblock_10",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_10"
     },
     {
       "relation": "contains",
@@ -20833,9 +20947,9 @@
       "source_file": "README.md",
       "source_location": "L176",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_claude_code_project_scope_mcp_json",
-      "target": "precice_ai_readme_codeblock_11",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_11"
     },
     {
       "relation": "contains",
@@ -20863,9 +20977,9 @@
       "source_file": "README.md",
       "source_location": "L206",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_codex",
-      "target": "precice_ai_readme_codeblock_12",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_12"
     },
     {
       "relation": "contains",
@@ -20873,9 +20987,9 @@
       "source_file": "README.md",
       "source_location": "L214",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_codex",
-      "target": "precice_ai_readme_codeblock_13",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_13"
     },
     {
       "relation": "contains",
@@ -20933,9 +21047,9 @@
       "source_file": "README.md",
       "source_location": "L261",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_environment_variables",
-      "target": "precice_ai_readme_codeblock_14",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_14"
     },
     {
       "relation": "contains",
@@ -20983,9 +21097,9 @@
       "source_file": "README.md",
       "source_location": "L285",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_how_to_use_it",
-      "target": "precice_ai_readme_codeblock_15",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_15"
     },
     {
       "relation": "contains",
@@ -20993,9 +21107,9 @@
       "source_file": "README.md",
       "source_location": "L302",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_how_to_use_it",
-      "target": "precice_ai_readme_codeblock_16",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_16"
     },
     {
       "relation": "contains",
@@ -21043,9 +21157,9 @@
       "source_file": "README.md",
       "source_location": "L315",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_precice_cli_backed_tools",
-      "target": "precice_ai_readme_codeblock_17",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_17"
     },
     {
       "relation": "contains",
@@ -21073,9 +21187,9 @@
       "source_file": "README.md",
       "source_location": "L341",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_cli_commands",
-      "target": "precice_ai_readme_codeblock_18",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_18"
     },
     {
       "relation": "contains",
@@ -21103,9 +21217,9 @@
       "source_file": "README.md",
       "source_location": "L354",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_running_the_server_manually",
-      "target": "precice_ai_readme_codeblock_19",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_19"
     },
     {
       "relation": "contains",
@@ -21143,9 +21257,9 @@
       "source_file": "README.md",
       "source_location": "L385",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_knowledge_base_storage",
-      "target": "precice_ai_readme_codeblock_21",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_21"
     },
     {
       "relation": "contains",
@@ -21153,9 +21267,9 @@
       "source_file": "README.md",
       "source_location": "L391",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_knowledge_base_storage",
-      "target": "precice_ai_readme_codeblock_22",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_22"
     },
     {
       "relation": "contains",
@@ -21213,9 +21327,9 @@
       "source_file": "README.md",
       "source_location": "L406",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_readme_project_layout",
-      "target": "precice_ai_readme_codeblock_23",
-      "confidence_score": 1.0
+      "target": "precice_ai_readme_codeblock_23"
     },
     {
       "relation": "contains",
@@ -28125,5 +28239,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "85301a92e1af3f7b9954c476b09a2c3365e26c1c"
+  "built_at_commit": "38edbe0de2cb182357a139e4720ecd8421e423f0"
 }

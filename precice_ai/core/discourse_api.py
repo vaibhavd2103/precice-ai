@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from urllib.parse import urljoin
 
@@ -11,11 +11,30 @@ JSON_ACCEPT_HEADER = {"Accept": "application/json"}
 
 
 @dataclass
+class DiscoursePost:
+    post_number: int
+    username: str
+    raw: str
+    created_at: str | None = None
+    is_accepted_solution: bool = False
+
+
+@dataclass
 class DiscourseTopicDocument:
     title: str
     url: str
     text: str
     updated_at: str
+    created_at: str | None = None
+    tags: list[str] = field(default_factory=list)
+    reply_count: int = 0
+    posts: list[DiscoursePost] = field(default_factory=list)
+
+
+_BOT_USERNAMES = {"system", "discobot", "discoursebot"}
+# post_type: 1 regular, 2 moderator action post, 3 small action ("closed the
+# topic"), 4 whisper. Only 1 and 2 carry real discussion content.
+_CONTENT_POST_TYPES = {1, 2}
 
 
 # ---------------------------------------------------------------------------
@@ -88,7 +107,8 @@ def fetch_discourse_topic_documents(
                 continue
 
             try:
-                merged = _fetch_topic_text(client, base_url, topic_id=topic_id)
+                topic_meta, posts = _fetch_topic_posts(client, base_url, topic_id=topic_id)
+                merged = "\n\n".join(p.raw for p in posts).strip()
             except Exception as exc:
                 # Log and count instead of silently dropping — after retries
                 # this should be rare, and you want to SEE it if it isn't.
@@ -105,6 +125,10 @@ def fetch_discourse_topic_documents(
                     url=urljoin(base_url, f"t/{slug}/{topic_id}"),
                     text=merged,
                     updated_at=last_posted_at,
+                    created_at=topic.get("created_at"),
+                    tags=_normalize_tags(topic_meta.get("tags") or topic.get("tags")),
+                    reply_count=int(topic_meta.get("reply_count") or topic.get("reply_count") or 0),
+                    posts=posts,
                 )
             )
             seen_topic_ids.add(topic_id)
@@ -186,45 +210,75 @@ def _iter_category_topics(client: httpx.Client, base_url: str, category: dict):
         )
 
 
-def _fetch_topic_text(client: httpx.Client, base_url: str, *, topic_id: int) -> str:
+def _normalize_tags(tags: object) -> list[str]:
+    out: list[str] = []
+    if isinstance(tags, list):
+        for tag in tags:
+            name = tag.get("name") if isinstance(tag, dict) else tag
+            if isinstance(name, str) and name:
+                out.append(name)
+    return out
+
+
+def _fetch_topic_posts(
+    client: httpx.Client, base_url: str, *, topic_id: int
+) -> tuple[dict, list[DiscoursePost]]:
+    """Return (topic json, content posts in thread order). Bot/system posts,
+    whispers, small actions and deleted/hidden posts are dropped."""
     topic_data = _get_json(client, urljoin(base_url, f"t/{topic_id}.json"))
 
     post_stream = topic_data.get("post_stream", {})
     posts = post_stream.get("posts", [])
     stream = post_stream.get("stream", [])
 
-    raw_by_post_id: dict[int, str] = {}
+    by_id: dict[int, dict] = {}
     if isinstance(posts, list):
         for post in posts:
-            if not isinstance(post, dict):
-                continue
-            post_id = post.get("id")
-            raw = post.get("raw")
-            if isinstance(post_id, int) and isinstance(raw, str) and raw.strip():
-                raw_by_post_id[post_id] = raw.strip()
+            if isinstance(post, dict) and isinstance(post.get("id"), int):
+                by_id[post["id"]] = post
 
     ordered_post_ids = [post_id for post_id in stream if isinstance(post_id, int)]
     if not ordered_post_ids:
-        ordered_post_ids = list(raw_by_post_id.keys())
+        ordered_post_ids = list(by_id.keys())
 
-    text_parts: list[str] = []
+    solution_post = (topic_data.get("accepted_answer") or {}).get("post_number")
+
+    result: list[DiscoursePost] = []
     for post_id in ordered_post_ids:
-        raw_text = raw_by_post_id.get(post_id)
-        if raw_text is None:
+        post = by_id.get(post_id)
+        if post is None or not isinstance(post.get("raw"), str):
             try:
-                raw_text = _fetch_post_raw(client, base_url, post_id)
+                full = _get_json(client, urljoin(base_url, f"posts/{post_id}.json"))
             except Exception:
                 continue
-        if raw_text:
-            text_parts.append(raw_text)
-
-    return "\n\n".join(text_parts).strip()
-
-
-def _fetch_post_raw(client: httpx.Client, base_url: str, post_id: int) -> str:
-    data = _get_json(client, urljoin(base_url, f"posts/{post_id}.json"))
-    raw = data.get("raw")
-    return raw.strip() if isinstance(raw, str) and raw.strip() else ""
+            post = {**(post or {}), **full}
+        raw = post.get("raw")
+        if not isinstance(raw, str) or not raw.strip():
+            continue
+        username = post.get("username") or ""
+        user_id = post.get("user_id")
+        if (
+            post.get("post_type", 1) not in _CONTENT_POST_TYPES
+            or post.get("hidden")
+            or post.get("deleted_at")
+            or username.lower() in _BOT_USERNAMES
+            or (isinstance(user_id, int) and user_id < 0)
+        ):
+            continue
+        number = post.get("post_number")
+        if not isinstance(number, int):
+            number = len(result) + 1
+        result.append(
+            DiscoursePost(
+                post_number=number,
+                username=username,
+                raw=raw.strip(),
+                created_at=post.get("created_at"),
+                is_accepted_solution=bool(post.get("accepted_answer")) or number == solution_post,
+            )
+        )
+    result.sort(key=lambda p: p.post_number)
+    return topic_data, result
 
 
 def _normalize_api_url(base_url: str, url_or_path: str) -> str:

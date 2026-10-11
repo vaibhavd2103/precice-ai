@@ -20,7 +20,8 @@ no git repo (forum, issues, pulls) keep a lightweight live signature: the
 latest forum post timestamp, or the latest issue/PR updated_at, fetched via
 API rather than a full clone (there's nothing to clone).
 
-If the signature differs from what's stored, the category is stale.
+If the signature differs from what's stored, or the state was written under a
+different chunk SCHEMA_VERSION, the category is stale.
 
 CLI usage:
     python scripts/kb_state.py tree-hash --repo-dir precice-docs --path content/docs
@@ -39,6 +40,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from precice_ai.kb.schema import SCHEMA_VERSION
 
 USER_AGENT = "precice-ai-mcp/1.0 (+https://github.com/precice)"
 
@@ -110,11 +115,16 @@ def save_state(state_file: Path, state: dict) -> None:
 
 
 def is_stale(state: dict, category: str, signature: str) -> bool:
+    # A chunk-schema bump invalidates every category: content hashes alone
+    # can't tell that the stored chunks were built in the old format.
+    if state.get("schema_version") != SCHEMA_VERSION:
+        return True
     stored = state.get("categories", {}).get(category, {})
     return stored.get("signature") != signature
 
 
 def update_category(state: dict, category: str, signature: str) -> dict:
+    state["schema_version"] = SCHEMA_VERSION
     state.setdefault("categories", {})[category] = {
         "signature": signature,
         "updated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),

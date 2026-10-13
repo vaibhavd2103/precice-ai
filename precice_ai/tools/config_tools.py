@@ -1,8 +1,8 @@
 from datetime import datetime
 from pathlib import Path
 import shutil
-import xml.etree.ElementTree as ET
 
+from lxml import etree
 from mcp.server.fastmcp import FastMCP
 
 from precice_ai.core.paths import get_project_path, get_precice_config_path
@@ -32,11 +32,14 @@ def register_config_tools(mcp: FastMCP) -> None:
         if not config_file.exists():
             return f"No precice-config.xml found at: {config_file}"
 
+        # preCICE configs use prefixed tags (data:scalar, mapping:..., m2n:...)
+        # without declaring the namespaces, which a strict XML parser rejects.
         try:
-            tree = ET.parse(config_file)
-            root = tree.getroot()
-        except ET.ParseError as exc:
+            root = etree.parse(str(config_file), etree.XMLParser(recover=True)).getroot()
+        except (etree.XMLSyntaxError, OSError) as exc:
             return f"Failed to parse XML file: {exc}"
+        if root is None:
+            return f"Failed to parse XML file: no root element in {config_file}"
 
         participants: list[str] = []
         meshes: list[str] = []
@@ -44,6 +47,8 @@ def register_config_tools(mcp: FastMCP) -> None:
         coupling_schemes: list[str] = []
 
         for element in root.iter():
+            if not isinstance(element.tag, str):  # comments, processing instructions
+                continue
             tag = _clean_xml_tag(element.tag)
             if tag == "participant":
                 name = element.attrib.get("name")

@@ -2,7 +2,7 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
-from precice_ai.core.paths import get_project_path
+from precice_ai.core.paths import get_project_path, iter_project_files
 
 
 LOG_EXTENSIONS = ["*.log", "*.txt"]
@@ -119,5 +119,5 @@ Last {lines} lines:
 def _find_log_files(project_dir: Path) -> list[Path]:
     log_files: list[Path] = []
     for pattern in LOG_EXTENSIONS:
-        log_files.extend(project_dir.rglob(pattern))
+        log_files.extend(iter_project_files(project_dir, pattern))
     return sorted(set(log_files))

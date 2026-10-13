@@ -2,7 +2,7 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
-from precice_ai.core.paths import get_project_path
+from precice_ai.core.paths import get_project_path, iter_project_files
 from precice_ai.core.command_runner import run_safe_command
 
 
@@ -46,7 +46,7 @@ def register_project_tools(mcp: FastMCP) -> None:
         lines: list[str] = [f"Project structure for: {project_path}\n"]
         base_depth = len(project_dir.parts)
 
-        for path in sorted(project_dir.rglob("*")):
+        for path in iter_project_files(project_dir):
             relative_depth = len(path.parts) - base_depth
             if relative_depth > max_depth:
                 continue
@@ -68,7 +68,7 @@ def register_project_tools(mcp: FastMCP) -> None:
         if not project_dir.exists():
             return f"Project not found: {project_path}"
 
-        config_files = list(project_dir.rglob("precice-config.xml"))
+        config_files = iter_project_files(project_dir, "precice-config.xml")
 
         if not config_files:
             return f"No precice-config.xml found in project: {project_path}"

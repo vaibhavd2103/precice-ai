@@ -37,6 +37,19 @@ def get_project_path(project_path: str) -> Path:
     return resolved
 
 
+# Directories that never hold case files but can dwarf them in listings/searches.
+IGNORED_DIR_NAMES = {".git", ".venv", "venv", "__pycache__", "node_modules"}
+
+
+def iter_project_files(project_dir: Path, pattern: str = "*") -> list[Path]:
+    """Recursively match pattern under project_dir, skipping IGNORED_DIR_NAMES."""
+    return sorted(
+        path
+        for path in project_dir.rglob(pattern)
+        if not IGNORED_DIR_NAMES.intersection(path.relative_to(project_dir).parts)
+    )
+
+
 def get_precice_config_path(project_path: str) -> Path:
     return get_project_path(project_path) / "precice-config.xml"
 

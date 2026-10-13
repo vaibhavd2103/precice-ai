@@ -2008,7 +2008,7 @@
       "source_file": "precice_ai/cli/platforms/__init__.py",
       "source_location": "L1",
       "id": "precice_ai_cli_platforms_init_py",
-      "community": 76,
+      "community": 74,
       "norm_label": "__init__.py"
     },
     {
@@ -2039,10 +2039,19 @@
       "norm_label": "get_project_path()"
     },
     {
+      "label": "iter_project_files()",
+      "file_type": "code",
+      "source_file": "precice_ai/core/paths.py",
+      "source_location": "L44",
+      "id": "core_paths_iter_project_files",
+      "community": 62,
+      "norm_label": "iter_project_files()"
+    },
+    {
       "label": "get_precice_config_path()",
       "file_type": "code",
       "source_file": "precice_ai/core/paths.py",
-      "source_location": "L40",
+      "source_location": "L53",
       "id": "core_paths_get_precice_config_path",
       "community": 62,
       "norm_label": "get_precice_config_path()"
@@ -2051,7 +2060,7 @@
       "label": "get_env_file_path()",
       "file_type": "code",
       "source_file": "precice_ai/core/paths.py",
-      "source_location": "L44",
+      "source_location": "L57",
       "id": "core_paths_get_env_file_path",
       "community": 57,
       "norm_label": "get_env_file_path()"
@@ -2075,11 +2084,20 @@
       "norm_label": "return the absolute path of a project directory.      agents pass the project di"
     },
     {
-      "label": "Return the .env file to load API keys and other settings from.      Resolved in",
+      "label": "Recursively match pattern under project_dir, skipping IGNORED_DIR_NAMES.",
       "file_type": "rationale",
       "source_file": "precice_ai/core/paths.py",
       "source_location": "L45",
       "id": "core_paths_rationale_45",
+      "community": 57,
+      "norm_label": "recursively match pattern under project_dir, skipping ignored_dir_names."
+    },
+    {
+      "label": "Return the .env file to load API keys and other settings from.      Resolved in",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/paths.py",
+      "source_location": "L58",
+      "id": "core_paths_rationale_58",
       "community": 57,
       "norm_label": "return the .env file to load api keys and other settings from.      resolved in"
     },
@@ -2440,7 +2458,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L1030",
       "id": "core_knowledge_base_sync_kb_from_release",
-      "community": 1,
+      "community": 57,
       "norm_label": "sync_kb_from_release()"
     },
     {
@@ -2530,7 +2548,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L1037",
       "id": "core_knowledge_base_rationale_1037",
-      "community": 1,
+      "community": 57,
       "norm_label": "sync the local kb (vector + lexical) from the kb-latest github release.      sin"
     },
     {
@@ -2818,7 +2836,7 @@
       "source_file": "precice_ai/core/embedding.py",
       "source_location": "L71",
       "id": "core_embedding_embed_query",
-      "community": 1,
+      "community": 58,
       "norm_label": "embed_query()"
     },
     {
@@ -2854,7 +2872,7 @@
       "source_file": "precice_ai/core/embedding.py",
       "source_location": "L72",
       "id": "core_embedding_rationale_72",
-      "community": 1,
+      "community": 58,
       "norm_label": "embed a single query string."
     },
     {
@@ -2872,7 +2890,7 @@
       "source_file": "precice_ai/tools/config_tools.py",
       "source_location": "L1",
       "id": "precice_ai_tools_config_tools_py",
-      "community": 62,
+      "community": 117,
       "norm_label": "config_tools.py"
     },
     {
@@ -2888,7 +2906,7 @@
       "label": "_clean_xml_tag()",
       "file_type": "code",
       "source_file": "precice_ai/tools/config_tools.py",
-      "source_location": "L100",
+      "source_location": "L105",
       "id": "tools_config_tools_clean_xml_tag",
       "community": 117,
       "norm_label": "_clean_xml_tag()"
@@ -2897,7 +2915,7 @@
       "label": "_format_list()",
       "file_type": "code",
       "source_file": "precice_ai/tools/config_tools.py",
-      "source_location": "L106",
+      "source_location": "L111",
       "id": "tools_config_tools_format_list",
       "community": 117,
       "norm_label": "_format_list()"
@@ -2917,7 +2935,7 @@
       "source_file": "precice_ai/tools/log_tools.py",
       "source_location": "L1",
       "id": "precice_ai_tools_log_tools_py",
-      "community": 0,
+      "community": 62,
       "norm_label": "log_tools.py"
     },
     {
@@ -2980,7 +2998,7 @@
       "source_file": "precice_ai/tools/knowledge_tools.py",
       "source_location": "L1",
       "id": "precice_ai_tools_knowledge_tools_py",
-      "community": 59,
+      "community": 1,
       "norm_label": "knowledge_tools.py"
     },
     {
@@ -3385,7 +3403,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L43",
       "id": "utils_topology_schema_properties_to",
-      "community": 102,
+      "community": 68,
       "norm_label": "to"
     },
     {
@@ -3394,7 +3412,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L44",
       "id": "utils_topology_schema_to_type",
-      "community": 102,
+      "community": 68,
       "norm_label": "type"
     },
     {
@@ -3403,7 +3421,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L45",
       "id": "utils_topology_schema_to_description",
-      "community": 102,
+      "community": 68,
       "norm_label": "description"
     },
     {
@@ -3412,7 +3430,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L47",
       "id": "utils_topology_schema_properties_to_patch",
-      "community": 68,
+      "community": 111,
       "norm_label": "to-patch"
     },
     {
@@ -3421,7 +3439,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L48",
       "id": "utils_topology_schema_to_patch_type",
-      "community": 68,
+      "community": 111,
       "norm_label": "type"
     },
     {
@@ -3430,7 +3448,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L49",
       "id": "utils_topology_schema_to_patch_description",
-      "community": 68,
+      "community": 111,
       "norm_label": "description"
     },
     {
@@ -4744,7 +4762,7 @@
       "source_file": "README.md",
       "source_location": "L76",
       "id": "precice_ai_readme_codeblock_5",
-      "community": 4,
+      "community": 3,
       "norm_label": "code:bash (precice-ai bootstrap auto --projects-dir /path/to/precice/ca)"
     },
     {
@@ -4834,7 +4852,7 @@
       "source_file": "README.md",
       "source_location": "L176",
       "id": "precice_ai_readme_codeblock_11",
-      "community": 4,
+      "community": 75,
       "norm_label": "code:json ({)"
     },
     {
@@ -4843,7 +4861,7 @@
       "source_file": "README.md",
       "source_location": "L202",
       "id": "precice_ai_readme_codex",
-      "community": 4,
+      "community": 75,
       "norm_label": "codex"
     },
     {
@@ -4852,7 +4870,7 @@
       "source_file": "README.md",
       "source_location": "L206",
       "id": "precice_ai_readme_codeblock_12",
-      "community": 4,
+      "community": 75,
       "norm_label": "code:bash (codex mcp add precice-ai \\)"
     },
     {
@@ -4861,7 +4879,7 @@
       "source_file": "README.md",
       "source_location": "L214",
       "id": "precice_ai_readme_codeblock_13",
-      "community": 11,
+      "community": 75,
       "norm_label": "code:toml ([mcp_servers.\"precice-ai\"])"
     },
     {
@@ -4879,7 +4897,7 @@
       "source_file": "README.md",
       "source_location": "L239",
       "id": "precice_ai_readme_environment_variables",
-      "community": 11,
+      "community": 75,
       "norm_label": "environment variables"
     },
     {
@@ -4888,7 +4906,7 @@
       "source_file": "README.md",
       "source_location": "L261",
       "id": "precice_ai_readme_codeblock_14",
-      "community": 11,
+      "community": 75,
       "norm_label": "code:bash (precice-ai bootstrap codex \\)"
     },
     {
@@ -4897,7 +4915,7 @@
       "source_file": "README.md",
       "source_location": "L273",
       "id": "precice_ai_readme_how_to_use_it",
-      "community": 11,
+      "community": 75,
       "norm_label": "how to use it"
     },
     {
@@ -4996,7 +5014,7 @@
       "source_file": "README.md",
       "source_location": "L385",
       "id": "precice_ai_readme_codeblock_21",
-      "community": 108,
+      "community": 11,
       "norm_label": "code:bash (precice-ai kb status)"
     },
     {
@@ -5140,7 +5158,7 @@
       "source_file": "document.md",
       "source_location": "L79",
       "id": "precice_ai_document_implementation_snapshot",
-      "community": 44,
+      "community": 6,
       "norm_label": "implementation snapshot"
     },
     {
@@ -5149,7 +5167,7 @@
       "source_file": "document.md",
       "source_location": "L81",
       "id": "precice_ai_document_codeblock_2",
-      "community": 44,
+      "community": 6,
       "norm_label": "code:python (from mcp.server.fastmcp import fastmcp)"
     },
     {
@@ -5455,7 +5473,7 @@
       "source_file": "document.md",
       "source_location": "L342",
       "id": "precice_ai_document_part_b_knowledge_context_management_approaches",
-      "community": 6,
+      "community": 46,
       "norm_label": "part b \u2014 knowledge & context management approaches"
     },
     {
@@ -5545,7 +5563,7 @@
       "source_file": "document.md",
       "source_location": "L397",
       "id": "precice_ai_document_implementation_snapshot_397",
-      "community": 44,
+      "community": 53,
       "norm_label": "implementation snapshot"
     },
     {
@@ -5554,7 +5572,7 @@
       "source_file": "document.md",
       "source_location": "L399",
       "id": "precice_ai_document_codeblock_9",
-      "community": 44,
+      "community": 53,
       "norm_label": "code:python (import chromadb)"
     },
     {
@@ -5653,7 +5671,7 @@
       "source_file": "document.md",
       "source_location": "L489",
       "id": "precice_ai_document_approach_d_graphrag_knowledge_graph",
-      "community": 75,
+      "community": 46,
       "norm_label": "approach d: graphrag / knowledge graph"
     },
     {
@@ -5662,7 +5680,7 @@
       "source_file": "document.md",
       "source_location": "L491",
       "id": "precice_ai_document_overview_491",
-      "community": 75,
+      "community": 46,
       "norm_label": "overview"
     },
     {
@@ -5671,7 +5689,7 @@
       "source_file": "document.md",
       "source_location": "L497",
       "id": "precice_ai_document_advantages_497",
-      "community": 75,
+      "community": 46,
       "norm_label": "advantages"
     },
     {
@@ -5680,7 +5698,7 @@
       "source_file": "document.md",
       "source_location": "L504",
       "id": "precice_ai_document_disadvantages_504",
-      "community": 75,
+      "community": 46,
       "norm_label": "disadvantages"
     },
     {
@@ -5689,7 +5707,7 @@
       "source_file": "document.md",
       "source_location": "L511",
       "id": "precice_ai_document_best_suited_for_511",
-      "community": 75,
+      "community": 46,
       "norm_label": "best suited for"
     },
     {
@@ -5968,7 +5986,7 @@
       "source_file": ".agents/skills/graphify/SKILL.md",
       "source_location": "L159",
       "id": "agents_skills_graphify_skill_md_graphify_skill_step_3_extract_entities_and_relationships",
-      "community": 49,
+      "community": 2,
       "norm_label": "step 3 - extract entities and relationships"
     },
     {
@@ -5977,7 +5995,7 @@
       "source_file": ".agents/skills/graphify/SKILL.md",
       "source_location": "L169",
       "id": "agents_skills_graphify_skill_md_graphify_skill_part_a_structural_extraction_for_code_files",
-      "community": 49,
+      "community": 2,
       "norm_label": "part a - structural extraction for code files"
     },
     {
@@ -5986,7 +6004,7 @@
       "source_file": ".agents/skills/graphify/SKILL.md",
       "source_location": "L173",
       "id": "agents_skills_graphify_skill_md_graphify_skill_codeblock_6",
-      "community": 49,
+      "community": 2,
       "norm_label": "code:bash ($(cat .graphify_python) -c \")"
     },
     {
@@ -6067,7 +6085,7 @@
       "source_file": ".agents/skills/graphify/SKILL.md",
       "source_location": "L396",
       "id": "agents_skills_graphify_skill_md_graphify_skill_part_c_merge_ast_semantic_into_final_extraction",
-      "community": 49,
+      "community": 2,
       "norm_label": "part c - merge ast + semantic into final extraction"
     },
     {
@@ -6076,7 +6094,7 @@
       "source_file": ".agents/skills/graphify/SKILL.md",
       "source_location": "L398",
       "id": "agents_skills_graphify_skill_md_graphify_skill_codeblock_14",
-      "community": 49,
+      "community": 2,
       "norm_label": "code:bash ($(cat .graphify_python) -c \")"
     },
     {
@@ -6148,7 +6166,7 @@
       "source_file": ".agents/skills/graphify/SKILL.md",
       "source_location": "L582",
       "id": "agents_skills_graphify_skill_md_graphify_skill_step_7_neo4j_export_only_if_neo4j_or_neo4j_push_flag",
-      "community": 2,
+      "community": 102,
       "norm_label": "step 7 - neo4j export (only if --neo4j or --neo4j-push flag)"
     },
     {
@@ -6157,7 +6175,7 @@
       "source_file": ".agents/skills/graphify/SKILL.md",
       "source_location": "L586",
       "id": "agents_skills_graphify_skill_md_graphify_skill_codeblock_19",
-      "community": 2,
+      "community": 102,
       "norm_label": "code:bash ($(cat .graphify_python) -c \")"
     },
     {
@@ -6166,7 +6184,7 @@
       "source_file": ".agents/skills/graphify/SKILL.md",
       "source_location": "L601",
       "id": "agents_skills_graphify_skill_md_graphify_skill_codeblock_20",
-      "community": 2,
+      "community": 102,
       "norm_label": "code:bash ($(cat .graphify_python) -c \")"
     },
     {
@@ -6211,7 +6229,7 @@
       "source_file": ".agents/skills/graphify/SKILL.md",
       "source_location": "L663",
       "id": "agents_skills_graphify_skill_md_graphify_skill_step_7d_mcp_server_only_if_mcp_flag",
-      "community": 124,
+      "community": 2,
       "norm_label": "step 7d - mcp server (only if --mcp flag)"
     },
     {
@@ -6220,7 +6238,7 @@
       "source_file": ".agents/skills/graphify/SKILL.md",
       "source_location": "L665",
       "id": "agents_skills_graphify_skill_md_graphify_skill_codeblock_23",
-      "community": 124,
+      "community": 2,
       "norm_label": "code:bash (python3 -m graphify.serve graphify-out/graph.json)"
     },
     {
@@ -6229,7 +6247,7 @@
       "source_file": ".agents/skills/graphify/SKILL.md",
       "source_location": "L672",
       "id": "agents_skills_graphify_skill_md_graphify_skill_codeblock_24",
-      "community": 124,
+      "community": 2,
       "norm_label": "code:json ({)"
     },
     {
@@ -7551,7 +7569,7 @@
       "file_type": "rationale",
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L1012",
-      "community": 1,
+      "community": 57,
       "norm_label": "sync the local kb (vector + lexical) from the kb-latest github release.      sin",
       "id": "core_knowledge_base_rationale_1012"
     },
@@ -7839,7 +7857,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L26",
-      "community": 4,
+      "community": 116,
       "norm_label": "platform setup",
       "id": "precice_ai_readme_platform_setup"
     },
@@ -7848,7 +7866,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L45",
-      "community": 4,
+      "community": 116,
       "norm_label": "check which platforms are detected",
       "id": "precice_ai_readme_check_which_platforms_are_detected"
     },
@@ -7857,7 +7875,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L51",
-      "community": 4,
+      "community": 3,
       "norm_label": "claude code",
       "id": "precice_ai_readme_claude_code"
     },
@@ -7902,7 +7920,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L104",
-      "community": 4,
+      "community": 116,
       "norm_label": "manual / generic",
       "id": "precice_ai_readme_manual_generic"
     },
@@ -8019,7 +8037,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L282",
-      "community": 108,
+      "community": 11,
       "norm_label": "6. read and analyze logs",
       "id": "precice_ai_readme_6_read_and_analyze_logs"
     },
@@ -8406,7 +8424,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L304",
-      "community": 4,
+      "community": 75,
       "norm_label": "controlling what gets indexed",
       "id": "precice_ai_readme_controlling_what_gets_indexed"
     },
@@ -8469,7 +8487,7 @@
       "file_type": "code",
       "source_file": "core/paths.py",
       "source_location": "L1",
-      "community": 117,
+      "community": 0,
       "norm_label": "paths.py",
       "id": "core_paths_py"
     },
@@ -8487,7 +8505,7 @@
       "file_type": "rationale",
       "source_file": "core/paths.py",
       "source_location": "L24",
-      "community": 117,
+      "community": 0,
       "norm_label": "return the expected precice-config.xml path for a project.",
       "id": "core_paths_rationale_24"
     },
@@ -8613,7 +8631,7 @@
       "file_type": "code",
       "source_file": "tools/project_tools.py",
       "source_location": "L1",
-      "community": 59,
+      "community": 63,
       "norm_label": "project_tools.py",
       "id": "tools_project_tools_py"
     },
@@ -9650,7 +9668,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 70,
       "norm_label": "platform.mcp_entry",
       "id": "base_platform_mcp_entry"
     },
@@ -9793,7 +9811,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 117,
+      "community": 0,
       "norm_label": "get_precice_config_path",
       "id": "paths_get_precice_config_path"
     },
@@ -10040,7 +10058,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 117,
+      "community": 0,
       "norm_label": "summarize_precice_config",
       "id": "tools_config_tools_summarize_precice_config"
     },
@@ -10624,7 +10642,7 @@
       "author": "Vaibhav Dange",
       "contributor": null,
       "rationale": "Recognized as a natural fit for preCICE's relational participant-mesh-data-mapping structure, but deferred due to high construction and maintenance cost versus flat RAG for most queries.",
-      "community": 6,
+      "community": 46,
       "norm_label": "approach d: graphrag / knowledge graph",
       "id": "document_graphrag_approach"
     },
@@ -10704,7 +10722,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 46,
       "norm_label": "from local to global: a graph rag approach - edge et al. (2024)",
       "id": "document_ref_graphrag_paper"
     },
@@ -12462,9 +12480,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L55",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_rationale_55",
-      "target": "scripts_adapter_repos_read_gitmodules",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_read_gitmodules"
     },
     {
       "relation": "rationale_for",
@@ -12493,9 +12511,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L67",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_rationale_67",
-      "target": "scripts_adapter_repos_parse_gitmodules",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_parse_gitmodules"
     },
     {
       "relation": "rationale_for",
@@ -12546,9 +12564,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L105",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_rationale_105",
-      "target": "scripts_adapter_repos_checkout",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_checkout"
     },
     {
       "relation": "rationale_for",
@@ -12577,9 +12595,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L134",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_rationale_134",
-      "target": "scripts_adapter_repos_signature",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_signature"
     },
     {
       "relation": "rationale_for",
@@ -12608,9 +12626,9 @@
       "source_file": "scripts/adapter_repos.py",
       "source_location": "L153",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_adapter_repos_rationale_153",
-      "target": "scripts_adapter_repos_sources",
-      "confidence_score": 1.0
+      "target": "scripts_adapter_repos_sources"
     },
     {
       "relation": "rationale_for",
@@ -15223,6 +15241,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "precice_ai/core/paths.py",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "precice_ai_core_paths_py",
+      "target": "core_paths_iter_project_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/paths.py",
       "source_location": "L31",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -15411,6 +15439,60 @@
       "target": "core_paths_get_project_path"
     },
     {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/paths.py",
+      "source_location": "L45",
+      "weight": 1.0,
+      "source": "core_paths_rationale_45",
+      "target": "core_paths_iter_project_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/tools/log_tools.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "precice_ai_tools_log_tools_py",
+      "target": "core_paths_iter_project_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/tools/project_tools.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "precice_ai_tools_project_tools_py",
+      "target": "core_paths_iter_project_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/tools/log_tools.py",
+      "source_location": "L122",
+      "weight": 1.0,
+      "source": "tools_log_tools_find_log_files",
+      "target": "core_paths_iter_project_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/tools/project_tools.py",
+      "source_location": "L49",
+      "weight": 1.0,
+      "source": "tools_project_tools_register_project_tools",
+      "target": "core_paths_iter_project_files",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -15436,11 +15518,21 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "precice_ai/core/paths.py",
-      "source_location": "L45",
+      "source_location": "L58",
       "weight": 1.0,
-      "source": "core_paths_rationale_45",
+      "source": "core_paths_rationale_58",
       "target": "core_paths_get_env_file_path",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/paths.py",
+      "source_location": "L45",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_paths_rationale_45",
+      "target": "core_paths_get_env_file_path"
     },
     {
       "relation": "rationale_for",
@@ -28239,5 +28331,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "38edbe0de2cb182357a139e4720ecd8421e423f0"
+  "built_at_commit": "1af9e1ee92bea333c79aaf83e156ce8c92e25ade"
 }

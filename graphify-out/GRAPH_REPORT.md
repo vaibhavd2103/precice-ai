@@ -1,16 +1,16 @@
 # Graph Report - precice-ai  (2026-10-11)
 
 ## Corpus Check
-- 51 files · ~112,118 words
+- 51 files · ~112,212 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1128 nodes · 1699 edges · 124 communities (104 shown, 20 thin omitted)
+- 1130 nodes · 1706 edges · 124 communities (104 shown, 20 thin omitted)
 - Extraction: 97% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 39 edges (avg confidence: 0.73)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `38edbe0d`
+- Built from commit: `1af9e1ee`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -122,6 +122,7 @@
 - [[_COMMUNITY_Community 108|Community 108]]
 - [[_COMMUNITY_Community 109|Community 109]]
 - [[_COMMUNITY_Community 110|Community 110]]
+- [[_COMMUNITY_Community 111|Community 111]]
 - [[_COMMUNITY_Community 113|Community 113]]
 - [[_COMMUNITY_Community 114|Community 114]]
 - [[_COMMUNITY_Community 116|Community 116]]
@@ -132,7 +133,6 @@
 - [[_COMMUNITY_Community 121|Community 121]]
 - [[_COMMUNITY_Community 122|Community 122]]
 - [[_COMMUNITY_Community 123|Community 123]]
-- [[_COMMUNITY_Community 124|Community 124]]
 - [[_COMMUNITY_Community 126|Community 126]]
 - [[_COMMUNITY_Community 127|Community 127]]
 
@@ -171,32 +171,32 @@
 ## Communities (124 total, 20 thin omitted)
 
 ### Community 0 - "Agent Architecture & Safety Rules"
-Cohesion: 0.19
-Nodes (20): AGENTS.md Safety Rules, AGENTS.md Tool Usage Order, Approach 1: MCP Server, Return the absolute path of a project inside test-projects.      This also preve, Model Context Protocol (MCP) Specification - Anthropic (2024), get_project_path, README MCP Tools Reference, README Safety Notes (+12 more)
+Cohesion: 0.17
+Nodes (23): AGENTS.md Safety Rules, AGENTS.md Tool Usage Order, Approach 1: MCP Server, Return the expected precice-config.xml path for a project., Return the absolute path of a project inside test-projects.      This also preve, Model Context Protocol (MCP) Specification - Anthropic (2024), get_precice_config_path, get_project_path (+15 more)
 
 ### Community 1 - "KB Retrieval & Comparison Tools"
-Cohesion: 0.05
-Nodes (63): compare_kb_search main(), _print_results, _run_lexical, _run_vector, embed_query(), Embed a single query string., _asset_name(), _bm25_like_score() (+55 more)
+Cohesion: 0.06
+Nodes (58): compare_kb_search main(), _print_results, _run_lexical, _run_vector, _asset_name(), _bm25_like_score(), _dedupe_keep_order(), _extract_html_document() (+50 more)
 
 ### Community 2 - "Graphify Skill (.agents copy)"
-Cohesion: 0.10
-Nodes (26): code:bash (mkdir -p graphify-out), code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -c "), code:bash (# Detect the correct Python interpreter (handles pipx, venv,), code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -c ") (+18 more)
+Cohesion: 0.08
+Nodes (31): code:bash ($(cat .graphify_python) -c "), code:bash (mkdir -p graphify-out), code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -c "), code:bash (# Detect the correct Python interpreter (handles pipx, venv,), code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -c ") (+23 more)
 
 ### Community 3 - "MCP Platform Installers"
-Cohesion: 0.18
-Nodes (7): Platform (abstract base class), Platform.mcp_entry, ClaudeCodePlatform, ClaudeCodePlatform, Claude Code CLI — writes to .mcp.json (project) or ~/.claude/settings.json (user, Claude Code CLI — writes to .mcp.json (project) or ~/.claude.json (user)., Mark 'precice-ai' as an approved .mcp.json server for this project.          Cla
+Cohesion: 0.16
+Nodes (8): Platform (abstract base class), ClaudeCodePlatform, ClaudeCodePlatform, Claude Code CLI — writes to .mcp.json (project) or ~/.claude/settings.json (user, Claude Code CLI — writes to .mcp.json (project) or ~/.claude.json (user)., Mark 'precice-ai' as an approved .mcp.json server for this project.          Cla, Claude Code, code:bash (precice-ai bootstrap auto --projects-dir /path/to/preCICE/ca)
 
 ### Community 4 - "README Setup Instructions"
-Cohesion: 0.13
-Nodes (22): Check which platforms are detected, Claude Code, Claude Code project scope (`.mcp.json`), code:json ({), code:json ({), code:bash (codex mcp add precice-ai \), code:bash (precice-ai bootstrap auto --projects-dir /path/to/preCICE/ca), code:bash (precice-ai bootstrap codex \) (+14 more)
+Cohesion: 0.18
+Nodes (13): Claude Code project scope (`.mcp.json`), code:json ({), code:bash (precice-ai bootstrap codex \), code:bash (precice-ai bootstrap claude-code --write-global-instructions), code:bash (precice-ai list-platforms), code:text (-m precice_ai.server), Common config locations, Cursor (+5 more)
 
 ### Community 5 - "Graphify Skill Codeblocks"
 Cohesion: 0.10
 Nodes (21): code:bash (mkdir -p graphify-out), code:bash (graphify export obsidian), code:bash (graphify export html  # auto-aggregates to community view if), code:bash (graphify export wiki), code:bash (graphify export neo4j), code:bash (graphify export neo4j --push bolt://localhost:7687 --user ne), code:bash (graphify export svg), code:bash (graphify export graphml) (+13 more)
 
 ### Community 6 - "Thesis: LLM Architecture Approaches"
-Cohesion: 0.23
-Nodes (22): Approach E: Fine-Tuned Embeddings, Approach D: GraphRAG / Knowledge Graph, Approach 2: LangChain/LangGraph Agent, Approach C: mem0 Agent Memory Layer, Approach A: Obsidian Vault + MCP Write-back, Approach 3: Raw Function Calling (Anthropic/OpenAI API), Recommended Stack: MCP + ChromaDB RAG + Obsidian + mem0, From Local to Global: A Graph RAG Approach - Edge et al. (2024) (+14 more)
+Cohesion: 0.24
+Nodes (21): Approach E: Fine-Tuned Embeddings, Approach 2: LangChain/LangGraph Agent, Approach C: mem0 Agent Memory Layer, Approach A: Obsidian Vault + MCP Write-back, Approach 3: Raw Function Calling (Anthropic/OpenAI API), Recommended Stack: MCP + ChromaDB RAG + Obsidian + mem0, LangChain: Building applications with LLMs - Chase (2022), mem0: The Memory Layer for AI Agents (2024) (+13 more)
 
 ### Community 7 - "Graphify Skill (.claude copy)"
 Cohesion: 0.12
@@ -215,8 +215,8 @@ Cohesion: 0.12
 Nodes (16): 1. Introduction & Problem Statement, 4.1 Tool Integration Approaches, 4.2 Knowledge & Context Management Approaches, 4. Comparison Matrices, 5. Best Approach & Recommended Architecture, 6. Conclusion, 7. References, A Comparative Analysis for Thesis Research (+8 more)
 
 ### Community 11 - "README Usage Walkthrough"
-Cohesion: 0.13
-Nodes (22): 1. Download the knowledge base, 2. Discover your projects, 3. Inspect a project, 4. Validate the config, 5. Run safe commands, 7. Ask the knowledge base, CLI Commands, code:toml ([mcp_servers."precice-ai"]) (+14 more)
+Cohesion: 0.14
+Nodes (20): 1. Download the knowledge base, 2. Discover your projects, 3. Inspect a project, 4. Validate the config, 5. Run safe commands, 6. Read and analyze logs, 7. Ask the knowledge base, CLI Commands (+12 more)
 
 ### Community 12 - "Graphify Detect Output"
 Cohesion: 0.14
@@ -279,16 +279,16 @@ Cohesion: 0.17
 Nodes (12): code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -m graphify save-result --question "), code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -m graphify save-result --question "), code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -c ") (+4 more)
 
 ### Community 44 - "Community 44"
-Cohesion: 0.18
-Nodes (11): Advantages, Approach C: mem0 — Agent Memory Layer, Best Suited For, code:python (from mem0 import Memory), code:python (from mcp.server.fastmcp import FastMCP), code:python (import chromadb), Disadvantages, Implementation Snapshot (+3 more)
+Cohesion: 0.29
+Nodes (7): Advantages, Approach C: mem0 — Agent Memory Layer, Best Suited For, code:python (from mem0 import Memory), Disadvantages, Implementation Snapshot, Overview
 
 ### Community 45 - "Community 45"
 Cohesion: 0.13
 Nodes (16): code:block4 (Corpus: X files · ~Y words), code:bash ($(cat graphify-out/.graphify_python) -c "), code:bash ($(cat graphify-out/.graphify_python) -c "), code:bash ($(cat graphify-out/.graphify_python) -c "), code:block31 (Graph complete. Outputs in PATH_TO_DIR/graphify-out/), code:bash ($(cat graphify-out/.graphify_python) -c "), code:bash ($(cat graphify-out/.graphify_python) -c "), code:block7 (Corpus: X files · ~Y words) (+8 more)
 
 ### Community 46 - "Community 46"
-Cohesion: 0.40
-Nodes (5): Advantages, Approach E: Fine-Tuned Embeddings, Best Suited For, Disadvantages, Overview
+Cohesion: 0.15
+Nodes (13): Approach D: GraphRAG / Knowledge Graph, From Local to Global: A Graph RAG Approach - Edge et al. (2024), Advantages, Advantages, Approach D: GraphRAG / Knowledge Graph, Approach E: Fine-Tuned Embeddings, Best Suited For, Best Suited For (+5 more)
 
 ### Community 47 - "Community 47"
 Cohesion: 0.22
@@ -299,8 +299,8 @@ Cohesion: 0.25
 Nodes (9): Advantages, Approach 5: Fine-Tuned / Domain-Adapted LLM, Best Suited For, code:block1 (User: "Debug my heat-exchanger simulation"), code:block7 (Data Collection:), Disadvantages, How It Works, How It Works (+1 more)
 
 ### Community 49 - "Community 49"
-Cohesion: 0.15
-Nodes (13): code:block10 (You are a graphify extraction subagent. Read the files liste), code:bash ($(cat graphify-out/.graphify_python) -c "), code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -c "), code:block8 (spawn_agent(agent_type="worker", message="Your task is to pe) (+5 more)
+Cohesion: 0.25
+Nodes (8): code:block10 (You are a graphify extraction subagent. Read the files liste), code:bash ($(cat graphify-out/.graphify_python) -c "), code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -c "), code:block8 (spawn_agent(agent_type="worker", message="Your task is to pe), code:block9 (result = wait_agent(handle); close_agent(handle)   # repeat ), Part B - Semantic extraction (parallel subagents)
 
 ### Community 50 - "Community 50"
 Cohesion: 0.25
@@ -315,8 +315,8 @@ Cohesion: 0.29
 Nodes (7): Advantages, Approach 4: Semantic Kernel (Microsoft), Best Suited For, code:python (import semantic_kernel as sk), Disadvantages, Implementation Snapshot, Overview
 
 ### Community 53 - "Community 53"
-Cohesion: 0.29
-Nodes (7): Advantages, Approach B: Vector Database RAG Pipeline, Best Suited For, code:block8 (Indexing (one-time):), Disadvantages, How It Works, Overview
+Cohesion: 0.22
+Nodes (9): Advantages, Approach B: Vector Database RAG Pipeline, Best Suited For, code:block8 (Indexing (one-time):), code:python (import chromadb), Disadvantages, How It Works, Implementation Snapshot (+1 more)
 
 ### Community 54 - "Community 54"
 Cohesion: 0.40
@@ -332,14 +332,14 @@ Nodes (6): code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_
 
 ### Community 57 - "Community 57"
 Cohesion: 0.06
-Nodes (43): build_client_env(), write_env_file(), bootstrap(), _build_extra_env(), _configure_logging(), _detect_platform(), kb_ingest(), kb_query() (+35 more)
+Nodes (47): build_client_env(), write_env_file(), bootstrap(), _build_extra_env(), _configure_logging(), _detect_platform(), kb_ingest(), kb_query() (+39 more)
 
 ### Community 58 - "Community 58"
-Cohesion: 0.10
-Nodes (27): DiscourseTopicDocument, _fetch_categories(), fetch_discourse_topic_documents(), _fetch_post_raw(), _fetch_topic_text(), _get_json(), _iter_category_topics(), _normalize_api_url() (+19 more)
+Cohesion: 0.09
+Nodes (29): DiscourseTopicDocument, _fetch_categories(), fetch_discourse_topic_documents(), _fetch_post_raw(), _fetch_topic_text(), _get_json(), _iter_category_topics(), _normalize_api_url() (+21 more)
 
 ### Community 59 - "Community 59"
-Cohesion: 0.15
+Cohesion: 0.16
 Nodes (17): README Project Structure Diagram, Register MCP tools that wrap precice-cli commands., Register MCP tools that wrap precice-cli commands., register_cli_tools(), Register preCICE configuration-related MCP tools., Register preCICE configuration-related MCP tools., register_config_tools(), Register all MCP tools. (+9 more)
 
 ### Community 60 - "Community 60"
@@ -351,11 +351,11 @@ Cohesion: 0.67
 Nodes (3): main(), Render the --sources-json argument for build_embeddings.py from kb_sources.json., render()
 
 ### Community 62 - "Community 62"
-Cohesion: 0.35
-Nodes (8): get_precice_config_path(), get_project_path(), get_projects_dir(), Return the absolute path of a project directory.      Agents pass the project di, Return the preCICE projects directory.      Resolved from PRECICE_PROJECTS_DIR e, get_projects_dir, Register project-related MCP tools., register_project_tools()
+Cohesion: 0.33
+Nodes (9): get_precice_config_path(), get_project_path(), get_projects_dir(), iter_project_files(), Return the absolute path of a project directory.      Agents pass the project di, Return the preCICE projects directory.      Resolved from PRECICE_PROJECTS_DIR e, get_projects_dir, Register project-related MCP tools. (+1 more)
 
 ### Community 63 - "Community 63"
-Cohesion: 0.22
+Cohesion: 0.20
 Nodes (15): run_safe_command, _check_precice_cli(), _load_topology_schema(), precice_config_check, precice_config_format, precice_config_visualize, precice_init, precice_profiling_analyze (+7 more)
 
 ### Community 64 - "Community 64"
@@ -372,15 +372,15 @@ Nodes (13): code:text (precice-ai/), code:text (pyproject.toml), Contributor Gui
 
 ### Community 68 - "Community 68"
 Cohesion: 0.20
-Nodes (10): description, type, description, type, properties, data, from-patch, to-patch (+2 more)
+Nodes (10): description, type, description, type, properties, data, from-patch, to (+2 more)
 
 ### Community 69 - "Community 69"
 Cohesion: 0.22
 Nodes (9): code:bash (graphify query "QUESTION"), code:bash ($(cat graphify-out/.graphify_python) -m graphify save-result), code:bash (graphify path "NODE_A" "NODE_B"), code:bash ($(cat graphify-out/.graphify_python) -m graphify save-result), code:bash (graphify explain "NODE_NAME"), code:bash ($(cat graphify-out/.graphify_python) -m graphify save-result), For /graphify explain, For /graphify path (+1 more)
 
 ### Community 70 - "Community 70"
-Cohesion: 0.27
-Nodes (4): CodexPlatform, CodexPlatform, OpenAI Codex CLI — writes MCP server entry to ~/.codex/mcp.json., OpenAI Codex CLI — manages MCP servers via `codex mcp` and ~/.codex/config.toml.
+Cohesion: 0.24
+Nodes (5): Platform.mcp_entry, CodexPlatform, CodexPlatform, OpenAI Codex CLI — writes MCP server entry to ~/.codex/mcp.json., OpenAI Codex CLI — manages MCP servers via `codex mcp` and ~/.codex/config.toml.
 
 ### Community 71 - "Community 71"
 Cohesion: 0.31
@@ -399,8 +399,8 @@ Cohesion: 0.42
 Nodes (6): Platform._merge_json_config, ClaudeDesktopPlatform, _config_path, ClaudeDesktopPlatform, _config_path(), Claude Desktop
 
 ### Community 75 - "Community 75"
-Cohesion: 0.40
-Nodes (5): Advantages, Approach D: GraphRAG / Knowledge Graph, Best Suited For, Disadvantages, Overview
+Cohesion: 0.32
+Nodes (8): code:json ({), code:bash (codex mcp add precice-ai \), code:toml ([mcp_servers."precice-ai"]), code:bash (precice-ai bootstrap codex \), Codex, Controlling what gets indexed, Environment Variables, How To Use It
 
 ### Community 76 - "Community 76"
 Cohesion: 0.43
@@ -508,15 +508,15 @@ Nodes (3): solver, description, type
 
 ### Community 102 - "Community 102"
 Cohesion: 0.67
-Nodes (3): to, description, type
+Nodes (3): code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -c "), Step 7 - Neo4j export (only if --neo4j or --neo4j-push flag)
 
 ### Community 107 - "Community 107"
 Cohesion: 0.67
 Nodes (3): description, type, name
 
 ### Community 108 - "Community 108"
-Cohesion: 0.15
-Nodes (13): 6. Read and analyze logs, Categories and sources, code:bash (precice-ai kb status), code:text (precice_ai/), code:json ({), code:bash (gh workflow run kb-ingest.yml --repo vaibhavd2103/precice-ai), code:bash (# Delete local cache to force re-download on next query), How it works (+5 more)
+Cohesion: 0.18
+Nodes (11): Categories and sources, code:text (precice_ai/), code:json ({), code:bash (gh workflow run kb-ingest.yml --repo vaibhavd2103/precice-ai), code:bash (# Delete local cache to force re-download on next query), How it works, Project Layout, Refreshing the knowledge base (+3 more)
 
 ### Community 109 - "Community 109"
 Cohesion: 0.25
@@ -525,6 +525,10 @@ Nodes (8): 1. MCP clients, 2. The FastMCP server, 3. Local preCICE project direc
 ### Community 110 - "Community 110"
 Cohesion: 0.29
 Nodes (6): base_url, docs_dir, exclude_patterns, include_subfolders, repo, sparse_checkout_paths
+
+### Community 111 - "Community 111"
+Cohesion: 0.67
+Nodes (3): to-patch, description, type
 
 ### Community 113 - "Community 113"
 Cohesion: 0.33
@@ -535,12 +539,12 @@ Cohesion: 0.40
 Nodes (5): categories, pulls, description, repo, type
 
 ### Community 116 - "Community 116"
-Cohesion: 0.19
-Nodes (15): 1. Create and activate a Python environment, 2. Install dependencies, 3. Start the MCP server, code:bash (pipx install precice-ai), code:bash (git clone https://github.com/vaibhavd2103/precice-ai), code:powershell (git clone https://github.com/vaibhavd2103/precice-ai), code:bash (./install.sh auto --projects-dir /path/to/preCICE/cases), From PyPI (recommended) (+7 more)
+Cohesion: 0.17
+Nodes (18): 1. Create and activate a Python environment, 2. Install dependencies, 3. Start the MCP server, Check which platforms are detected, code:bash (pipx install precice-ai), code:bash (git clone https://github.com/vaibhavd2103/precice-ai), code:powershell (git clone https://github.com/vaibhavd2103/precice-ai), code:bash (./install.sh auto --projects-dir /path/to/preCICE/cases) (+10 more)
 
 ### Community 117 - "Community 117"
-Cohesion: 0.28
-Nodes (7): Return the expected precice-config.xml path for a project., get_precice_config_path, _clean_xml_tag(), _format_list(), Remove XML namespace from tag if present., Format a list for readable output., summarize_precice_config
+Cohesion: 0.40
+Nodes (4): _clean_xml_tag(), _format_list(), Remove XML namespace from tag if present., Format a list for readable output.
 
 ### Community 118 - "Community 118"
 Cohesion: 0.50
@@ -565,10 +569,6 @@ Nodes (4): issues, description, repo, type
 ### Community 123 - "Community 123"
 Cohesion: 0.50
 Nodes (4): tutorials, description, exclude_patterns, sources
-
-### Community 124 - "Community 124"
-Cohesion: 0.67
-Nodes (3): code:bash (python3 -m graphify.serve graphify-out/graph.json), code:json ({), Step 7d - MCP server (only if --mcp flag)
 
 ## Ambiguous Edges - Review These
 - `KnowledgeBaseService.query` → `is_command_safe`  [AMBIGUOUS]
@@ -596,9 +596,9 @@ _Questions this graph is uniquely positioned to answer:_
   _Edge tagged AMBIGUOUS (relation: references) - confidence is low._
 - **What is the exact relationship between `precice_config_visualize` and `README MCP Tools Reference`?**
   _Edge tagged AMBIGUOUS (relation: references) - confidence is low._
-- **Why does `preCICE AI MCP Server` connect `Community 41` to `KB Retrieval & Comparison Tools`, `README Setup Instructions`, `KB & Config Policy Rules`, `README Usage Walkthrough`, `README Graphify Setup`, `Community 116`, `Community 55`?**
-  _High betweenness centrality (0.197) - this node is a cross-community bridge._
+- **Why does `preCICE AI MCP Server` connect `Community 41` to `KB Retrieval & Comparison Tools`, `KB & Config Policy Rules`, `README Usage Walkthrough`, `Community 75`, `README Graphify Setup`, `Community 116`, `Community 55`?**
+  _High betweenness centrality (0.209) - this node is a cross-community bridge._
 - **Why does `Approach 1: MCP Server` connect `Agent Architecture & Safety Rules` to `Community 41`, `Community 98`, `Thesis: LLM Architecture Approaches`?**
-  _High betweenness centrality (0.187) - this node is a cross-community bridge._
-- **Why does `Approach D: GraphRAG / Knowledge Graph` connect `Thesis: LLM Architecture Approaches` to `Claude Settings & Graphify Commands`?**
-  _High betweenness centrality (0.182) - this node is a cross-community bridge._
+  _High betweenness centrality (0.206) - this node is a cross-community bridge._
+- **Why does `graphify Skill` connect `Claude Settings & Graphify Commands` to `Command Safety Core`, `Community 46`?**
+  _High betweenness centrality (0.198) - this node is a cross-community bridge._

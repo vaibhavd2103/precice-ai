@@ -9,6 +9,10 @@ Use this decision tree:
 - If you need an explicit refresh step before querying, call `kb_ingest_precice_data(...)` for that category.
 - Do not answer from training data alone when a KB tool should be used.
 
+## Running a preCICE project
+
+Before checking, setting up or running any preCICE project or tutorial, call `precice_project_preflight(project_path)` (use `list_precice_projects(path)` first if only a project name is given). Do not start a participant until it returns `"ready": true`; if it does not, report the listed problems, fix them, and call it again. Then start one case per participant concurrently with the returned `run_command` values and analyze the logs.
+
 ---
 
 ## graphify (optional)

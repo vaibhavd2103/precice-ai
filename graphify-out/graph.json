@@ -532,7 +532,7 @@
       "source_file": "scripts/compare_kb_search.py",
       "source_location": "L1",
       "id": "scripts_compare_kb_search_py",
-      "community": 1,
+      "community": 124,
       "norm_label": "compare_kb_search.py"
     },
     {
@@ -541,7 +541,7 @@
       "source_file": "scripts/compare_kb_search.py",
       "source_location": "L39",
       "id": "scripts_compare_kb_search_run_lexical",
-      "community": 1,
+      "community": 124,
       "norm_label": "_run_lexical()"
     },
     {
@@ -550,7 +550,7 @@
       "source_file": "scripts/compare_kb_search.py",
       "source_location": "L47",
       "id": "scripts_compare_kb_search_run_vector",
-      "community": 1,
+      "community": 124,
       "norm_label": "_run_vector()"
     },
     {
@@ -559,7 +559,7 @@
       "source_file": "scripts/compare_kb_search.py",
       "source_location": "L80",
       "id": "scripts_compare_kb_search_print_results",
-      "community": 1,
+      "community": 124,
       "norm_label": "_print_results()"
     },
     {
@@ -568,7 +568,7 @@
       "source_file": "scripts/compare_kb_search.py",
       "source_location": "L98",
       "id": "scripts_compare_kb_search_main",
-      "community": 1,
+      "community": 124,
       "norm_label": "main()"
     },
     {
@@ -577,7 +577,7 @@
       "source_file": "scripts/compare_kb_search.py",
       "source_location": "L1",
       "id": "scripts_compare_kb_search_rationale_1",
-      "community": 1,
+      "community": 124,
       "norm_label": "run lexical (bm25-like) and vector (embedding cosine-similarity) search against"
     },
     {
@@ -811,7 +811,7 @@
       "source_file": "scripts/build_lexical_kb.py",
       "source_location": "L1",
       "id": "scripts_build_lexical_kb_py",
-      "community": 1,
+      "community": 102,
       "norm_label": "build_lexical_kb.py"
     },
     {
@@ -820,7 +820,7 @@
       "source_file": "scripts/build_lexical_kb.py",
       "source_location": "L30",
       "id": "scripts_build_lexical_kb_main",
-      "community": 1,
+      "community": 102,
       "norm_label": "main()"
     },
     {
@@ -829,7 +829,7 @@
       "source_file": "scripts/build_lexical_kb.py",
       "source_location": "L1",
       "id": "scripts_build_lexical_kb_rationale_1",
-      "community": 1,
+      "community": 102,
       "norm_label": "dev/fallback-only tool \u2014 not part of the primary kb-ingest.yml pipeline.  the pr"
     },
     {
@@ -1243,7 +1243,7 @@
       "source_file": "precice_ai/cli/main.py",
       "source_location": "L413",
       "id": "cli_main_list_platforms",
-      "community": 54,
+      "community": 57,
       "norm_label": "list_platforms()"
     },
     {
@@ -1324,7 +1324,7 @@
       "source_file": "precice_ai/cli/main.py",
       "source_location": "L414",
       "id": "cli_main_rationale_414",
-      "community": 54,
+      "community": 57,
       "norm_label": "list all supported platforms and whether they appear to be installed."
     },
     {
@@ -2012,12 +2012,39 @@
       "norm_label": "__init__.py"
     },
     {
+      "label": "config_xml.py",
+      "file_type": "code",
+      "source_file": "precice_ai/core/config_xml.py",
+      "source_location": "L1",
+      "id": "precice_ai_core_config_xml_py",
+      "community": 112,
+      "norm_label": "config_xml.py"
+    },
+    {
+      "label": "parse_precice_config()",
+      "file_type": "code",
+      "source_file": "precice_ai/core/config_xml.py",
+      "source_location": "L8",
+      "id": "core_config_xml_parse_precice_config",
+      "community": 112,
+      "norm_label": "parse_precice_config()"
+    },
+    {
+      "label": "Parse a precice-config.xml and return its root element.      preCICE configs use",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/config_xml.py",
+      "source_location": "L9",
+      "id": "core_config_xml_rationale_9",
+      "community": 112,
+      "norm_label": "parse a precice-config.xml and return its root element.      precice configs use"
+    },
+    {
       "label": "paths.py",
       "file_type": "code",
       "source_file": "precice_ai/core/paths.py",
       "source_location": "L1",
       "id": "precice_ai_core_paths_py",
-      "community": 62,
+      "community": 0,
       "norm_label": "paths.py"
     },
     {
@@ -2026,7 +2053,7 @@
       "source_file": "precice_ai/core/paths.py",
       "source_location": "L7",
       "id": "core_paths_get_projects_dir",
-      "community": 62,
+      "community": 0,
       "norm_label": "get_projects_dir()"
     },
     {
@@ -2035,7 +2062,7 @@
       "source_file": "precice_ai/core/paths.py",
       "source_location": "L20",
       "id": "core_paths_get_project_path",
-      "community": 62,
+      "community": 0,
       "norm_label": "get_project_path()"
     },
     {
@@ -2044,7 +2071,7 @@
       "source_file": "precice_ai/core/paths.py",
       "source_location": "L44",
       "id": "core_paths_iter_project_files",
-      "community": 62,
+      "community": 0,
       "norm_label": "iter_project_files()"
     },
     {
@@ -2053,7 +2080,7 @@
       "source_file": "precice_ai/core/paths.py",
       "source_location": "L53",
       "id": "core_paths_get_precice_config_path",
-      "community": 62,
+      "community": 0,
       "norm_label": "get_precice_config_path()"
     },
     {
@@ -2071,7 +2098,7 @@
       "source_file": "precice_ai/core/paths.py",
       "source_location": "L8",
       "id": "core_paths_rationale_8",
-      "community": 62,
+      "community": 0,
       "norm_label": "return the precice projects directory.      resolved from precice_projects_dir e"
     },
     {
@@ -2080,7 +2107,7 @@
       "source_file": "precice_ai/core/paths.py",
       "source_location": "L21",
       "id": "core_paths_rationale_21",
-      "community": 62,
+      "community": 0,
       "norm_label": "return the absolute path of a project directory.      agents pass the project di"
     },
     {
@@ -2116,7 +2143,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L20",
       "id": "core_knowledge_base_get_kb_dir",
-      "community": 1,
+      "community": 107,
       "norm_label": "_get_kb_dir()"
     },
     {
@@ -2197,7 +2224,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L252",
       "id": "core_knowledge_base_kbdocument",
-      "community": 1,
+      "community": 14,
       "norm_label": "kbdocument"
     },
     {
@@ -2206,7 +2233,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L260",
       "id": "core_knowledge_base_knowledgebaseservice",
-      "community": 1,
+      "community": 102,
       "norm_label": "knowledgebaseservice"
     },
     {
@@ -2215,7 +2242,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L261",
       "id": "core_knowledge_base_knowledgebaseservice_init",
-      "community": 1,
+      "community": 107,
       "norm_label": ".__init__()"
     },
     {
@@ -2224,7 +2251,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L265",
       "id": "core_knowledge_base_knowledgebaseservice_ingest_precice_sources",
-      "community": 1,
+      "community": 14,
       "norm_label": ".ingest_precice_sources()"
     },
     {
@@ -2242,7 +2269,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L412",
       "id": "core_knowledge_base_knowledgebaseservice_sync_from_release",
-      "community": 1,
+      "community": 102,
       "norm_label": ".sync_from_release()"
     },
     {
@@ -2251,7 +2278,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L432",
       "id": "core_knowledge_base_knowledgebaseservice_query_with_optional_live_refresh",
-      "community": 1,
+      "community": 102,
       "norm_label": ".query_with_optional_live_refresh()"
     },
     {
@@ -2260,7 +2287,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L466",
       "id": "core_knowledge_base_knowledgebaseservice_kb_status",
-      "community": 1,
+      "community": 102,
       "norm_label": ".kb_status()"
     },
     {
@@ -2269,7 +2296,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L489",
       "id": "core_knowledge_base_knowledgebaseservice_fetch_docs_documents",
-      "community": 1,
+      "community": 14,
       "norm_label": "._fetch_docs_documents()"
     },
     {
@@ -2278,7 +2305,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L523",
       "id": "core_knowledge_base_knowledgebaseservice_fetch_forum_documents",
-      "community": 1,
+      "community": 14,
       "norm_label": "._fetch_forum_documents()"
     },
     {
@@ -2287,7 +2314,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L544",
       "id": "core_knowledge_base_knowledgebaseservice_read_kb",
-      "community": 1,
+      "community": 102,
       "norm_label": "._read_kb()"
     },
     {
@@ -2296,7 +2323,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L555",
       "id": "core_knowledge_base_knowledgebaseservice_is_stale",
-      "community": 1,
+      "community": 102,
       "norm_label": "._is_stale()"
     },
     {
@@ -2305,7 +2332,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L569",
       "id": "core_knowledge_base_normalize_url",
-      "community": 1,
+      "community": 14,
       "norm_label": "_normalize_url()"
     },
     {
@@ -2314,7 +2341,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L579",
       "id": "core_knowledge_base_extract_html_document",
-      "community": 1,
+      "community": 14,
       "norm_label": "_extract_html_document()"
     },
     {
@@ -2350,7 +2377,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L632",
       "id": "core_knowledge_base_dedupe_keep_order",
-      "community": 1,
+      "community": 14,
       "norm_label": "_dedupe_keep_order()"
     },
     {
@@ -2359,7 +2386,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L643",
       "id": "core_knowledge_base_now_iso",
-      "community": 1,
+      "community": 14,
       "norm_label": "_now_iso()"
     },
     {
@@ -2368,7 +2395,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L660",
       "id": "core_knowledge_base_asset_name",
-      "community": 1,
+      "community": 107,
       "norm_label": "_asset_name()"
     },
     {
@@ -2377,7 +2404,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L664",
       "id": "core_knowledge_base_find_repo_scripts_dir",
-      "community": 1,
+      "community": 107,
       "norm_label": "_find_repo_scripts_dir()"
     },
     {
@@ -2386,7 +2413,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L680",
       "id": "core_knowledge_base_find_kb_sources_config",
-      "community": 1,
+      "community": 107,
       "norm_label": "_find_kb_sources_config()"
     },
     {
@@ -2395,7 +2422,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L689",
       "id": "core_knowledge_base_vectorknowledgebase",
-      "community": 1,
+      "community": 107,
       "norm_label": "vectorknowledgebase"
     },
     {
@@ -2404,7 +2431,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L694",
       "id": "core_knowledge_base_vectorknowledgebase_init",
-      "community": 1,
+      "community": 107,
       "norm_label": ".__init__()"
     },
     {
@@ -2413,7 +2440,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L706",
       "id": "core_knowledge_base_vectorknowledgebase_download_from_release",
-      "community": 1,
+      "community": 107,
       "norm_label": ".download_from_release()"
     },
     {
@@ -2422,7 +2449,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L751",
       "id": "core_knowledge_base_vectorknowledgebase_build_category_locally",
-      "community": 1,
+      "community": 107,
       "norm_label": "._build_category_locally()"
     },
     {
@@ -2431,7 +2458,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L917",
       "id": "core_knowledge_base_vectorknowledgebase_is_available",
-      "community": 1,
+      "community": 107,
       "norm_label": ".is_available()"
     },
     {
@@ -2449,7 +2476,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L953",
       "id": "core_knowledge_base_vectorknowledgebase_query",
-      "community": 1,
+      "community": 102,
       "norm_label": ".query()"
     },
     {
@@ -2467,7 +2494,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L21",
       "id": "core_knowledge_base_rationale_21",
-      "community": 1,
+      "community": 107,
       "norm_label": "return the kb store directory.      uses precice_kb_store_dir env var when set ("
     },
     {
@@ -2503,7 +2530,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L413",
       "id": "core_knowledge_base_rationale_413",
-      "community": 1,
+      "community": 102,
       "norm_label": "sync kb_file from the kb-latest release's kb-lexical.json asset.          the re"
     },
     {
@@ -2512,7 +2539,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L665",
       "id": "core_knowledge_base_rationale_665",
-      "community": 1,
+      "community": 107,
       "norm_label": "locate the precice-ai source checkout's scripts/ dir, if any.      only availabl"
     },
     {
@@ -2521,7 +2548,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L690",
       "id": "core_knowledge_base_rationale_690",
-      "community": 1,
+      "community": 107,
       "norm_label": "downloads pre-built per-category .npz embedding archives from a github     relea"
     },
     {
@@ -2530,7 +2557,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L709",
       "id": "core_knowledge_base_rationale_709",
-      "community": 1,
+      "community": 107,
       "norm_label": "sync each category's .npz from the kb-latest release.          the release is th"
     },
     {
@@ -2539,7 +2566,7 @@
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L752",
       "id": "core_knowledge_base_rationale_752",
-      "community": 1,
+      "community": 107,
       "norm_label": "fallback for when no github release asset exists yet for a category.          cl"
     },
     {
@@ -2557,7 +2584,7 @@
       "source_file": "precice_ai/core/safety.py",
       "source_location": "L1",
       "id": "precice_ai_core_safety_py",
-      "community": 14,
+      "community": 112,
       "norm_label": "safety.py"
     },
     {
@@ -2566,7 +2593,7 @@
       "source_file": "precice_ai/core/safety.py",
       "source_location": "L38",
       "id": "core_safety_is_command_safe",
-      "community": 14,
+      "community": 112,
       "norm_label": "is_command_safe()"
     },
     {
@@ -2575,7 +2602,7 @@
       "source_file": "precice_ai/core/safety.py",
       "source_location": "L72",
       "id": "core_safety_get_allowed_commands",
-      "community": 14,
+      "community": 112,
       "norm_label": "get_allowed_commands()"
     },
     {
@@ -2584,7 +2611,7 @@
       "source_file": "precice_ai/core/safety.py",
       "source_location": "L39",
       "id": "core_safety_rationale_39",
-      "community": 14,
+      "community": 112,
       "norm_label": "check whether a command is safe to execute.      returns:         (true, \"allowe"
     },
     {
@@ -2647,26 +2674,260 @@
       "source_file": "precice_ai/core/command_runner.py",
       "source_location": "L1",
       "id": "precice_ai_core_command_runner_py",
-      "community": 14,
+      "community": 112,
       "norm_label": "command_runner.py"
+    },
+    {
+      "label": "CommandResult",
+      "file_type": "code",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L14",
+      "id": "core_command_runner_commandresult",
+      "community": 112,
+      "norm_label": "commandresult"
+    },
+    {
+      "label": "ok()",
+      "file_type": "code",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L26",
+      "id": "core_command_runner_ok",
+      "community": 112,
+      "norm_label": "ok()"
+    },
+    {
+      "label": "output()",
+      "file_type": "code",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L30",
+      "id": "core_command_runner_output",
+      "community": 112,
+      "norm_label": "output()"
+    },
+    {
+      "label": ".format()",
+      "file_type": "code",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L33",
+      "id": "core_command_runner_commandresult_format",
+      "community": 112,
+      "norm_label": ".format()"
+    },
+    {
+      "label": "run_command()",
+      "file_type": "code",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L54",
+      "id": "core_command_runner_run_command",
+      "community": 112,
+      "norm_label": "run_command()"
     },
     {
       "label": "run_safe_command()",
       "file_type": "code",
       "source_file": "precice_ai/core/command_runner.py",
-      "source_location": "L9",
+      "source_location": "L89",
       "id": "core_command_runner_run_safe_command",
-      "community": 14,
+      "community": 0,
       "norm_label": "run_safe_command()"
     },
     {
-      "label": "Run a command safely inside a given working directory.",
+      "label": "precice_cli_available()",
+      "file_type": "code",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L94",
+      "id": "core_command_runner_precice_cli_available",
+      "community": 112,
+      "norm_label": "precice_cli_available()"
+    },
+    {
+      "label": "run_precice_cli()",
+      "file_type": "code",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L98",
+      "id": "core_command_runner_run_precice_cli",
+      "community": 112,
+      "norm_label": "run_precice_cli()"
+    },
+    {
+      "label": "Outcome of one command. `error` is set when it never ran (blocked,     missing w",
       "file_type": "rationale",
       "source_file": "precice_ai/core/command_runner.py",
-      "source_location": "L14",
-      "id": "core_command_runner_rationale_14",
-      "community": 14,
-      "norm_label": "run a command safely inside a given working directory."
+      "source_location": "L15",
+      "id": "core_command_runner_rationale_15",
+      "community": 112,
+      "norm_label": "outcome of one command. `error` is set when it never ran (blocked,     missing w"
+    },
+    {
+      "label": "Text report returned to the agent by the command tools.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L34",
+      "id": "core_command_runner_rationale_34",
+      "community": 112,
+      "norm_label": "text report returned to the agent by the command tools."
+    },
+    {
+      "label": "Run an allowlisted command inside a working directory.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L55",
+      "id": "core_command_runner_rationale_55",
+      "community": 112,
+      "norm_label": "run an allowlisted command inside a working directory."
+    },
+    {
+      "label": "Run a command safely inside a given working directory and report it as text.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L90",
+      "id": "core_command_runner_rationale_90",
+      "community": 0,
+      "norm_label": "run a command safely inside a given working directory and report it as text."
+    },
+    {
+      "label": "Run `precice-cli <args>`; the single entry point for every precice-cli call.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L99",
+      "id": "core_command_runner_rationale_99",
+      "community": 112,
+      "norm_label": "run `precice-cli <args>`; the single entry point for every precice-cli call."
+    },
+    {
+      "label": "preflight.py",
+      "file_type": "code",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L1",
+      "id": "precice_ai_core_preflight_py",
+      "community": 112,
+      "norm_label": "preflight.py"
+    },
+    {
+      "label": "check_precice_installation()",
+      "file_type": "code",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L51",
+      "id": "core_preflight_check_precice_installation",
+      "community": 112,
+      "norm_label": "check_precice_installation()"
+    },
+    {
+      "label": "check_config()",
+      "file_type": "code",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L76",
+      "id": "core_preflight_check_config",
+      "community": 112,
+      "norm_label": "check_config()"
+    },
+    {
+      "label": "_python_module_available()",
+      "file_type": "code",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L108",
+      "id": "core_preflight_python_module_available",
+      "community": 112,
+      "norm_label": "_python_module_available()"
+    },
+    {
+      "label": "_normalize()",
+      "file_type": "code",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L113",
+      "id": "core_preflight_normalize",
+      "community": 112,
+      "norm_label": "_normalize()"
+    },
+    {
+      "label": "_solver_of()",
+      "file_type": "code",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L117",
+      "id": "core_preflight_solver_of",
+      "community": 112,
+      "norm_label": "_solver_of()"
+    },
+    {
+      "label": "check_case()",
+      "file_type": "code",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L121",
+      "id": "core_preflight_check_case",
+      "community": 112,
+      "norm_label": "check_case()"
+    },
+    {
+      "label": "_group_by_participant()",
+      "file_type": "code",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L166",
+      "id": "core_preflight_group_by_participant",
+      "community": 112,
+      "norm_label": "_group_by_participant()"
+    },
+    {
+      "label": "preflight()",
+      "file_type": "code",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L186",
+      "id": "core_preflight_preflight",
+      "community": 112,
+      "norm_label": "preflight()"
+    },
+    {
+      "label": "Pre-run checks for a preCICE project: is preCICE installed, is the configuration",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L1",
+      "id": "core_preflight_rationale_1",
+      "community": 112,
+      "norm_label": "pre-run checks for a precice project: is precice installed, is the configuration"
+    },
+    {
+      "label": "Report the precice-cli and preCICE library versions found on this machine.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L52",
+      "id": "core_preflight_rationale_52",
+      "community": 112,
+      "norm_label": "report the precice-cli and precice library versions found on this machine."
+    },
+    {
+      "label": "Locate precice-config.xml, validate it and extract the participant names.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L77",
+      "id": "core_preflight_rationale_77",
+      "community": 112,
+      "norm_label": "locate precice-config.xml, validate it and extract the participant names."
+    },
+    {
+      "label": "Check whether the solver behind one participant case directory is available.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L122",
+      "id": "core_preflight_rationale_122",
+      "community": 112,
+      "norm_label": "check whether the solver behind one participant case directory is available."
+    },
+    {
+      "label": "Assign each case to the participant its directory is named after.      Names are",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L169",
+      "id": "core_preflight_rationale_169",
+      "community": 112,
+      "norm_label": "assign each case to the participant its directory is named after.      names are"
+    },
+    {
+      "label": "Run every pre-run check for a project and say whether it can be started.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L187",
+      "id": "core_preflight_rationale_187",
+      "community": 112,
+      "norm_label": "run every pre-run check for a project and say whether it can be started."
     },
     {
       "label": "discourse_api.py",
@@ -2890,7 +3151,7 @@
       "source_file": "precice_ai/tools/config_tools.py",
       "source_location": "L1",
       "id": "precice_ai_tools_config_tools_py",
-      "community": 117,
+      "community": 0,
       "norm_label": "config_tools.py"
     },
     {
@@ -2899,25 +3160,25 @@
       "source_file": "precice_ai/tools/config_tools.py",
       "source_location": "L11",
       "id": "tools_config_tools_register_config_tools",
-      "community": 59,
+      "community": 0,
       "norm_label": "register_config_tools()"
     },
     {
       "label": "_clean_xml_tag()",
       "file_type": "code",
       "source_file": "precice_ai/tools/config_tools.py",
-      "source_location": "L105",
+      "source_location": "L101",
       "id": "tools_config_tools_clean_xml_tag",
-      "community": 117,
+      "community": 0,
       "norm_label": "_clean_xml_tag()"
     },
     {
       "label": "_format_list()",
       "file_type": "code",
       "source_file": "precice_ai/tools/config_tools.py",
-      "source_location": "L111",
+      "source_location": "L107",
       "id": "tools_config_tools_format_list",
-      "community": 117,
+      "community": 0,
       "norm_label": "_format_list()"
     },
     {
@@ -2926,7 +3187,7 @@
       "source_file": "precice_ai/tools/config_tools.py",
       "source_location": "L12",
       "id": "tools_config_tools_rationale_12",
-      "community": 59,
+      "community": 0,
       "norm_label": "register precice configuration-related mcp tools."
     },
     {
@@ -2935,7 +3196,7 @@
       "source_file": "precice_ai/tools/log_tools.py",
       "source_location": "L1",
       "id": "precice_ai_tools_log_tools_py",
-      "community": 62,
+      "community": 0,
       "norm_label": "log_tools.py"
     },
     {
@@ -2944,7 +3205,7 @@
       "source_file": "precice_ai/tools/log_tools.py",
       "source_location": "L11",
       "id": "tools_log_tools_register_log_tools",
-      "community": 59,
+      "community": 0,
       "norm_label": "register_log_tools()"
     },
     {
@@ -2962,7 +3223,7 @@
       "source_file": "precice_ai/tools/log_tools.py",
       "source_location": "L12",
       "id": "tools_log_tools_rationale_12",
-      "community": 59,
+      "community": 0,
       "norm_label": "register log-related mcp tools."
     },
     {
@@ -2971,7 +3232,7 @@
       "source_file": "precice_ai/tools/project_tools.py",
       "source_location": "L1",
       "id": "precice_ai_tools_project_tools_py",
-      "community": 62,
+      "community": 0,
       "norm_label": "project_tools.py"
     },
     {
@@ -2980,7 +3241,7 @@
       "source_file": "precice_ai/tools/project_tools.py",
       "source_location": "L9",
       "id": "tools_project_tools_register_project_tools",
-      "community": 62,
+      "community": 0,
       "norm_label": "register_project_tools()"
     },
     {
@@ -2989,7 +3250,7 @@
       "source_file": "precice_ai/tools/project_tools.py",
       "source_location": "L10",
       "id": "tools_project_tools_rationale_10",
-      "community": 62,
+      "community": 0,
       "norm_label": "register project-related mcp tools."
     },
     {
@@ -2998,7 +3259,7 @@
       "source_file": "precice_ai/tools/knowledge_tools.py",
       "source_location": "L1",
       "id": "precice_ai_tools_knowledge_tools_py",
-      "community": 1,
+      "community": 102,
       "norm_label": "knowledge_tools.py"
     },
     {
@@ -3007,7 +3268,7 @@
       "source_file": "precice_ai/tools/knowledge_tools.py",
       "source_location": "L18",
       "id": "tools_knowledge_tools_register_knowledge_tools",
-      "community": 59,
+      "community": 0,
       "norm_label": "register_knowledge_tools()"
     },
     {
@@ -3016,7 +3277,7 @@
       "source_file": "precice_ai/tools/knowledge_tools.py",
       "source_location": "L19",
       "id": "tools_knowledge_tools_rationale_19",
-      "community": 59,
+      "community": 0,
       "norm_label": "register knowledge-base tools for precice docs/forum retrieval."
     },
     {
@@ -3025,61 +3286,52 @@
       "source_file": "precice_ai/tools/cli_tools.py",
       "source_location": "L1",
       "id": "precice_ai_tools_cli_tools_py",
-      "community": 63,
+      "community": 0,
       "norm_label": "cli_tools.py"
-    },
-    {
-      "label": "_check_precice_cli()",
-      "file_type": "code",
-      "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "L26",
-      "id": "tools_cli_tools_check_precice_cli",
-      "community": 63,
-      "norm_label": "_check_precice_cli()"
     },
     {
       "label": "_load_topology_schema()",
       "file_type": "code",
       "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "L32",
+      "source_location": "L26",
       "id": "tools_cli_tools_load_topology_schema",
-      "community": 63,
+      "community": 0,
       "norm_label": "_load_topology_schema()"
     },
     {
       "label": "_validate_topology()",
       "file_type": "code",
       "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "L36",
+      "source_location": "L30",
       "id": "tools_cli_tools_validate_topology",
-      "community": 63,
+      "community": 0,
       "norm_label": "_validate_topology()"
     },
     {
       "label": "register_cli_tools()",
       "file_type": "code",
       "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "L50",
+      "source_location": "L44",
       "id": "tools_cli_tools_register_cli_tools",
-      "community": 59,
+      "community": 0,
       "norm_label": "register_cli_tools()"
     },
     {
       "label": "Validate a topology dict against topology_schema.json.      Returns a list of hu",
       "file_type": "rationale",
       "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "L37",
-      "id": "tools_cli_tools_rationale_37",
-      "community": 63,
+      "source_location": "L31",
+      "id": "tools_cli_tools_rationale_31",
+      "community": 0,
       "norm_label": "validate a topology dict against topology_schema.json.      returns a list of hu"
     },
     {
       "label": "Register MCP tools that wrap precice-cli commands.",
       "file_type": "rationale",
       "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "L51",
-      "id": "tools_cli_tools_rationale_51",
-      "community": 59,
+      "source_location": "L45",
+      "id": "tools_cli_tools_rationale_45",
+      "community": 0,
       "norm_label": "register mcp tools that wrap precice-cli commands."
     },
     {
@@ -3088,7 +3340,7 @@
       "source_file": "precice_ai/tools/__init__.py",
       "source_location": "L1",
       "id": "precice_ai_tools_init_py",
-      "community": 59,
+      "community": 0,
       "norm_label": "__init__.py"
     },
     {
@@ -3097,7 +3349,7 @@
       "source_file": "precice_ai/tools/__init__.py",
       "source_location": "L10",
       "id": "tools_init_register_all_tools",
-      "community": 59,
+      "community": 0,
       "norm_label": "register_all_tools()"
     },
     {
@@ -3106,7 +3358,7 @@
       "source_file": "precice_ai/tools/__init__.py",
       "source_location": "L11",
       "id": "tools_init_rationale_11",
-      "community": 59,
+      "community": 0,
       "norm_label": "register all mcp tools."
     },
     {
@@ -3196,7 +3448,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L10",
       "id": "utils_topology_schema_properties_name",
-      "community": 107,
+      "community": 125,
       "norm_label": "name"
     },
     {
@@ -3205,7 +3457,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L11",
       "id": "utils_topology_schema_name_type",
-      "community": 107,
+      "community": 125,
       "norm_label": "type"
     },
     {
@@ -3214,7 +3466,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L12",
       "id": "utils_topology_schema_name_description",
-      "community": 107,
+      "community": 125,
       "norm_label": "description"
     },
     {
@@ -3403,7 +3655,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L43",
       "id": "utils_topology_schema_properties_to",
-      "community": 68,
+      "community": 128,
       "norm_label": "to"
     },
     {
@@ -3412,7 +3664,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L44",
       "id": "utils_topology_schema_to_type",
-      "community": 68,
+      "community": 128,
       "norm_label": "type"
     },
     {
@@ -3421,7 +3673,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L45",
       "id": "utils_topology_schema_to_description",
-      "community": 68,
+      "community": 128,
       "norm_label": "description"
     },
     {
@@ -3430,7 +3682,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L47",
       "id": "utils_topology_schema_properties_to_patch",
-      "community": 111,
+      "community": 68,
       "norm_label": "to-patch"
     },
     {
@@ -3439,7 +3691,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L48",
       "id": "utils_topology_schema_to_patch_type",
-      "community": 111,
+      "community": 68,
       "norm_label": "type"
     },
     {
@@ -3448,7 +3700,7 @@
       "source_file": "precice_ai/utils/topology_schema.json",
       "source_location": "L49",
       "id": "utils_topology_schema_to_patch_description",
-      "community": 111,
+      "community": 68,
       "norm_label": "description"
     },
     {
@@ -3704,10 +3956,19 @@
       "norm_label": "precice knowledge base"
     },
     {
+      "label": "Running a preCICE project",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L12",
+      "id": "precice_ai_claude_running_a_precice_project",
+      "community": 20,
+      "norm_label": "running a precice project"
+    },
+    {
       "label": "graphify (optional)",
       "file_type": "document",
       "source_file": "CLAUDE.md",
-      "source_location": "L14",
+      "source_location": "L18",
       "id": "precice_ai_claude_graphify_optional",
       "community": 20,
       "norm_label": "graphify (optional)"
@@ -4634,7 +4895,7 @@
       "label": "Current Scope",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L48",
+      "source_location": "L54",
       "id": "precice_ai_agents_current_scope",
       "community": 18,
       "norm_label": "current scope"
@@ -4643,7 +4904,7 @@
       "label": "graphify (optional)",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L61",
+      "source_location": "L67",
       "id": "precice_ai_agents_graphify_optional",
       "community": 18,
       "norm_label": "graphify (optional)"
@@ -4762,7 +5023,7 @@
       "source_file": "README.md",
       "source_location": "L76",
       "id": "precice_ai_readme_codeblock_5",
-      "community": 3,
+      "community": 4,
       "norm_label": "code:bash (precice-ai bootstrap auto --projects-dir /path/to/precice/ca)"
     },
     {
@@ -4852,7 +5113,7 @@
       "source_file": "README.md",
       "source_location": "L176",
       "id": "precice_ai_readme_codeblock_11",
-      "community": 75,
+      "community": 4,
       "norm_label": "code:json ({)"
     },
     {
@@ -4861,7 +5122,7 @@
       "source_file": "README.md",
       "source_location": "L202",
       "id": "precice_ai_readme_codex",
-      "community": 75,
+      "community": 4,
       "norm_label": "codex"
     },
     {
@@ -4870,7 +5131,7 @@
       "source_file": "README.md",
       "source_location": "L206",
       "id": "precice_ai_readme_codeblock_12",
-      "community": 75,
+      "community": 4,
       "norm_label": "code:bash (codex mcp add precice-ai \\)"
     },
     {
@@ -4879,7 +5140,7 @@
       "source_file": "README.md",
       "source_location": "L214",
       "id": "precice_ai_readme_codeblock_13",
-      "community": 75,
+      "community": 11,
       "norm_label": "code:toml ([mcp_servers.\"precice-ai\"])"
     },
     {
@@ -4897,7 +5158,7 @@
       "source_file": "README.md",
       "source_location": "L239",
       "id": "precice_ai_readme_environment_variables",
-      "community": 75,
+      "community": 11,
       "norm_label": "environment variables"
     },
     {
@@ -4906,7 +5167,7 @@
       "source_file": "README.md",
       "source_location": "L261",
       "id": "precice_ai_readme_codeblock_14",
-      "community": 75,
+      "community": 11,
       "norm_label": "code:bash (precice-ai bootstrap codex \\)"
     },
     {
@@ -4915,7 +5176,7 @@
       "source_file": "README.md",
       "source_location": "L273",
       "id": "precice_ai_readme_how_to_use_it",
-      "community": 75,
+      "community": 11,
       "norm_label": "how to use it"
     },
     {
@@ -5041,7 +5302,7 @@
       "source_file": "README.md",
       "source_location": "L402",
       "id": "precice_ai_readme_project_layout",
-      "community": 108,
+      "community": 11,
       "norm_label": "project layout"
     },
     {
@@ -5158,7 +5419,7 @@
       "source_file": "document.md",
       "source_location": "L79",
       "id": "precice_ai_document_implementation_snapshot",
-      "community": 6,
+      "community": 44,
       "norm_label": "implementation snapshot"
     },
     {
@@ -5167,7 +5428,7 @@
       "source_file": "document.md",
       "source_location": "L81",
       "id": "precice_ai_document_codeblock_2",
-      "community": 6,
+      "community": 44,
       "norm_label": "code:python (from mcp.server.fastmcp import fastmcp)"
     },
     {
@@ -5473,7 +5734,7 @@
       "source_file": "document.md",
       "source_location": "L342",
       "id": "precice_ai_document_part_b_knowledge_context_management_approaches",
-      "community": 46,
+      "community": 6,
       "norm_label": "part b \u2014 knowledge & context management approaches"
     },
     {
@@ -5788,7 +6049,7 @@
       "source_file": "document.md",
       "source_location": "L573",
       "id": "precice_ai_document_5_best_approach_recommended_architecture",
-      "community": 10,
+      "community": 54,
       "norm_label": "5. best approach & recommended architecture"
     },
     {
@@ -5797,7 +6058,7 @@
       "source_file": "document.md",
       "source_location": "L575",
       "id": "precice_ai_document_verdict",
-      "community": 10,
+      "community": 54,
       "norm_label": "verdict"
     },
     {
@@ -5806,7 +6067,7 @@
       "source_file": "document.md",
       "source_location": "L581",
       "id": "precice_ai_document_why_this_combination",
-      "community": 10,
+      "community": 54,
       "norm_label": "why this combination"
     },
     {
@@ -5815,7 +6076,7 @@
       "source_file": "document.md",
       "source_location": "L610",
       "id": "precice_ai_document_architecture_diagram",
-      "community": 10,
+      "community": 54,
       "norm_label": "architecture diagram"
     },
     {
@@ -5824,7 +6085,7 @@
       "source_file": "document.md",
       "source_location": "L612",
       "id": "precice_ai_document_codeblock_11",
-      "community": 10,
+      "community": 54,
       "norm_label": "code:block11 (\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510)"
     },
     {
@@ -5833,7 +6094,7 @@
       "source_file": "document.md",
       "source_location": "L646",
       "id": "precice_ai_document_evaluation_strategy_for_the_thesis",
-      "community": 10,
+      "community": 54,
       "norm_label": "evaluation strategy for the thesis"
     },
     {
@@ -5842,7 +6103,7 @@
       "source_file": "document.md",
       "source_location": "L660",
       "id": "precice_ai_document_roadmap_for_implementation",
-      "community": 10,
+      "community": 54,
       "norm_label": "roadmap for implementation"
     },
     {
@@ -6166,7 +6427,7 @@
       "source_file": ".agents/skills/graphify/SKILL.md",
       "source_location": "L582",
       "id": "agents_skills_graphify_skill_md_graphify_skill_step_7_neo4j_export_only_if_neo4j_or_neo4j_push_flag",
-      "community": 102,
+      "community": 2,
       "norm_label": "step 7 - neo4j export (only if --neo4j or --neo4j-push flag)"
     },
     {
@@ -6175,7 +6436,7 @@
       "source_file": ".agents/skills/graphify/SKILL.md",
       "source_location": "L586",
       "id": "agents_skills_graphify_skill_md_graphify_skill_codeblock_19",
-      "community": 102,
+      "community": 2,
       "norm_label": "code:bash ($(cat .graphify_python) -c \")"
     },
     {
@@ -6184,7 +6445,7 @@
       "source_file": ".agents/skills/graphify/SKILL.md",
       "source_location": "L601",
       "id": "agents_skills_graphify_skill_md_graphify_skill_codeblock_20",
-      "community": 102,
+      "community": 2,
       "norm_label": "code:bash ($(cat .graphify_python) -c \")"
     },
     {
@@ -7340,6 +7601,141 @@
       "norm_label": "honesty rules"
     },
     {
+      "label": "Run a command safely inside a given working directory.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L14",
+      "community": 0,
+      "norm_label": "run a command safely inside a given working directory.",
+      "id": "core_command_runner_rationale_14"
+    },
+    {
+      "label": "_run()",
+      "file_type": "code",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L54",
+      "community": 112,
+      "norm_label": "_run()",
+      "id": "core_preflight_run"
+    },
+    {
+      "label": "Report the preCICE library and precice-cli found on this machine.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L63",
+      "community": 112,
+      "norm_label": "report the precice library and precice-cli found on this machine.",
+      "id": "core_preflight_rationale_63"
+    },
+    {
+      "label": "Locate precice-config.xml, validate it and extract the participant names.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L93",
+      "community": 112,
+      "norm_label": "locate precice-config.xml, validate it and extract the participant names.",
+      "id": "core_preflight_rationale_93"
+    },
+    {
+      "label": "Check whether the solver behind one participant case directory is available.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L140",
+      "community": 112,
+      "norm_label": "check whether the solver behind one participant case directory is available.",
+      "id": "core_preflight_rationale_140"
+    },
+    {
+      "label": "Run every pre-run check for a project and say whether it can be started.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L179",
+      "community": 112,
+      "norm_label": "run every pre-run check for a project and say whether it can be started.",
+      "id": "core_preflight_rationale_179"
+    },
+    {
+      "label": "_check_precice_cli()",
+      "file_type": "code",
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "L27",
+      "community": 0,
+      "norm_label": "_check_precice_cli()",
+      "id": "tools_cli_tools_check_precice_cli"
+    },
+    {
+      "label": "Validate a topology dict against topology_schema.json.      Returns a list of hu",
+      "file_type": "rationale",
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "L38",
+      "community": 0,
+      "norm_label": "validate a topology dict against topology_schema.json.      returns a list of hu",
+      "id": "tools_cli_tools_rationale_38"
+    },
+    {
+      "label": "Register MCP tools that wrap precice-cli commands.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "L52",
+      "community": 0,
+      "norm_label": "register mcp tools that wrap precice-cli commands.",
+      "id": "tools_cli_tools_rationale_52"
+    },
+    {
+      "label": "Report the preCICE library and precice-cli found on this machine.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L62",
+      "community": 112,
+      "norm_label": "report the precice library and precice-cli found on this machine.",
+      "id": "core_preflight_rationale_62"
+    },
+    {
+      "label": "Locate precice-config.xml, validate it and extract the participant names.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L92",
+      "community": 112,
+      "norm_label": "locate precice-config.xml, validate it and extract the participant names.",
+      "id": "core_preflight_rationale_92"
+    },
+    {
+      "label": "Check whether the solver behind one participant case directory is available.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L141",
+      "community": 112,
+      "norm_label": "check whether the solver behind one participant case directory is available.",
+      "id": "core_preflight_rationale_141"
+    },
+    {
+      "label": "Run every pre-run check for a project and say whether it can be started.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L180",
+      "community": 112,
+      "norm_label": "run every pre-run check for a project and say whether it can be started.",
+      "id": "core_preflight_rationale_180"
+    },
+    {
+      "label": "Validate a topology dict against topology_schema.json.      Returns a list of hu",
+      "file_type": "rationale",
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "L37",
+      "community": 0,
+      "norm_label": "validate a topology dict against topology_schema.json.      returns a list of hu",
+      "id": "tools_cli_tools_rationale_37"
+    },
+    {
+      "label": "Register MCP tools that wrap precice-cli commands.",
+      "file_type": "rationale",
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "L51",
+      "community": 0,
+      "norm_label": "register mcp tools that wrap precice-cli commands.",
+      "id": "tools_cli_tools_rationale_51"
+    },
+    {
       "label": "Return .gitmodules text from a local checkout, or fetch it from GitHub.",
       "file_type": "rationale",
       "source_file": "scripts/adapter_repos.py",
@@ -7461,7 +7857,7 @@
       "file_type": "rationale",
       "source_file": "precice_ai/cli/main.py",
       "source_location": "L384",
-      "community": 54,
+      "community": 57,
       "norm_label": "list all supported platforms and whether they appear to be installed.",
       "id": "cli_main_rationale_384"
     },
@@ -7578,7 +7974,7 @@
       "file_type": "rationale",
       "source_file": "precice_ai/tools/knowledge_tools.py",
       "source_location": "L16",
-      "community": 59,
+      "community": 0,
       "norm_label": "register knowledge-base tools for precice docs/forum retrieval.",
       "id": "tools_knowledge_tools_rationale_16"
     },
@@ -7704,7 +8100,7 @@
       "file_type": "rationale",
       "source_file": "precice_ai/cli/main.py",
       "source_location": "L64",
-      "community": 54,
+      "community": 57,
       "norm_label": "list all supported platforms and whether they appear to be installed.",
       "id": "cli_main_rationale_64"
     },
@@ -7803,7 +8199,7 @@
       "file_type": "code",
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L40",
-      "community": 1,
+      "community": 14,
       "norm_label": ".to_dict()",
       "id": "core_knowledge_base_kbdocument_to_dict"
     },
@@ -7812,7 +8208,7 @@
       "file_type": "code",
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L352",
-      "community": 1,
+      "community": 14,
       "norm_label": "_strip_html()",
       "id": "core_knowledge_base_strip_html"
     },
@@ -7821,7 +8217,7 @@
       "file_type": "rationale",
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L15",
-      "community": 1,
+      "community": 107,
       "norm_label": "return the kb store directory.      uses precice_kb_store_dir env var when set (",
       "id": "core_knowledge_base_rationale_15"
     },
@@ -7830,7 +8226,7 @@
       "file_type": "rationale",
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L424",
-      "community": 1,
+      "community": 107,
       "norm_label": "downloads pre-built per-category .npz embedding archives from a github     relea",
       "id": "core_knowledge_base_rationale_424"
     },
@@ -7839,7 +8235,7 @@
       "file_type": "rationale",
       "source_file": "precice_ai/tools/cli_tools.py",
       "source_location": "L16",
-      "community": 59,
+      "community": 0,
       "norm_label": "register mcp tools that wrap precice-cli commands.",
       "id": "tools_cli_tools_rationale_16"
     },
@@ -7857,7 +8253,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L26",
-      "community": 116,
+      "community": 74,
       "norm_label": "platform setup",
       "id": "precice_ai_readme_platform_setup"
     },
@@ -7875,7 +8271,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L51",
-      "community": 3,
+      "community": 74,
       "norm_label": "claude code",
       "id": "precice_ai_readme_claude_code"
     },
@@ -7920,7 +8316,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L104",
-      "community": 116,
+      "community": 4,
       "norm_label": "manual / generic",
       "id": "precice_ai_readme_manual_generic"
     },
@@ -8226,7 +8622,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L491",
-      "community": 41,
+      "community": 17,
       "norm_label": "starting the server manually",
       "id": "precice_ai_readme_starting_the_server_manually"
     },
@@ -8406,7 +8802,7 @@
       "file_type": "rationale",
       "source_file": "precice_ai/core/knowledge_base.py",
       "source_location": "L416",
-      "community": 1,
+      "community": 108,
       "norm_label": "downloads a pre-built .npz embeddings archive from a github release and     answ",
       "id": "core_knowledge_base_rationale_416"
     },
@@ -8424,7 +8820,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L304",
-      "community": 75,
+      "community": 4,
       "norm_label": "controlling what gets indexed",
       "id": "precice_ai_readme_controlling_what_gets_indexed"
     },
@@ -8478,7 +8874,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L442",
-      "community": 41,
+      "community": 17,
       "norm_label": "code:bash (# via the cli)",
       "id": "precice_ai_readme_codeblock_32"
     },
@@ -8514,7 +8910,7 @@
       "file_type": "code",
       "source_file": "core/knowledge_base.py",
       "source_location": "L1",
-      "community": 1,
+      "community": 14,
       "norm_label": "knowledge_base.py",
       "id": "core_knowledge_base_py"
     },
@@ -8523,7 +8919,7 @@
       "file_type": "code",
       "source_file": "core/safety.py",
       "source_location": "L1",
-      "community": 14,
+      "community": 112,
       "norm_label": "safety.py",
       "id": "core_safety_py"
     },
@@ -8532,7 +8928,7 @@
       "file_type": "rationale",
       "source_file": "core/safety.py",
       "source_location": "L74",
-      "community": 14,
+      "community": 112,
       "norm_label": "return the list of allowed command prefixes.",
       "id": "core_safety_rationale_74"
     },
@@ -8541,7 +8937,7 @@
       "file_type": "code",
       "source_file": "core/command_runner.py",
       "source_location": "L1",
-      "community": 14,
+      "community": 112,
       "norm_label": "command_runner.py",
       "id": "core_command_runner_py"
     },
@@ -8568,7 +8964,7 @@
       "file_type": "code",
       "source_file": "tools/config_tools.py",
       "source_location": "L1",
-      "community": 117,
+      "community": 0,
       "norm_label": "config_tools.py",
       "id": "tools_config_tools_py"
     },
@@ -8577,7 +8973,7 @@
       "file_type": "rationale",
       "source_file": "tools/config_tools.py",
       "source_location": "L13",
-      "community": 59,
+      "community": 0,
       "norm_label": "register precice configuration-related mcp tools.",
       "id": "tools_config_tools_rationale_13"
     },
@@ -8586,7 +8982,7 @@
       "file_type": "rationale",
       "source_file": "tools/config_tools.py",
       "source_location": "L178",
-      "community": 117,
+      "community": 0,
       "norm_label": "remove xml namespace from tag if present.",
       "id": "tools_config_tools_rationale_178"
     },
@@ -8595,7 +8991,7 @@
       "file_type": "rationale",
       "source_file": "tools/config_tools.py",
       "source_location": "L187",
-      "community": 117,
+      "community": 0,
       "norm_label": "format a list for readable output.",
       "id": "tools_config_tools_rationale_187"
     },
@@ -8604,7 +9000,7 @@
       "file_type": "code",
       "source_file": "tools/log_tools.py",
       "source_location": "L1",
-      "community": 59,
+      "community": 0,
       "norm_label": "log_tools.py",
       "id": "tools_log_tools_py"
     },
@@ -8613,7 +9009,7 @@
       "file_type": "rationale",
       "source_file": "tools/log_tools.py",
       "source_location": "L15",
-      "community": 59,
+      "community": 0,
       "norm_label": "register log-related mcp tools.",
       "id": "tools_log_tools_rationale_15"
     },
@@ -8631,7 +9027,7 @@
       "file_type": "code",
       "source_file": "tools/project_tools.py",
       "source_location": "L1",
-      "community": 63,
+      "community": 0,
       "norm_label": "project_tools.py",
       "id": "tools_project_tools_py"
     },
@@ -8640,7 +9036,7 @@
       "file_type": "code",
       "source_file": "tools/knowledge_tools.py",
       "source_location": "L1",
-      "community": 59,
+      "community": 0,
       "norm_label": "knowledge_tools.py",
       "id": "tools_knowledge_tools_py"
     },
@@ -8649,7 +9045,7 @@
       "file_type": "rationale",
       "source_file": "tools/knowledge_tools.py",
       "source_location": "L14",
-      "community": 59,
+      "community": 0,
       "norm_label": "register knowledge-base tools for precice docs/forum retrieval.",
       "id": "tools_knowledge_tools_rationale_14"
     },
@@ -8658,7 +9054,7 @@
       "file_type": "code",
       "source_file": "tools/__init__.py",
       "source_location": "L1",
-      "community": 59,
+      "community": 0,
       "norm_label": "__init__.py",
       "id": "tools_init_py"
     },
@@ -8667,7 +9063,7 @@
       "file_type": "rationale",
       "source_file": "tools/__init__.py",
       "source_location": "L10",
-      "community": 59,
+      "community": 0,
       "norm_label": "register all mcp tools.",
       "id": "tools_init_rationale_10"
     },
@@ -9356,7 +9752,7 @@
       "captured_at": null,
       "author": "Vaibhav Dange",
       "contributor": null,
-      "community": 98,
+      "community": 0,
       "norm_label": "thesis comparative analysis",
       "id": "concept_thesis_comparative_analysis"
     },
@@ -9382,7 +9778,7 @@
       "captured_at": "May 2026",
       "author": "Vaibhav Dange",
       "contributor": null,
-      "community": 98,
+      "community": 0,
       "norm_label": "approach 2: langchain/langgraph",
       "id": "approach_langgraph"
     },
@@ -9395,7 +9791,7 @@
       "captured_at": "May 2026",
       "author": "Vaibhav Dange",
       "contributor": null,
-      "community": 98,
+      "community": 0,
       "norm_label": "approach 3: raw function calling",
       "id": "approach_raw_function_calling"
     },
@@ -9447,7 +9843,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 124,
       "norm_label": "_run_lexical",
       "id": "compare_kb_search_run_lexical"
     },
@@ -9460,7 +9856,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 108,
       "norm_label": "_run_vector",
       "id": "compare_kb_search_run_vector"
     },
@@ -9473,7 +9869,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 124,
       "norm_label": "_print_results",
       "id": "compare_kb_search_print_results"
     },
@@ -9486,7 +9882,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 124,
       "norm_label": "compare_kb_search main()",
       "id": "compare_kb_search_main"
     },
@@ -9642,7 +10038,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 54,
+      "community": 3,
       "norm_label": "registry dict of platform classes",
       "id": "platforms_registry"
     },
@@ -9655,7 +10051,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 71,
       "norm_label": "platform (abstract base class)",
       "id": "base_platform"
     },
@@ -9668,7 +10064,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 70,
+      "community": 3,
       "norm_label": "platform.mcp_entry",
       "id": "base_platform_mcp_entry"
     },
@@ -9785,7 +10181,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 62,
+      "community": 0,
       "norm_label": "get_projects_dir",
       "id": "paths_get_projects_dir"
     },
@@ -9824,7 +10220,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 102,
       "norm_label": "kbdocument dataclass",
       "id": "knowledge_base_kbdocument"
     },
@@ -9837,7 +10233,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 102,
       "norm_label": "knowledgebaseservice.ingest_precice_sources",
       "id": "knowledge_base_ingest_precice_sources"
     },
@@ -9850,7 +10246,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 102,
       "norm_label": "knowledgebaseservice.query",
       "id": "knowledge_base_query"
     },
@@ -9863,7 +10259,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 102,
       "norm_label": "knowledgebaseservice.query_with_optional_live_refresh",
       "id": "knowledge_base_query_with_optional_live_refresh"
     },
@@ -9876,7 +10272,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 102,
       "norm_label": "knowledgebaseservice._fetch_docs_documents",
       "id": "knowledge_base_fetch_docs_documents"
     },
@@ -9889,7 +10285,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 102,
       "norm_label": "_bm25_like_score",
       "id": "knowledge_base_bm25_like_score"
     },
@@ -9902,7 +10298,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 102,
       "norm_label": "_snippet_for_terms",
       "id": "knowledge_base_snippet_for_terms"
     },
@@ -9915,7 +10311,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 14,
       "norm_label": "_extract_html_document",
       "id": "knowledge_base_extract_html_document"
     },
@@ -9928,7 +10324,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 108,
       "norm_label": "vectorknowledgebase.download_from_release",
       "id": "knowledge_base_download_from_release"
     },
@@ -9941,7 +10337,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 108,
       "norm_label": "vectorknowledgebase.query",
       "id": "knowledge_base_vector_query"
     },
@@ -9954,7 +10350,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 108,
       "norm_label": "vectorknowledgebase.is_available",
       "id": "knowledge_base_is_available"
     },
@@ -9967,7 +10363,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 112,
       "norm_label": "is_command_safe",
       "id": "safety_is_command_safe"
     },
@@ -9980,7 +10376,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 112,
       "norm_label": "get_allowed_commands",
       "id": "safety_get_allowed_commands"
     },
@@ -9993,7 +10389,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 112,
       "norm_label": "allowed_command_prefixes",
       "id": "safety_allowed_command_prefixes"
     },
@@ -10006,7 +10402,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 112,
       "norm_label": "blocked_patterns",
       "id": "safety_blocked_patterns"
     },
@@ -10019,7 +10415,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 63,
+      "community": 0,
       "norm_label": "run_safe_command",
       "id": "command_runner_run_safe_command"
     },
@@ -10032,7 +10428,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 124,
       "norm_label": "lexical vs. vector kb dual retrieval pattern",
       "id": "kb_lexical_vs_vector_pattern"
     },
@@ -10240,7 +10636,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 63,
+      "community": 0,
       "norm_label": "precice_version",
       "id": "tools_cli_tools_precice_version"
     },
@@ -10253,7 +10649,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 63,
+      "community": 0,
       "norm_label": "precice_config_check",
       "id": "tools_cli_tools_precice_config_check"
     },
@@ -10266,7 +10662,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 63,
+      "community": 0,
       "norm_label": "precice_config_visualize",
       "id": "tools_cli_tools_precice_config_visualize"
     },
@@ -10279,7 +10675,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 63,
+      "community": 0,
       "norm_label": "precice_config_format",
       "id": "tools_cli_tools_precice_config_format"
     },
@@ -10292,7 +10688,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 63,
+      "community": 0,
       "norm_label": "precice_init",
       "id": "tools_cli_tools_precice_init"
     },
@@ -10305,7 +10701,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 63,
+      "community": 0,
       "norm_label": "precice_profiling_analyze",
       "id": "tools_cli_tools_precice_profiling_analyze"
     },
@@ -10318,7 +10714,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 63,
+      "community": 0,
       "norm_label": "precice_profiling_trace",
       "id": "tools_cli_tools_precice_profiling_trace"
     },
@@ -10331,7 +10727,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 63,
+      "community": 0,
       "norm_label": "precice_profiling_export",
       "id": "tools_cli_tools_precice_profiling_export"
     },
@@ -10344,7 +10740,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 63,
+      "community": 0,
       "norm_label": "precice_profiling_histogram",
       "id": "tools_cli_tools_precice_profiling_histogram"
     },
@@ -10357,7 +10753,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 63,
+      "community": 0,
       "norm_label": "precice_profiling_merge",
       "id": "tools_cli_tools_precice_profiling_merge"
     },
@@ -10503,7 +10899,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 59,
+      "community": 0,
       "norm_label": "readme project structure diagram",
       "id": "readme_project_structure"
     },
@@ -10642,7 +11038,7 @@
       "author": "Vaibhav Dange",
       "contributor": null,
       "rationale": "Recognized as a natural fit for preCICE's relational participant-mesh-data-mapping structure, but deferred due to high construction and maintenance cost versus flat RAG for most queries.",
-      "community": 46,
+      "community": 6,
       "norm_label": "approach d: graphrag / knowledge graph",
       "id": "document_graphrag_approach"
     },
@@ -10722,7 +11118,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 46,
+      "community": 6,
       "norm_label": "from local to global: a graph rag approach - edge et al. (2024)",
       "id": "document_ref_graphrag_paper"
     },
@@ -15220,6 +15616,70 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/config_xml.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "precice_ai_core_config_xml_py",
+      "target": "core_config_xml_parse_precice_config"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/config_xml.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_config_xml_rationale_9",
+      "target": "core_config_xml_parse_precice_config"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L15",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "precice_ai_core_preflight_py",
+      "target": "core_config_xml_parse_precice_config"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/tools/config_tools.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "precice_ai_tools_config_tools_py",
+      "target": "core_config_xml_parse_precice_config"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L103",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_check_config",
+      "target": "core_config_xml_parse_precice_config"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/tools/config_tools.py",
+      "source_location": "L36",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tools_config_tools_register_config_tools",
+      "target": "core_config_xml_parse_precice_config"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "precice_ai/core/paths.py",
       "source_location": "L7",
       "weight": 1.0,
@@ -15243,9 +15703,9 @@
       "source_file": "precice_ai/core/paths.py",
       "source_location": "L44",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_core_paths_py",
-      "target": "core_paths_iter_project_files",
-      "confidence_score": 1.0
+      "target": "core_paths_iter_project_files"
     },
     {
       "relation": "contains",
@@ -15444,9 +15904,20 @@
       "source_file": "precice_ai/core/paths.py",
       "source_location": "L45",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "core_paths_rationale_45",
-      "target": "core_paths_iter_project_files",
-      "confidence_score": 1.0
+      "target": "core_paths_iter_project_files"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L17",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "precice_ai_core_preflight_py",
+      "target": "core_paths_iter_project_files"
     },
     {
       "relation": "imports",
@@ -15455,9 +15926,9 @@
       "source_file": "precice_ai/tools/log_tools.py",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_tools_log_tools_py",
-      "target": "core_paths_iter_project_files",
-      "confidence_score": 1.0
+      "target": "core_paths_iter_project_files"
     },
     {
       "relation": "imports",
@@ -15466,9 +15937,20 @@
       "source_file": "precice_ai/tools/project_tools.py",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "precice_ai_tools_project_tools_py",
-      "target": "core_paths_iter_project_files",
-      "confidence_score": 1.0
+      "target": "core_paths_iter_project_files"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L93",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_check_config",
+      "target": "core_paths_iter_project_files"
     },
     {
       "relation": "calls",
@@ -15477,9 +15959,9 @@
       "source_file": "precice_ai/tools/log_tools.py",
       "source_location": "L122",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tools_log_tools_find_log_files",
-      "target": "core_paths_iter_project_files",
-      "confidence_score": 1.0
+      "target": "core_paths_iter_project_files"
     },
     {
       "relation": "calls",
@@ -15488,9 +15970,9 @@
       "source_file": "precice_ai/tools/project_tools.py",
       "source_location": "L49",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tools_project_tools_register_project_tools",
-      "target": "core_paths_iter_project_files",
-      "confidence_score": 1.0
+      "target": "core_paths_iter_project_files"
     },
     {
       "relation": "imports",
@@ -15520,9 +16002,9 @@
       "source_file": "precice_ai/core/paths.py",
       "source_location": "L58",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "core_paths_rationale_58",
-      "target": "core_paths_get_env_file_path",
-      "confidence_score": 1.0
+      "target": "core_paths_get_env_file_path"
     },
     {
       "relation": "rationale_for",
@@ -17052,6 +17534,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L58",
+      "weight": 1.0,
+      "source": "core_command_runner_run_command",
+      "target": "core_safety_is_command_safe",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
       "source_location": "L15",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -17112,11 +17605,71 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "precice_ai_core_command_runner_py",
+      "target": "core_command_runner_commandresult",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "precice_ai_core_command_runner_py",
+      "target": "core_command_runner_ok",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "precice_ai_core_command_runner_py",
+      "target": "core_command_runner_output",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L54",
+      "weight": 1.0,
+      "source": "precice_ai_core_command_runner_py",
+      "target": "core_command_runner_run_command",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
       "source_location": "L9",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "precice_ai_core_command_runner_py",
       "target": "core_command_runner_run_safe_command"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L94",
+      "weight": 1.0,
+      "source": "precice_ai_core_command_runner_py",
+      "target": "core_command_runner_precice_cli_available",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L98",
+      "weight": 1.0,
+      "source": "precice_ai_core_command_runner_py",
+      "target": "core_command_runner_run_precice_cli",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -17140,14 +17693,131 @@
       "target": "command_runner_run_safe_command"
     },
     {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "core_command_runner_commandresult",
+      "target": "core_command_runner_commandresult_format",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "core_command_runner_run_command",
+      "target": "core_command_runner_commandresult",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L102",
+      "weight": 1.0,
+      "source": "core_command_runner_run_precice_cli",
+      "target": "core_command_runner_commandresult",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "precice_ai/core/command_runner.py",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "core_command_runner_rationale_14",
-      "target": "core_command_runner_run_safe_command"
+      "source": "core_command_runner_rationale_15",
+      "target": "core_command_runner_commandresult",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "core_command_runner_run_safe_command",
+      "target": "core_command_runner_commandresult_format",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "core_command_runner_rationale_34",
+      "target": "core_command_runner_commandresult_format",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "core_command_runner_run_safe_command",
+      "target": "core_command_runner_run_command",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L103",
+      "weight": 1.0,
+      "source": "core_command_runner_run_precice_cli",
+      "target": "core_command_runner_run_command",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "core_command_runner_rationale_55",
+      "target": "core_command_runner_run_command",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "precice_ai_core_preflight_py",
+      "target": "core_command_runner_run_command",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L110",
+      "weight": 1.0,
+      "source": "core_preflight_python_module_available",
+      "target": "core_command_runner_run_command",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L90",
+      "weight": 1.0,
+      "source": "core_command_runner_rationale_90",
+      "target": "core_command_runner_run_safe_command",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -17158,6 +17828,27 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "precice_ai_tools_project_tools_py",
+      "target": "core_command_runner_run_safe_command"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/tools/project_tools.py",
+      "source_location": "L78",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tools_project_tools_register_project_tools",
+      "target": "core_command_runner_run_safe_command"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L14",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_command_runner_rationale_14",
       "target": "core_command_runner_run_safe_command"
     },
     {
@@ -17175,17 +17866,6 @@
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
-      "source_file": "precice_ai/tools/project_tools.py",
-      "source_location": "L78",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tools_project_tools_register_project_tools",
-      "target": "core_command_runner_run_safe_command"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
       "source_file": "precice_ai/tools/cli_tools.py",
       "source_location": "L23",
       "weight": 1.0,
@@ -17194,14 +17874,475 @@
       "target": "core_command_runner_run_safe_command"
     },
     {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L101",
+      "weight": 1.0,
+      "source": "core_command_runner_run_precice_cli",
+      "target": "core_command_runner_precice_cli_available",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "precice_ai_tools_cli_tools_py",
+      "target": "core_command_runner_precice_cli_available",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "L169",
+      "weight": 1.0,
+      "source": "tools_cli_tools_register_cli_tools",
+      "target": "core_command_runner_precice_cli_available",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "precice_ai/core/command_runner.py",
-      "source_location": "L14",
+      "source_location": "L99",
+      "weight": 1.0,
+      "source": "core_command_runner_rationale_99",
+      "target": "core_command_runner_run_precice_cli",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "precice_ai_core_preflight_py",
+      "target": "core_command_runner_run_precice_cli",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "precice_ai_tools_cli_tools_py",
+      "target": "core_command_runner_run_precice_cli",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "core_preflight_check_precice_installation",
+      "target": "core_command_runner_run_precice_cli",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L97",
+      "weight": 1.0,
+      "source": "core_preflight_check_config",
+      "target": "core_command_runner_run_precice_cli",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "L83",
+      "weight": 1.0,
+      "source": "tools_cli_tools_register_cli_tools",
+      "target": "core_command_runner_run_precice_cli",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L61",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "core_command_runner_rationale_14",
-      "target": "command_runner_run_safe_command"
+      "source": "precice_ai_core_preflight_py",
+      "target": "core_preflight_check_precice_installation"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L91",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "precice_ai_core_preflight_py",
+      "target": "core_preflight_check_config"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L124",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "precice_ai_core_preflight_py",
+      "target": "core_preflight_python_module_available"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L129",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "precice_ai_core_preflight_py",
+      "target": "core_preflight_normalize"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L133",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "precice_ai_core_preflight_py",
+      "target": "core_preflight_solver_of"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L140",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "precice_ai_core_preflight_py",
+      "target": "core_preflight_check_case"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L166",
+      "weight": 1.0,
+      "source": "precice_ai_core_preflight_py",
+      "target": "core_preflight_group_by_participant",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L179",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "precice_ai_core_preflight_py",
+      "target": "core_preflight_preflight"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_rationale_1",
+      "target": "precice_ai_core_preflight_py"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L53",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "precice_ai_core_preflight_py",
+      "target": "core_preflight_run"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L181",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_preflight",
+      "target": "core_preflight_check_precice_installation"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L52",
+      "weight": 1.0,
+      "source": "core_preflight_rationale_52",
+      "target": "core_preflight_check_precice_installation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L67",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_check_precice_installation",
+      "target": "core_preflight_run"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L63",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_rationale_63",
+      "target": "core_preflight_check_precice_installation"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L62",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_rationale_62",
+      "target": "core_preflight_check_precice_installation"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L182",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_preflight",
+      "target": "core_preflight_check_config"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "core_preflight_rationale_77",
+      "target": "core_preflight_check_config",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L115",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_check_config",
+      "target": "core_preflight_run"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L93",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_rationale_93",
+      "target": "core_preflight_check_config"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L92",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_rationale_92",
+      "target": "core_preflight_check_config"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L164",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_check_case",
+      "target": "core_preflight_python_module_available"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L125",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_python_module_available",
+      "target": "core_preflight_run"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L177",
+      "weight": 1.0,
+      "source": "core_preflight_group_by_participant",
+      "target": "core_preflight_normalize",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L196",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_preflight",
+      "target": "core_preflight_normalize"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L142",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_check_case",
+      "target": "core_preflight_solver_of"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L185",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_preflight",
+      "target": "core_preflight_check_case"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L122",
+      "weight": 1.0,
+      "source": "core_preflight_rationale_122",
+      "target": "core_preflight_check_case",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L140",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_rationale_140",
+      "target": "core_preflight_check_case"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L141",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_rationale_141",
+      "target": "core_preflight_check_case"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L195",
+      "weight": 1.0,
+      "source": "core_preflight_preflight",
+      "target": "core_preflight_group_by_participant",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L169",
+      "weight": 1.0,
+      "source": "core_preflight_rationale_169",
+      "target": "core_preflight_group_by_participant",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L187",
+      "weight": 1.0,
+      "source": "core_preflight_rationale_187",
+      "target": "core_preflight_preflight",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "L11",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "precice_ai_tools_cli_tools_py",
+      "target": "core_preflight_preflight"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "L85",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tools_cli_tools_register_cli_tools",
+      "target": "core_preflight_preflight"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L179",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_rationale_179",
+      "target": "core_preflight_preflight"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/preflight.py",
+      "source_location": "L180",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_preflight_rationale_180",
+      "target": "core_preflight_preflight"
     },
     {
       "relation": "contains",
@@ -18310,16 +19451,6 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "L9",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "precice_ai_tools_cli_tools_py",
-      "target": "tools_cli_tools_check_precice_cli"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "precice_ai/tools/cli_tools.py",
       "source_location": "L32",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -18358,6 +19489,16 @@
       "target": "precice_ai_tools_cli_tools_py"
     },
     {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "precice_ai_tools_cli_tools_py",
+      "target": "tools_cli_tools_check_precice_cli"
+    },
+    {
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -18367,116 +19508,6 @@
       "confidence_score": 1.0,
       "source": "precice_ai_tools_cli_tools_py",
       "target": "command_runner_run_safe_command"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "21",
-      "weight": 1.0,
-      "source": "tools_cli_tools_precice_version",
-      "target": "tools_cli_tools_check_precice_cli"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "33",
-      "weight": 1.0,
-      "source": "tools_cli_tools_precice_config_check",
-      "target": "tools_cli_tools_check_precice_cli"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "54",
-      "weight": 1.0,
-      "source": "tools_cli_tools_precice_config_visualize",
-      "target": "tools_cli_tools_check_precice_cli"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "69",
-      "weight": 1.0,
-      "source": "tools_cli_tools_precice_config_format",
-      "target": "tools_cli_tools_check_precice_cli"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "85",
-      "weight": 1.0,
-      "source": "file_precice_config_xml",
-      "target": "tools_cli_tools_check_precice_cli"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "100",
-      "weight": 1.0,
-      "source": "tools_cli_tools_precice_init",
-      "target": "tools_cli_tools_check_precice_cli"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "118",
-      "weight": 1.0,
-      "source": "tools_cli_tools_precice_profiling_analyze",
-      "target": "tools_cli_tools_check_precice_cli"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "136",
-      "weight": 1.0,
-      "source": "tools_cli_tools_precice_profiling_trace",
-      "target": "tools_cli_tools_check_precice_cli"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "158",
-      "weight": 1.0,
-      "source": "tools_cli_tools_precice_profiling_export",
-      "target": "tools_cli_tools_check_precice_cli"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "178",
-      "weight": 1.0,
-      "source": "tools_cli_tools_precice_profiling_histogram",
-      "target": "tools_cli_tools_check_precice_cli"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "200",
-      "weight": 1.0,
-      "source": "tools_cli_tools_precice_profiling_merge",
-      "target": "tools_cli_tools_check_precice_cli"
     },
     {
       "relation": "calls",
@@ -18493,6 +19524,26 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "tools_cli_tools_rationale_31",
+      "target": "tools_cli_tools_validate_topology",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "L38",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tools_cli_tools_rationale_38",
+      "target": "tools_cli_tools_validate_topology"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/tools/cli_tools.py",
       "source_location": "L37",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -18503,11 +19554,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "precice_ai/tools/cli_tools.py",
-      "source_location": "L51",
+      "source_location": "L45",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "tools_cli_tools_rationale_51",
-      "target": "tools_cli_tools_register_cli_tools"
+      "source": "tools_cli_tools_rationale_45",
+      "target": "tools_cli_tools_register_cli_tools",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -18529,6 +19580,26 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "tools_init_register_all_tools",
+      "target": "tools_cli_tools_register_cli_tools"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "L52",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tools_cli_tools_rationale_52",
+      "target": "tools_cli_tools_register_cli_tools"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "L51",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "tools_cli_tools_rationale_51",
       "target": "tools_cli_tools_register_cli_tools"
     },
     {
@@ -19272,6 +20343,16 @@
       "confidence_score": 1.0,
       "source": "claude_md",
       "target": "precice_ai_claude_precice_knowledge_base"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L12",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "claude_md",
+      "target": "precice_ai_claude_running_a_precice_project"
     },
     {
       "relation": "contains",
@@ -25004,6 +26085,126 @@
       "target": "graphify_skill_codeblock_50"
     },
     {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "precice_ai/core/command_runner.py",
+      "source_location": "L14",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_command_runner_rationale_14",
+      "target": "command_runner_run_safe_command"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "21",
+      "weight": 1.0,
+      "source": "tools_cli_tools_precice_version",
+      "target": "tools_cli_tools_check_precice_cli"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "33",
+      "weight": 1.0,
+      "source": "tools_cli_tools_precice_config_check",
+      "target": "tools_cli_tools_check_precice_cli"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "54",
+      "weight": 1.0,
+      "source": "tools_cli_tools_precice_config_visualize",
+      "target": "tools_cli_tools_check_precice_cli"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "69",
+      "weight": 1.0,
+      "source": "tools_cli_tools_precice_config_format",
+      "target": "tools_cli_tools_check_precice_cli"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "85",
+      "weight": 1.0,
+      "source": "file_precice_config_xml",
+      "target": "tools_cli_tools_check_precice_cli"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "100",
+      "weight": 1.0,
+      "source": "tools_cli_tools_precice_init",
+      "target": "tools_cli_tools_check_precice_cli"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "118",
+      "weight": 1.0,
+      "source": "tools_cli_tools_precice_profiling_analyze",
+      "target": "tools_cli_tools_check_precice_cli"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "136",
+      "weight": 1.0,
+      "source": "tools_cli_tools_precice_profiling_trace",
+      "target": "tools_cli_tools_check_precice_cli"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "158",
+      "weight": 1.0,
+      "source": "tools_cli_tools_precice_profiling_export",
+      "target": "tools_cli_tools_check_precice_cli"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "178",
+      "weight": 1.0,
+      "source": "tools_cli_tools_precice_profiling_histogram",
+      "target": "tools_cli_tools_check_precice_cli"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "precice_ai/tools/cli_tools.py",
+      "source_location": "200",
+      "weight": 1.0,
+      "source": "tools_cli_tools_precice_profiling_merge",
+      "target": "tools_cli_tools_check_precice_cli"
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "kb_state.json",
@@ -28331,5 +29532,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "1af9e1ee92bea333c79aaf83e156ce8c92e25ade"
+  "built_at_commit": "55c39e277f250349dc2a60a6fd72e7f1ac69d128"
 }

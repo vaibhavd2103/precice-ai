@@ -35,6 +35,12 @@ For a new project:
 5. `summarize_precice_config`
 6. `precice_config_check(cwd, config_file)` — requires `precice-cli` on `PATH` (`pip install precice`); `cwd` is the project directory
 
+Before running a project (any request to check, set up, run or simulate a case):
+
+1. `precice_project_preflight(project_path)` — checks the preCICE installation, validates the config and checks each participant's solver dependencies
+2. If `ready` is false: report the `problems`, fix them, call it again. Do not start any participant.
+3. If `ready` is true: start one case per participant concurrently with the returned `run_command`, then go to the log tools.
+
 Before editing a config: `backup_precice_config(project_path)`, then `precice_config_format`/`precice_config_doc` as needed.
 
 For logs:

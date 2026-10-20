@@ -1,10 +1,10 @@
 from datetime import datetime
 from pathlib import Path
 import shutil
-import xml.etree.ElementTree as ET
 
 from mcp.server.fastmcp import FastMCP
 
+from precice_ai.core.config_xml import parse_precice_config
 from precice_ai.core.paths import get_project_path, get_precice_config_path
 
 
@@ -12,24 +12,29 @@ def register_config_tools(mcp: FastMCP) -> None:
     """Register preCICE configuration-related MCP tools."""
 
     @mcp.tool()
-    def inspect_precice_config(project_name: str) -> str:
-        """Read the precice-config.xml file of a project."""
-        config_file = get_precice_config_path(project_name)
+    def inspect_precice_config(project_path: str) -> str:
+        """Read the precice-config.xml file of a project.
+
+        project_path is the absolute path of the project directory.
+        """
+        config_file = get_precice_config_path(project_path)
         if not config_file.exists():
             return f"No precice-config.xml found at: {config_file}"
         return config_file.read_text(errors="ignore")
 
     @mcp.tool()
-    def summarize_precice_config(project_name: str) -> str:
-        """Summarize important information from precice-config.xml."""
-        config_file = get_precice_config_path(project_name)
+    def summarize_precice_config(project_path: str) -> str:
+        """Summarize important information from precice-config.xml.
+
+        project_path is the absolute path of the project directory.
+        """
+        config_file = get_precice_config_path(project_path)
         if not config_file.exists():
             return f"No precice-config.xml found at: {config_file}"
 
         try:
-            tree = ET.parse(config_file)
-            root = tree.getroot()
-        except ET.ParseError as exc:
+            root = parse_precice_config(config_file)
+        except ValueError as exc:
             return f"Failed to parse XML file: {exc}"
 
         participants: list[str] = []
@@ -38,6 +43,8 @@ def register_config_tools(mcp: FastMCP) -> None:
         coupling_schemes: list[str] = []
 
         for element in root.iter():
+            if not isinstance(element.tag, str):  # comments, processing instructions
+                continue
             tag = _clean_xml_tag(element.tag)
             if tag == "participant":
                 name = element.attrib.get("name")
@@ -57,7 +64,7 @@ def register_config_tools(mcp: FastMCP) -> None:
         return f"""preCICE configuration summary
 
 Project:
-{project_name}
+{project_path}
 
 Config file:
 {config_file}
@@ -76,9 +83,12 @@ Coupling scheme tags:
 """
 
     @mcp.tool()
-    def backup_precice_config(project_name: str) -> str:
-        """Create a timestamped backup of precice-config.xml."""
-        config_file = get_precice_config_path(project_name)
+    def backup_precice_config(project_path: str) -> str:
+        """Create a timestamped backup of precice-config.xml.
+
+        project_path is the absolute path of the project directory.
+        """
+        config_file = get_precice_config_path(project_path)
         if not config_file.exists():
             return f"No precice-config.xml found at: {config_file}"
 

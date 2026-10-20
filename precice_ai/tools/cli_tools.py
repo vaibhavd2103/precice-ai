@@ -1,13 +1,13 @@
 import json
-import shutil
 from pathlib import Path
 
 import jsonschema
 import yaml
 from mcp.server.fastmcp import FastMCP
 
-from precice_ai.core.command_runner import run_safe_command
+from precice_ai.core.command_runner import PRECICE_CLI_MISSING, precice_cli_available, run_precice_cli
 from precice_ai.core.paths import get_project_path
+from precice_ai.core.preflight import preflight
 
 TOPOLOGY_SCHEMA_PATH = Path(__file__).resolve().parent.parent / "utils" / "topology_schema.json"
 
@@ -21,12 +21,6 @@ DEFAULT_COUPLING_SCHEME = {
     "max-iterations": 50,
     "coupling": "parallel",
 }
-
-
-def _check_precice_cli() -> str | None:
-    if shutil.which("precice-cli") is None:
-        return "precice-cli is not installed or not in PATH. Install it via: pip install precice"
-    return None
 
 
 def _load_topology_schema() -> dict:
@@ -51,11 +45,42 @@ def register_cli_tools(mcp: FastMCP) -> None:
     """Register MCP tools that wrap precice-cli commands."""
 
     @mcp.tool()
+    def precice_project_preflight(project_path: str) -> str:
+        """Check that a preCICE project can run: dependencies, configuration and solvers.
+
+        ALWAYS call this first when the user asks to check, validate, set up,
+        run, start, launch or simulate a preCICE project or tutorial, and
+        again after fixing anything it reports. Never start a participant
+        (run.sh, a solver, or run_command_in_project) before this returns
+        "ready": true.
+
+        It verifies, without changing anything:
+        - preCICE itself: precice-cli and the libprecice version;
+        - the project: precice-config.xml exists and passes
+          `precice-cli config check`;
+        - each participant: which <participant>-<solver> case directories
+          exist and whether that solver's executables / Python modules are
+          installed.
+
+        Returns JSON with "ready", a "problems" list, the per-participant
+        cases with their "run_command", and "next_steps" to follow.
+
+        Args:
+            project_path: Absolute path of the project directory, as returned
+                by list_precice_projects.
+        """
+        try:
+            project_dir = get_project_path(project_path)
+        except ValueError as exc:
+            return str(exc)
+        if not project_dir.is_dir():
+            return f"Project not found: {project_path}"
+        return json.dumps(preflight(project_dir), indent=2)
+
+    @mcp.tool()
     def precice_version() -> str:
         """Show the installed version of preCICE via precice-cli version."""
-        if err := _check_precice_cli():
-            return err
-        return run_safe_command(command="precice-cli version", cwd=Path.cwd())
+        return run_precice_cli("version", cwd=Path.cwd()).format()
 
     @mcp.tool()
     def precice_config_check(cwd: str, config_file: str = "precice-config.xml") -> str:
@@ -65,13 +90,7 @@ def register_cli_tools(mcp: FastMCP) -> None:
             cwd: Absolute path to the directory containing the config file.
             config_file: Config filename or relative path (default: precice-config.xml).
         """
-        if err := _check_precice_cli():
-            return err
-        return run_safe_command(
-            command=f"precice-cli config check {config_file}",
-            cwd=Path(cwd),
-            timeout=60,
-        )
+        return run_precice_cli(f"config check {config_file}", cwd=Path(cwd), timeout=60).format()
 
     @mcp.tool()
     def precice_config_visualize(
@@ -86,12 +105,10 @@ def register_cli_tools(mcp: FastMCP) -> None:
             config_file: Config filename or relative path (default: precice-config.xml).
             output_file: Optional output file path for the visualization.
         """
-        if err := _check_precice_cli():
-            return err
-        cmd = f"precice-cli config visualize {config_file}"
+        args = f"config visualize {config_file}"
         if output_file:
-            cmd += f" --output {output_file}"
-        return run_safe_command(command=cmd, cwd=Path(cwd), timeout=60)
+            args += f" --output {output_file}"
+        return run_precice_cli(args, cwd=Path(cwd), timeout=60).format()
 
     @mcp.tool()
     def precice_config_format(cwd: str, config_file: str = "precice-config.xml") -> str:
@@ -101,13 +118,7 @@ def register_cli_tools(mcp: FastMCP) -> None:
             cwd: Absolute path to the working directory.
             config_file: Config filename or relative path (default: precice-config.xml).
         """
-        if err := _check_precice_cli():
-            return err
-        return run_safe_command(
-            command=f"precice-cli config format {config_file}",
-            cwd=Path(cwd),
-            timeout=60,
-        )
+        return run_precice_cli(f"config format {config_file}", cwd=Path(cwd), timeout=60).format()
 
     @mcp.tool()
     def precice_config_doc(cwd: str, tag: str = "") -> str:
@@ -117,12 +128,10 @@ def register_cli_tools(mcp: FastMCP) -> None:
             cwd: Absolute path to the working directory.
             tag: Optional specific XML tag to get documentation for.
         """
-        if err := _check_precice_cli():
-            return err
-        cmd = "precice-cli config doc"
+        args = "config doc"
         if tag:
-            cmd += f" {tag}"
-        return run_safe_command(command=cmd, cwd=Path(cwd), timeout=60)
+            args += f" {tag}"
+        return run_precice_cli(args, cwd=Path(cwd), timeout=60).format()
 
     @mcp.tool()
     def precice_init(
@@ -157,8 +166,8 @@ def register_cli_tools(mcp: FastMCP) -> None:
                 applied for any keys omitted.
             output_dir: Optional absolute path overriding the test-projects default.
         """
-        if err := _check_precice_cli():
-            return err
+        if not precice_cli_available():
+            return PRECICE_CLI_MISSING
 
         topology = {"participants": participants, "exchanges": exchanges}
         errors = _validate_topology(topology)
@@ -186,8 +195,8 @@ def register_cli_tools(mcp: FastMCP) -> None:
         topology_path = target_dir / "topology.yaml"
         topology_path.write_text(yaml.dump(full_topology, sort_keys=False))
 
-        cmd = "precice-cli init -f topology.yaml -o generated --validate-topology -v"
-        return run_safe_command(command=cmd, cwd=target_dir, timeout=120)
+        args = "init -f topology.yaml -o generated --validate-topology -v"
+        return run_precice_cli(args, cwd=target_dir, timeout=120).format()
 
     @mcp.tool()
     def precice_profiling_analyze(
@@ -200,12 +209,10 @@ def register_cli_tools(mcp: FastMCP) -> None:
             data_dir: Path to the directory containing profiling files (default: .).
             extra_args: Optional additional arguments.
         """
-        if err := _check_precice_cli():
-            return err
-        cmd = f"precice-cli profiling analyze {data_dir}"
+        args = f"profiling analyze {data_dir}"
         if extra_args:
-            cmd += f" {extra_args}"
-        return run_safe_command(command=cmd, cwd=Path(cwd), timeout=120)
+            args += f" {extra_args}"
+        return run_precice_cli(args, cwd=Path(cwd), timeout=120).format()
 
     @mcp.tool()
     def precice_profiling_trace(
@@ -218,12 +225,10 @@ def register_cli_tools(mcp: FastMCP) -> None:
             data_dir: Path to the directory containing profiling files.
             extra_args: Optional additional arguments.
         """
-        if err := _check_precice_cli():
-            return err
-        cmd = f"precice-cli profiling trace {data_dir}"
+        args = f"profiling trace {data_dir}"
         if extra_args:
-            cmd += f" {extra_args}"
-        return run_safe_command(command=cmd, cwd=Path(cwd), timeout=120)
+            args += f" {extra_args}"
+        return run_precice_cli(args, cwd=Path(cwd), timeout=120).format()
 
     @mcp.tool()
     def precice_profiling_export(
@@ -240,14 +245,12 @@ def register_cli_tools(mcp: FastMCP) -> None:
             output_file: Optional output file path.
             extra_args: Optional additional arguments.
         """
-        if err := _check_precice_cli():
-            return err
-        cmd = f"precice-cli profiling export {data_dir}"
+        args = f"profiling export {data_dir}"
         if output_file:
-            cmd += f" --output {output_file}"
+            args += f" --output {output_file}"
         if extra_args:
-            cmd += f" {extra_args}"
-        return run_safe_command(command=cmd, cwd=Path(cwd), timeout=120)
+            args += f" {extra_args}"
+        return run_precice_cli(args, cwd=Path(cwd), timeout=120).format()
 
     @mcp.tool()
     def precice_profiling_histogram(
@@ -260,12 +263,10 @@ def register_cli_tools(mcp: FastMCP) -> None:
             data_dir: Path to the directory containing profiling files.
             extra_args: Optional additional arguments.
         """
-        if err := _check_precice_cli():
-            return err
-        cmd = f"precice-cli profiling histogram {data_dir}"
+        args = f"profiling histogram {data_dir}"
         if extra_args:
-            cmd += f" {extra_args}"
-        return run_safe_command(command=cmd, cwd=Path(cwd), timeout=120)
+            args += f" {extra_args}"
+        return run_precice_cli(args, cwd=Path(cwd), timeout=120).format()
 
     @mcp.tool()
     def precice_profiling_merge(
@@ -282,11 +283,9 @@ def register_cli_tools(mcp: FastMCP) -> None:
             output_dir: Optional output directory for merged data.
             extra_args: Optional additional arguments.
         """
-        if err := _check_precice_cli():
-            return err
-        cmd = f"precice-cli profiling merge {data_dirs}"
+        args = f"profiling merge {data_dirs}"
         if output_dir:
-            cmd += f" --output {output_dir}"
+            args += f" --output {output_dir}"
         if extra_args:
-            cmd += f" {extra_args}"
-        return run_safe_command(command=cmd, cwd=Path(cwd), timeout=120)
+            args += f" {extra_args}"
+        return run_precice_cli(args, cwd=Path(cwd), timeout=120).format()

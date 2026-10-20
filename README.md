@@ -283,13 +283,13 @@ Once your MCP client sees the server, the main workflow is:
 Typical tool calls:
 
 ```text
-list_precice_projects()
-inspect_project_structure("partitioned-heat-conduction")
-find_precice_config("partitioned-heat-conduction")
-inspect_precice_config("partitioned-heat-conduction")
-summarize_precice_config("partitioned-heat-conduction")
-read_latest_log("partitioned-heat-conduction")
-analyze_precice_logs("partitioned-heat-conduction")
+list_precice_projects("/absolute/path/to/preCICE/cases")
+inspect_project_structure("/absolute/path/to/preCICE/cases/partitioned-heat-conduction")
+find_precice_config("/absolute/path/to/preCICE/cases/partitioned-heat-conduction")
+inspect_precice_config("/absolute/path/to/preCICE/cases/partitioned-heat-conduction")
+summarize_precice_config("/absolute/path/to/preCICE/cases/partitioned-heat-conduction")
+read_latest_log("/absolute/path/to/preCICE/cases/partitioned-heat-conduction")
+analyze_precice_logs("/absolute/path/to/preCICE/cases/partitioned-heat-conduction")
 kb_precice_status()
 # If the documentation category is fresh:
 kb_query_precice("how does implicit coupling work in preCICE?", category="documentation")
